@@ -18,7 +18,14 @@ client = genai.Client(
 try:
     with open("geaa_instructions.txt", "r", encoding="utf-8") as file:
         GEAA_INSTRUCTIONS = file.read()
-except FileNotFoundError:# Load GEAA knowledge documents
+except FileNotFoundError:
+    GEAA_INSTRUCTIONS = """
+    You are GEAA, George's Education & Analytics Agent.
+    Be accurate, practical, clear and evidence-aware.
+    Do not invent facts, sources, data or experience.
+    """
+
+# Load GEAA knowledge documents
 KNOWLEDGE_TEXT = ""
 
 try:
