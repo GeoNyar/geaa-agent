@@ -1,4 +1,5 @@
 import streamlit as st
+from google import genai
 
 # Page configuration
 st.set_page_config(
@@ -7,7 +8,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# Main title
+# Connect to Gemini
+client = genai.Client(
+    api_key=st.secrets["GEMINI_API_KEY"]
+)
+
+# Main page
 st.title("🎓 GEAA")
 st.subheader("George's Education & Analytics Agent")
 
@@ -23,29 +29,36 @@ st.markdown("### What would you like GEAA to help you with?")
 
 task = st.text_area(
     "Enter your task",
-    placeholder="Example: Analyse this Form 3 Chemistry performance data..."
+    placeholder="Example: Explain chemical kinetics to Form 3 students..."
 )
 
-# Run button
+# Run task
 if st.button("🚀 Run Task"):
 
     if task.strip():
 
-        st.markdown("### Your task")
+        with st.spinner("GEAA is thinking..."):
 
-        st.write(task)
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.8-flash",
+                    contents=task
+                )
 
-        st.info(
-            "GEAA v0.1 received your task. "
-            "The AI reasoning engine will be connected next."
-        )
+                st.markdown("### GEAA's Response")
+                st.write(response.text)
+
+            except Exception as e:
+                st.error(
+                    "GEAA could not connect to the AI service."
+                )
+                st.code(str(e))
 
     else:
-
         st.warning("Please enter a task first.")
 
 st.divider()
 
 st.caption(
-    "GEAA v0.1 — George's Education & Analytics Agent"
+    "GEAA v0.2 — Powered by Gemini"
 )
