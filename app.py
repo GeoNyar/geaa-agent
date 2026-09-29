@@ -18,7 +18,18 @@ client = genai.Client(
 try:
     with open("geaa_instructions.txt", "r", encoding="utf-8") as file:
         GEAA_INSTRUCTIONS = file.read()
+except FileNotFoundError:# Load GEAA knowledge documents
+KNOWLEDGE_TEXT = ""
+
+try:
+    with open(
+        "knowledge/chemistry_principles_level_6_course_outline.md",
+        "r",
+        encoding="utf-8"
+    ) as file:
+        KNOWLEDGE_TEXT = file.read()
 except FileNotFoundError:
+    KNOWLEDGE_TEXT = ""
     GEAA_INSTRUCTIONS = """
     You are GEAA, George's Education & Analytics Agent.
     Be accurate, practical, clear and evidence-aware.
@@ -182,7 +193,13 @@ if st.button("🚀 Run Task"):
             try:
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-                    contents=task,
+                    contents=f"""
+USER TASK:
+{task}
+
+RELEVANT GEAA KNOWLEDGE:
+{KNOWLEDGE_TEXT}
+""",,
                     config=types.GenerateContentConfig(
                         system_instruction=full_instructions
                     )
