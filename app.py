@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from google import genai
 
@@ -39,20 +40,35 @@ if st.button("🚀 Run Task"):
 
         with st.spinner("GEAA is thinking..."):
 
-            try:
-                response = client.models.generate_content(
-                    model="gemini-3.8-flash",
-                    contents=task
-                )
+            max_attempts = 3
 
-                st.markdown("### GEAA's Response")
-                st.write(response.text)
+            for attempt in range(max_attempts):
 
-            except Exception as e:
-                st.error(
-                    "GEAA could not connect to the AI service."
-                )
-                st.code(str(e))
+                try:
+                    response = client.models.generate_content(
+                        model="gemini-3.8-flash",
+                        contents=task
+                    )
+
+                    st.markdown("### GEAA's Response")
+                    st.write(response.text)
+                    break
+
+                except Exception as e:
+
+                    error_message = str(e)
+
+                    if "503" in error_message and attempt < max_attempts - 1:
+                        time.sleep(2 ** attempt)
+                        continue
+
+                    st.error(
+                        "GEAA could not complete the request. "
+                        "Please try again shortly."
+                    )
+
+                    with st.expander("Technical details"):
+                        st.code(error_message)
 
     else:
         st.warning("Please enter a task first.")
@@ -60,5 +76,5 @@ if st.button("🚀 Run Task"):
 st.divider()
 
 st.caption(
-    "GEAA v0.2 — Powered by Gemini"
+    "GEAA v0.3 — Powered by Gemini"
 )
