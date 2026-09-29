@@ -1,4 +1,3 @@
-import time
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -37,7 +36,7 @@ st.write(
 
 st.divider()
 
-# GEAA mode
+# Mode selection
 st.markdown("### Select GEAA Mode")
 
 mode = st.selectbox(
@@ -52,6 +51,110 @@ mode = st.selectbox(
     ]
 )
 
+# Mode-specific workflows
+workflows = {
+
+    "Teaching": """
+TEACHING WORKFLOW
+
+Follow this sequence when appropriate:
+
+1. Identify the learner level and subject.
+2. Identify exactly what the learner or teacher needs.
+3. Identify the relevant learning objective or intended outcome.
+4. Explain the content using language appropriate to the learner level.
+5. Use examples, illustrations or analogies where they improve understanding.
+6. If an activity is requested, make it practical, realistic and safe.
+7. If assessment is appropriate, provide suitable questions or tasks.
+8. Check scientific accuracy and ensure that models or analogies are clearly
+   distinguished from the actual scientific process.
+9. Present a classroom-ready response.
+
+Do not add unnecessary advanced content simply to make the response longer.
+""",
+
+    "Research": """
+RESEARCH WORKFLOW
+
+Follow this sequence when appropriate:
+
+1. Identify the research problem or purpose.
+2. Identify the research question(s) or objective(s).
+3. Identify the relevant concepts, variables or constructs.
+4. Consider appropriate theory or conceptual framing.
+5. Consider the appropriate research design and methodology.
+6. Identify what evidence or data would be required.
+7. Explain appropriate analysis methods.
+8. Distinguish evidence from interpretation.
+9. Identify limitations, assumptions and possible sources of bias.
+10. Provide a clear research-oriented response.
+
+Never fabricate references, participants, findings, datasets or results.
+""",
+
+    "Analytics": """
+ANALYTICS WORKFLOW
+
+Follow this sequence when appropriate:
+
+1. Identify the analytical question.
+2. Identify the available data and its structure.
+3. Check data quality, missing values and obvious inconsistencies.
+4. Determine appropriate calculations or analytical methods.
+5. Analyse the data rather than assuming the result.
+6. Select appropriate tables, charts or visualisations where useful.
+7. Interpret the results in relation to the original question.
+8. Identify limitations and important assumptions.
+9. Provide practical implications or next steps where appropriate.
+
+Never invent data or analytical results.
+""",
+
+    "Education Leadership": """
+EDUCATION LEADERSHIP WORKFLOW
+
+Follow this sequence when appropriate:
+
+1. Identify the education leadership or management problem.
+2. Identify the relevant stakeholders.
+3. Identify available evidence and information gaps.
+4. Consider the relevant school, institutional or policy context.
+5. Identify possible approaches or interventions.
+6. Consider implementation requirements.
+7. Identify indicators that could be used to monitor progress.
+8. Consider risks, limitations and unintended effects.
+9. Provide practical next steps.
+10. Preserve professional judgement and distinguish evidence from judgement.
+""",
+
+    "TVET": """
+TVET WORKFLOW
+
+Follow this sequence when appropriate:
+
+1. Identify the competency, unit or skill involved.
+2. Identify the expected learner performance.
+3. Identify the relevant knowledge, skills and attitudes.
+4. Identify the practical task or workplace application where appropriate.
+5. Identify required resources, equipment and safety considerations.
+6. Determine suitable assessment methods.
+7. Identify appropriate evidence for the learner's portfolio where relevant.
+8. Develop clear assessment criteria or indicators where requested.
+9. Check that the task is practical, observable and assessable.
+10. Present the result in a format suitable for TVET use.
+""",
+
+    "General": """
+GENERAL WORKFLOW
+
+1. Identify the user's actual task.
+2. Identify important constraints and requirements.
+3. Produce the most useful practical response.
+4. Check accuracy, completeness and clarity.
+5. State important limitations where necessary.
+"""
+}
+
 # Task input
 st.markdown("### What would you like GEAA to help you with?")
 
@@ -60,64 +163,21 @@ task = st.text_area(
     placeholder="Example: Explain chemical kinetics to Form 3 students..."
 )
 
-# Mode-specific instructions
-mode_instructions = {
-    "Teaching": """
-Focus on teaching and learning.
-Adapt explanations to the stated learner level.
-Use clear language, examples, activities and assessment where useful.
-Prioritize learner understanding and classroom practicality.
-""",
-
-    "Research": """
-Focus on educational and scientific research.
-Pay attention to research questions, methodology, evidence,
-data analysis, academic writing and limitations.
-Never fabricate references, findings or data.
-""",
-
-    "Analytics": """
-Focus on data analysis and evidence-based decision-making.
-When data are provided, check the data before interpreting them.
-Use appropriate statistical or analytical methods.
-Do not invent data or results.
-Explain assumptions and limitations.
-""",
-
-    "Education Leadership": """
-Focus on educational leadership and management.
-Consider school improvement, quality assurance, teacher development,
-planning, monitoring, decision-making and evidence.
-Provide practical approaches that can work in an education setting.
-""",
-
-    "TVET": """
-Focus on TVET, CBET and competency-based assessment.
-Consider practical skills, assessment evidence, laboratory work,
-performance criteria, portfolios and workplace relevance.
-Use clear competency-oriented language.
-""",
-
-    "General": """
-Provide a practical response appropriate to the task.
-"""
-}
-
 # Run task
 if st.button("🚀 Run Task"):
 
     if task.strip():
 
-        # Combine general GEAA instructions with selected mode
+        # Combine instructions and workflow
         full_instructions = (
             GEAA_INSTRUCTIONS
             + "\n\nSELECTED MODE:\n"
             + mode
-            + "\n\nMODE-SPECIFIC INSTRUCTIONS:\n"
-            + mode_instructions[mode]
+            + "\n\nMODE WORKFLOW:\n"
+            + workflows[mode]
         )
 
-        with st.spinner("GEAA is thinking..."):
+        with st.spinner("GEAA is working through the task..."):
 
             try:
                 response = client.models.generate_content(
@@ -144,5 +204,5 @@ if st.button("🚀 Run Task"):
 st.divider()
 
 st.caption(
-    "GEAA v0.8 — George's Education & Analytics Agent"
+    "GEAA v0.9 — George's Education & Analytics Agent"
 )
