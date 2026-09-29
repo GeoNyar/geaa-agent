@@ -206,7 +206,7 @@ USER TASK:
 
 RELEVANT GEAA KNOWLEDGE:
 {KNOWLEDGE_TEXT}
-""",,
+""",
                     config=types.GenerateContentConfig(
                         system_instruction=full_instructions
                     )
