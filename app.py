@@ -15,7 +15,7 @@ client = genai.Client(
     api_key=st.secrets["GEMINI_API_KEY"]
 )
 
-# Load GEAA instructions from a separate file
+# Load GEAA instructions
 try:
     with open("geaa_instructions.txt", "r", encoding="utf-8") as file:
         GEAA_INSTRUCTIONS = file.read()
@@ -37,6 +37,21 @@ st.write(
 
 st.divider()
 
+# GEAA mode
+st.markdown("### Select GEAA Mode")
+
+mode = st.selectbox(
+    "What type of task are you working on?",
+    [
+        "Teaching",
+        "Research",
+        "Analytics",
+        "Education Leadership",
+        "TVET",
+        "General"
+    ]
+)
+
 # Task input
 st.markdown("### What would you like GEAA to help you with?")
 
@@ -45,10 +60,62 @@ task = st.text_area(
     placeholder="Example: Explain chemical kinetics to Form 3 students..."
 )
 
+# Mode-specific instructions
+mode_instructions = {
+    "Teaching": """
+Focus on teaching and learning.
+Adapt explanations to the stated learner level.
+Use clear language, examples, activities and assessment where useful.
+Prioritize learner understanding and classroom practicality.
+""",
+
+    "Research": """
+Focus on educational and scientific research.
+Pay attention to research questions, methodology, evidence,
+data analysis, academic writing and limitations.
+Never fabricate references, findings or data.
+""",
+
+    "Analytics": """
+Focus on data analysis and evidence-based decision-making.
+When data are provided, check the data before interpreting them.
+Use appropriate statistical or analytical methods.
+Do not invent data or results.
+Explain assumptions and limitations.
+""",
+
+    "Education Leadership": """
+Focus on educational leadership and management.
+Consider school improvement, quality assurance, teacher development,
+planning, monitoring, decision-making and evidence.
+Provide practical approaches that can work in an education setting.
+""",
+
+    "TVET": """
+Focus on TVET, CBET and competency-based assessment.
+Consider practical skills, assessment evidence, laboratory work,
+performance criteria, portfolios and workplace relevance.
+Use clear competency-oriented language.
+""",
+
+    "General": """
+Provide a practical response appropriate to the task.
+"""
+}
+
 # Run task
 if st.button("🚀 Run Task"):
 
     if task.strip():
+
+        # Combine general GEAA instructions with selected mode
+        full_instructions = (
+            GEAA_INSTRUCTIONS
+            + "\n\nSELECTED MODE:\n"
+            + mode
+            + "\n\nMODE-SPECIFIC INSTRUCTIONS:\n"
+            + mode_instructions[mode]
+        )
 
         with st.spinner("GEAA is thinking..."):
 
@@ -57,7 +124,7 @@ if st.button("🚀 Run Task"):
                     model="gemini-3.5-flash-lite",
                     contents=task,
                     config=types.GenerateContentConfig(
-                        system_instruction=GEAA_INSTRUCTIONS
+                        system_instruction=full_instructions
                     )
                 )
 
@@ -77,5 +144,5 @@ if st.button("🚀 Run Task"):
 st.divider()
 
 st.caption(
-    "GEAA v0.6 — George's Education & Analytics Agent"
+    "GEAA v0.7 — George's Education & Analytics Agent"
 )
