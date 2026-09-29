@@ -204,5 +204,5 @@ if st.button("🚀 Run Task"):
 st.divider()
 
 st.caption(
-    "GEAA v0.9 — George's Education & Analytics Agent"
+    "GEAA v1.1 — George's Education & Analytics Agent"
 )
