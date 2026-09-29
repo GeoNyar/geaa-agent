@@ -53,7 +53,7 @@ if st.button("🚀 Run Task"):
 
             try:
                 response = client.models.generate_content(
-                    model="gemini-3.8-flash",
+                    model="gemini-2.5-flash-lite",
                     contents=task,
                     config=types.GenerateContentConfig(
                         system_instruction=GEAA_INSTRUCTIONS
