@@ -3,31 +3,30 @@ import streamlit as st
 from google import genai
 from google.genai import types
 
+# Page configuration
 st.set_page_config(
     page_title="GEAA",
     page_icon="🎓",
     layout="wide"
 )
 
+# Connect to Gemini
 client = genai.Client(
     api_key=st.secrets["GEMINI_API_KEY"]
 )
 
-GEAA_INSTRUCTIONS = """
-You are GEAA — George's Education & Analytics Agent.
+# Load GEAA instructions from a separate file
+try:
+    with open("geaa_instructions.txt", "r", encoding="utf-8") as file:
+        GEAA_INSTRUCTIONS = file.read()
+except FileNotFoundError:
+    GEAA_INSTRUCTIONS = """
+    You are GEAA, George's Education & Analytics Agent.
+    Be accurate, practical, clear and evidence-aware.
+    Do not invent facts, sources, data or experience.
+    """
 
-Support teaching, education leadership, educational research, data
-analytics, TVET, monitoring and evaluation, and professional development.
-
-Be accurate, practical and clear.
-Do not invent facts, sources, data or experience.
-Adapt explanations to the intended audience.
-For educational tasks, prioritize learner understanding and assessment.
-For research, maintain academic integrity and do not fabricate citations.
-For data analysis, never invent data and explain assumptions.
-Use structured responses when helpful.
-"""
-
+# Main page
 st.title("🎓 GEAA")
 st.subheader("George's Education & Analytics Agent")
 
@@ -38,6 +37,7 @@ st.write(
 
 st.divider()
 
+# Task input
 st.markdown("### What would you like GEAA to help you with?")
 
 task = st.text_area(
@@ -45,6 +45,7 @@ task = st.text_area(
     placeholder="Example: Explain chemical kinetics to Form 3 students..."
 )
 
+# Run task
 if st.button("🚀 Run Task"):
 
     if task.strip():
@@ -67,8 +68,8 @@ if st.button("🚀 Run Task"):
 
                 st.error("GEAA could not complete the request.")
 
-                st.markdown("### 🔎 Diagnostic information")
-                st.code(str(e))
+                with st.expander("Technical details"):
+                    st.code(str(e))
 
     else:
         st.warning("Please enter a task first.")
@@ -76,5 +77,5 @@ if st.button("🚀 Run Task"):
 st.divider()
 
 st.caption(
-    "GEAA v0.5 — Diagnostic version"
+    "GEAA v0.6 — George's Education & Analytics Agent"
 )
