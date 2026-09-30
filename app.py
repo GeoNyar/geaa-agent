@@ -27,15 +27,29 @@ except FileNotFoundError:
 
 # Load GEAA knowledge documents
 # Load GEAA knowledge documents
+# Load all GEAA knowledge documents
+import os
+
 KNOWLEDGE_TEXT = ""
 
 try:
-    with open(
-        "knowledge/chemistry_principles_level_6_course_outline.md",
-        "r",
-        encoding="utf-8"
-    ) as file:
-        KNOWLEDGE_TEXT = file.read()
+    knowledge_folder = "knowledge"
+    knowledge_sections = []
+
+    for filename in sorted(os.listdir(knowledge_folder)):
+        if filename.endswith(".md"):
+            filepath = os.path.join(knowledge_folder, filename)
+
+            with open(filepath, "r", encoding="utf-8") as file:
+                content = file.read()
+
+            knowledge_sections.append(
+                f"\n--- KNOWLEDGE SOURCE: {filename} ---\n"
+                f"{content}\n"
+            )
+
+    KNOWLEDGE_TEXT = "\n".join(knowledge_sections)
+
 except FileNotFoundError:
     KNOWLEDGE_TEXT = ""
     GEAA_INSTRUCTIONS = """
