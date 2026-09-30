@@ -27,11 +27,86 @@ except FileNotFoundError:
 
 # Load GEAA knowledge documents
 # Load GEAA knowledge documents
-# Load all GEAA knowledge documents
+# Load GEAA knowledge documents
 import os
+import re
 
-KNOWLEDGE_TEXT = ""
+KNOWLEDGE_DOCUMENTS = []
 
+try:
+    knowledge_folder = "knowledge"
+
+    for filename in sorted(os.listdir(knowledge_folder)):
+        if filename.endswith(".md"):
+            filepath = os.path.join(knowledge_folder, filename)
+
+            with open(filepath, "r", encoding="utf-8") as file:
+                content = file.read()
+
+            KNOWLEDGE_DOCUMENTS.append({
+                "filename": filename,
+                "content": content
+            })
+
+except FileNotFoundError:
+    KNOWLEDGE_DOCUMENTS = []
+
+
+def retrieve_knowledge(task, documents, max_sections=5):
+    """
+    Simple keyword-based retrieval from GEAA knowledge documents.
+    Returns the most relevant document sections for the user's task.
+    """
+
+    if not documents:
+        return ""
+
+    task_words = set(
+        word.lower()
+        for word in re.findall(r"[A-Za-z0-9Δ]+", task)
+        if len(word) > 2
+    )
+
+    matches = []
+
+    for document in documents:
+        content = document["content"]
+
+        sections = re.split(
+            r"(?=^#{1,3}\s)",
+            content,
+            flags=re.MULTILINE
+        )
+
+        for section in sections:
+            section_words = set(
+                word.lower()
+                for word in re.findall(r"[A-Za-z0-9Δ]+", section)
+                if len(word) > 2
+            )
+
+            score = len(task_words.intersection(section_words))
+
+            if score > 0:
+                matches.append({
+                    "score": score,
+                    "filename": document["filename"],
+                    "section": section.strip()
+                })
+
+    matches.sort(key=lambda item: item["score"], reverse=True)
+
+    selected = matches[:max_sections]
+
+    retrieved_text = []
+
+    for item in selected:
+        retrieved_text.append(
+            f"\n--- RETRIEVED KNOWLEDGE: {item['filename']} ---\n"
+            f"{item['section']}\n"
+        )
+
+    return "\n".join(retrieved_text)
 try:
     knowledge_folder = "knowledge"
     knowledge_sections = []
@@ -198,7 +273,10 @@ task = st.text_area(
 
 # Run task
 if st.button("🚀 Run Task"):
-
+    retrieved_knowledge = retrieve_knowledge(
+        task,
+        KNOWLEDGE_DOCUMENTS
+    )
     if task.strip():
 
         # Combine instructions and workflow
@@ -216,11 +294,12 @@ if st.button("🚀 Run Task"):
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
                     contents=f"""
+contents=f"""
 USER TASK:
 {task}
 
-RELEVANT GEAA KNOWLEDGE:
-{KNOWLEDGE_TEXT}
+RETRIEVED GEAA KNOWLEDGE:
+{retrieved_knowledge}
 """,
                     config=types.GenerateContentConfig(
                         system_instruction=full_instructions
