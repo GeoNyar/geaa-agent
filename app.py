@@ -121,7 +121,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             f"{item['section']}\n"
         )
 
-return "\n".join(retrieved_text), selected
+    return "\n".join(retrieved_text), selected
 try:
     knowledge_folder = "knowledge"
     knowledge_sections = []
