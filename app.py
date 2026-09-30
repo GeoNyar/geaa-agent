@@ -26,6 +26,7 @@ except FileNotFoundError:
     """
 
 # Load GEAA knowledge documents
+# Load GEAA knowledge documents
 KNOWLEDGE_TEXT = ""
 
 try:
