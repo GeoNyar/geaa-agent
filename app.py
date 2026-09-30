@@ -243,5 +243,7 @@ RELEVANT GEAA KNOWLEDGE:
 st.divider()
 
 st.caption(
-    "GEAA v1.1 — George's Education & Analytics Agent"
+    st.caption(
+    "GEAA v1.2 — George's Education & Analytics Agent"
+)
 )
