@@ -291,7 +291,9 @@ if st.button("🚀 Run Task"):
     retrieved_knowledge = retrieve_knowledge(
         task,
         KNOWLEDGE_DOCUMENTS
-    )    with st.expander("🔎 Retrieved Knowledge"):
+  )
+
+    with st.expander("🔎 Retrieved Knowledge"):
         if retrieved_knowledge:
             st.markdown(retrieved_knowledge)
         else:
