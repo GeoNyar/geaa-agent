@@ -121,7 +121,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             f"{item['section']}\n"
         )
 
-    return "\n".join(retrieved_text)
+return "\n".join(retrieved_text), selected
 try:
     knowledge_folder = "knowledge"
     knowledge_sections = []
@@ -288,16 +288,20 @@ task = st.text_area(
 
 # Run task
 if st.button("🚀 Run Task"):
-    retrieved_knowledge = retrieve_knowledge(
-        task,
-        KNOWLEDGE_DOCUMENTS
-  )
+   retrieved_knowledge, retrieval_details = retrieve_knowledge(
+    task,
+    KNOWLEDGE_DOCUMENTS
+)
 
     with st.expander("🔎 Retrieved Knowledge"):
-        if retrieved_knowledge:
-            st.markdown(retrieved_knowledge)
-        else:
-            st.write("No relevant knowledge was retrieved.")
+    if retrieval_details:
+        for item in retrieval_details:
+            st.write(
+                f"📄 {item['filename']} | "
+                f"Score: {item['score']}"
+            )
+    else:
+        st.write("No relevant knowledge was retrieved.")
     if task.strip():
 
         # Combine instructions and workflow
