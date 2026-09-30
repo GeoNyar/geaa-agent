@@ -1,4 +1,11 @@
-CHEMISTRY PRINCIPLES
+---
+Document type: Course outline
+Subject: Chemistry
+Level: TVET Level 6
+Authority: User-provided professional source
+Primary use: Curriculum structure, learning outcomes, unit duration and assessment-method information
+Status: Source-provided; official status not independently verified
+---CHEMISTRY PRINCIPLES
 
 
 ISCED UNIT CODE: 0531 541 14A
