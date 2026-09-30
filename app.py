@@ -72,6 +72,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
     for document in documents:
         content = document["content"]
 
+        filename_words = set(
+            word.lower()
+            for word in re.findall(r"[A-Za-z0-9Δ]+", document["filename"])
+            if len(word) > 2
+        )
+
         sections = re.split(
             r"(?=^#{1,3}\s)",
             content,
@@ -79,22 +85,20 @@ def retrieve_knowledge(task, documents, max_sections=5):
         )
 
         for section in sections:
-                        section_words = set(
+            section_words = set(
                 word.lower()
                 for word in re.findall(r"[A-Za-z0-9Δ]+", section)
                 if len(word) > 2
             )
 
-            score = len(task_words.intersection(section_words))
-
-            # Give extra weight when task words match the document name
-            filename_words = set(
-                word.lower()
-                for word in re.findall(r"[A-Za-z0-9Δ]+", document["filename"])
-                if len(word) > 2
+            score = len(
+                task_words.intersection(section_words)
             )
 
-            score += 3 * len(task_words.intersection(filename_words))
+            score += 3 * len(
+                task_words.intersection(filename_words)
+            )
+
             if score > 0:
                 matches.append({
                     "score": score,
@@ -102,7 +106,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     "section": section.strip()
                 })
 
-    matches.sort(key=lambda item: item["score"], reverse=True)
+    matches.sort(
+        key=lambda item: item["score"],
+        reverse=True
+    )
 
     selected = matches[:max_sections]
 
