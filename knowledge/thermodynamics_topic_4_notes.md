@@ -1,4 +1,11 @@
-1
+---
+Document type: Learning notes
+Subject: Chemistry — Thermodynamics
+Level: TVET Level 6
+Authority: User-provided professional source
+Primary use: Teaching content, worked examples, scientific explanations and learner assessment
+Status: Source-provided; official status not independently verified
+---1
 TOPIC 4: THERMODYNAMICS Learning Objectives By the end of this topic, you should be able to: Knowledge
 1. Define thermodynamics and related energy terms.
 2. Distinguish between exothermic and endothermic reactions.
