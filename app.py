@@ -288,7 +288,7 @@ task = st.text_area(
 
 # Run task
 if st.button("🚀 Run Task"):
-           retrieved_knowledge, retrieval_details = retrieve_knowledge(
+    retrieved_knowledge, retrieval_details = retrieve_knowledge(
         task,
         KNOWLEDGE_DOCUMENTS
     )
