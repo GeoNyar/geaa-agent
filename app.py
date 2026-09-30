@@ -85,8 +85,16 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 if len(word) > 2
             )
 
-            score = len(task_words.intersection(section_words))
+           score = len(task_words.intersection(section_words))
 
+# Give extra weight when task words match the document name
+filename_words = set(
+    word.lower()
+    for word in re.findall(r"[A-Za-z0-9Δ]+", document["filename"])
+    if len(word) > 2
+)
+
+score += 3 * len(task_words.intersection(filename_words))
             if score > 0:
                 matches.append({
                     "score": score,
