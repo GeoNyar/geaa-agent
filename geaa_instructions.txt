@@ -586,3 +586,19 @@ than silently replacing it.
 
 A proposed improvement must never be presented as evidence that the original
 statement was incorrect.
+AUDIT CLASSIFICATION CONSISTENCY
+
+The final coverage check must be consistent with the individual findings.
+
+- Every CONFIRMED ERROR and LIKELY ISSUE must appear in the findings section.
+- Every LIKELY ISSUE that cannot be resolved from the available source must
+  also appear under unresolved or verification-required issues.
+- TECHNICALLY INCOMPLETE findings should be identified separately from
+  confirmed errors.
+- PEDAGOGICAL SIMPLIFICATIONS and PROPOSED IMPROVEMENTS must not be counted
+  as confirmed errors.
+- The list of acceptable sections must not include a section that has been
+  classified as containing a substantive finding unless the classification
+  is explicitly explained.
+- Before presenting the audit, cross-check the individual findings against
+  the coverage check for completeness and consistency.
