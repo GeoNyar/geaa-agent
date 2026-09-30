@@ -288,7 +288,7 @@ task = st.text_area(
 
 # Run task
 if st.button("🚀 Run Task"):
-       retrieved_knowledge, retrieval_details = retrieve_knowledge(
+           retrieved_knowledge, retrieval_details = retrieve_knowledge(
         task,
         KNOWLEDGE_DOCUMENTS
     )
@@ -302,14 +302,7 @@ if st.button("🚀 Run Task"):
                 )
         else:
             st.write("No relevant knowledge was retrieved.")
-    if retrieval_details:
-        for item in retrieval_details:
-            st.write(
-                f"📄 {item['filename']} | "
-                f"Score: {item['score']}"
-            )
-    else:
-        st.write("No relevant knowledge was retrieved.")
+
     if task.strip():
 
         # Combine instructions and workflow
