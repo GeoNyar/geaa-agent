@@ -293,8 +293,7 @@ if st.button("🚀 Run Task"):
             try:
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-                    contents=f"""
-contents=f"""
+                   contents=f"""
 USER TASK:
 {task}
 
