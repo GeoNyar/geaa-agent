@@ -313,7 +313,8 @@ if st.button("🚀 Run Task"):
 
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
-            for item in retrieval_details:
+            for item in retrieval_details:st.write("### 📚 Retrieved Text Passed to GEAA")
+st.text(retrieved_knowledge)
                 lines = item["section"].splitlines()
 
                 section_heading = next(
