@@ -298,7 +298,7 @@ if st.button("🚀 Run Task"):
             for item in retrieval_details:
                 st.write(
 f"📄 {item['filename']} | "
-f"Section: {item['section'].splitlines()[0]} | "
+f"Section: {next((line for line in item['section'].splitlines() if line.startswith('#')), 'General content')} | "
 f"Score: {item['score']}"
                 )
         else:
