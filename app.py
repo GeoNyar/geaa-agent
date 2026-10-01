@@ -331,7 +331,7 @@ if st.button("🚀 Run Task"):
                 if section_heading:
                     display_section = section_heading
                 else:
-                    display_section = "Document introduction / general content"
+                    display_section = "Section heading not captured"
 
                 st.write(
                     f"📄 {item['filename']} | "
