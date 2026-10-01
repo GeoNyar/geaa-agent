@@ -390,7 +390,5 @@ RETRIEVED GEAA KNOWLEDGE:
 st.divider()
 
 st.caption(
-    st.caption(
     "GEAA v1.2 — George's Education & Analytics Agent"
-)
 )
