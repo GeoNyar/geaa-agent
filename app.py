@@ -312,31 +312,34 @@ if st.button("🚀 Run Task"):
     )
 
     with st.expander("🔎 Retrieved Knowledge"):
-    if retrieval_details:
-        for item in retrieval_details:
-            lines = item["section"].splitlines()
+        if retrieval_details:
+            for item in retrieval_details:
+                lines = item["section"].splitlines()
 
-            section_heading = next(
-                (
-                    line.strip()
-                    for line in lines
-                    if re.match(r"^\d+(?:\.\d+)*\s+", line.strip())
-                ),
-                None
-            )
+                section_heading = next(
+                    (
+                        line.strip()
+                        for line in lines
+                        if re.match(
+                            r"^\d+(?:\.\d+)*\s+",
+                            line.strip()
+                        )
+                    ),
+                    None
+                )
 
-            if section_heading:
-                display_section = section_heading
-            else:
-                display_section = "Document introduction / general content"
+                if section_heading:
+                    display_section = section_heading
+                else:
+                    display_section = "Document introduction / general content"
 
-            st.write(
-                f"📄 {item['filename']} | "
-                f"Section: {display_section} | "
-                f"Keyword match score: {item['score']}"
-            )
-    else:
-        st.write("No relevant knowledge was retrieved.")
+                st.write(
+                    f"📄 {item['filename']} | "
+                    f"Section: {display_section} | "
+                    f"Keyword match score: {item['score']}"
+                )
+        else:
+            st.write("No relevant knowledge was retrieved.")
 
     if task.strip():
 
