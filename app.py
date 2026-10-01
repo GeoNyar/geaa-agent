@@ -112,10 +112,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             score = len(
                 expanded_terms.intersection(section_words)
             )
-section_heading = section.splitlines()[0].strip().lower()
 
-if "hess" in task.lower() and "hess" in section_heading:
-    score += 10
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
