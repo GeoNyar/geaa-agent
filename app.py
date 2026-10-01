@@ -299,7 +299,7 @@ if st.button("🚀 Run Task"):
                 st.write(
 f"📄 {item['filename']} | "
 f"Section: {next((line.strip() for line in item['section'].splitlines() if re.match(r'^\d+(?:\.\d+)*\s+', line.strip())), 'General content')} | "
-f"Score: {item['score']}"
+f"Keyword match score: {item['score']}"
                 )
         else:
             st.write("No relevant knowledge was retrieved.")
