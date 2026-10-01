@@ -9,7 +9,7 @@ QUERY_EXPANSION = {
     "equilibrium": ["ionic equilibrium", "ions", "equilibrium constant"],
     "electrochemistry": ["electrochemical", "electrode", "cell", "oxidation", "reduction"],
     "kinetics": ["rate", "activation energy", "collision theory"],
-    "thermodynamics": ["enthalpy", "heat", "energy", "exothermic", "endothermic"],
+    "thermodynamics": ["enthalpy", "heat", "energy", "exothermic", "endothermic"],    "several steps": ["hess", "hess's law", "route", "reaction pathway"],
 }
 # Page configuration
 st.set_page_config(
