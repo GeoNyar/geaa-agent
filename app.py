@@ -344,18 +344,7 @@ if st.button("🚀 Run Task"):
     st.write("### 📚 Retrieved Text Passed to GEAA")
     st.text(retrieved_knowledge)
 
-                if section_heading:
-                    display_section = section_heading
-                else:
-                    display_section = "Section heading not captured"
 
-                st.write(
-                    f"📄 {item['filename']} | "
-                    f"Section: {display_section} | "
-                    f"Keyword match score: {item['score']}"
-                )
-        else:
-            st.write("No relevant knowledge was retrieved.")
 
     if task.strip():
 
