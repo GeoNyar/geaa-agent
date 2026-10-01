@@ -59,7 +59,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
     """
 
     if not documents:
-        return ""
+    return "", []
 
     task_words = set(
         word.lower()
