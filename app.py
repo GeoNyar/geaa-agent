@@ -1,7 +1,16 @@
 import streamlit as st
 from google import genai
 from google.genai import types
-
+# GEAA query expansion terms
+QUERY_EXPANSION = {
+    "hess": ["enthalpy", "energy", "reaction", "steps"],
+    "heat change": ["enthalpy", "delta h", "thermodynamics"],
+    "rate": ["kinetics", "activation energy", "reaction rate"],
+    "equilibrium": ["ionic equilibrium", "ions", "equilibrium constant"],
+    "electrochemistry": ["electrochemical", "electrode", "cell", "oxidation", "reduction"],
+    "kinetics": ["rate", "activation energy", "collision theory"],
+    "thermodynamics": ["enthalpy", "heat", "energy", "exothermic", "endothermic"],
+}
 # Page configuration
 st.set_page_config(
     page_title="GEAA",
@@ -59,14 +68,29 @@ def retrieve_knowledge(task, documents, max_sections=5):
     """
 
     if not documents:
-    return "", []
+        return "", []
 
     task_words = set(
         word.lower()
         for word in re.findall(r"[A-Za-z0-9Δ]+", task)
         if len(word) > 2
     )
+        return "", []
 
+    task_words = set(
+    word.lower()
+    for word in re.findall(r"[A-Za-z0-9Δ]+", task)
+    if len(word) > 2
+)
+
+expanded_terms = set(task_words)
+
+for phrase, related_terms in QUERY_EXPANSION.items():
+    if phrase in task.lower():
+        expanded_terms.update(
+            term.lower()
+            for term in related_terms
+        )
     matches = []
 
     for document in documents:
@@ -92,8 +116,8 @@ def retrieve_knowledge(task, documents, max_sections=5):
             )
 
             score = len(
-                task_words.intersection(section_words)
-            )
+    expanded_terms.intersection(section_words)
+)
 
             score += 3 * len(
                 task_words.intersection(filename_words)
