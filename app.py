@@ -75,22 +75,16 @@ def retrieve_knowledge(task, documents, max_sections=5):
         for word in re.findall(r"[A-Za-z0-9Δ]+", task)
         if len(word) > 2
     )
-        return "", []
 
-    task_words = set(
-    word.lower()
-    for word in re.findall(r"[A-Za-z0-9Δ]+", task)
-    if len(word) > 2
-)
+    expanded_terms = set(task_words)
 
-expanded_terms = set(task_words)
+    for phrase, related_terms in QUERY_EXPANSION.items():
+        if phrase in task.lower():
+            expanded_terms.update(
+                term.lower()
+                for term in related_terms
+            )
 
-for phrase, related_terms in QUERY_EXPANSION.items():
-    if phrase in task.lower():
-        expanded_terms.update(
-            term.lower()
-            for term in related_terms
-        )
     matches = []
 
     for document in documents:
@@ -103,10 +97,10 @@ for phrase, related_terms in QUERY_EXPANSION.items():
         )
 
         sections = re.split(
-    r"(?=^\d+(?:\.\d+)*\s+)",
-    content,
-    flags=re.MULTILINE
-)
+            r"(?=^\d+(?:\.\d+)*\s+)",
+            content,
+            flags=re.MULTILINE
+        )
 
         for section in sections:
             section_words = set(
@@ -116,8 +110,8 @@ for phrase, related_terms in QUERY_EXPANSION.items():
             )
 
             score = len(
-    expanded_terms.intersection(section_words)
-)
+                expanded_terms.intersection(section_words)
+            )
 
             score += 3 * len(
                 task_words.intersection(filename_words)
