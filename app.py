@@ -297,8 +297,9 @@ if st.button("🚀 Run Task"):
         if retrieval_details:
             for item in retrieval_details:
                 st.write(
-                    f"📄 {item['filename']} | "
-                    f"Score: {item['score']}"
+f"📄 {item['filename']} | "
+f"Section: {item['section'].splitlines()[0]} | "
+f"Score: {item['score']}"
                 )
         else:
             st.write("No relevant knowledge was retrieved.")
