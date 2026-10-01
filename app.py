@@ -298,7 +298,7 @@ if st.button("🚀 Run Task"):
             for item in retrieval_details:
                 st.write(
 f"📄 {item['filename']} | "
-f"Section: {next((line for line in item['section'].splitlines() if re.match(r'^\d+(?:\.\d+)*\s+', line)), 'General content')} | "
+f"Section: {next((line.strip() for line in item['section'].splitlines() if re.match(r'^\d+(?:\.\d+)*\s+', line.strip())), 'General content')} | "
 f"Score: {item['score']}"
                 )
         else:
