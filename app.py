@@ -79,10 +79,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
         )
 
         sections = re.split(
-            r"(?=^#{1,3}\s)",
-            content,
-            flags=re.MULTILINE
-        )
+    r"(?=^\d+(?:\.\d+)*\s+)",
+    content,
+    flags=re.MULTILINE
+)
 
         for section in sections:
             section_words = set(
