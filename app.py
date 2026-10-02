@@ -113,6 +113,23 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 expanded_terms.intersection(section_words)
             )
 
+            task_lower = task.lower()
+            section_lower = section.lower()
+
+            phrase_matches = [
+                phrase
+                for phrase in [
+                    "activation energy",
+                    "enthalpy change",
+                    "hess's law",
+                    "reaction rate",
+                    "energy profile",
+                    "collision theory",
+                ]
+                if phrase in task_lower and phrase in section_lower
+            ]
+
+            score += 4 * len(phrase_matches)
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
