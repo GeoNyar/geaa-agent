@@ -52,9 +52,20 @@ try:
             with open(filepath, "r", encoding="utf-8") as file:
                 content = file.read()
 
+            # Identify the type of knowledge document.
+            filename_lower = filename.lower()
+
+            if "course_outline" in filename_lower:
+                document_type = "course_outline"
+            elif "notes" in filename_lower:
+                document_type = "learning_notes"
+            else:
+                document_type = "general_knowledge"
+
             KNOWLEDGE_DOCUMENTS.append({
                 "filename": filename,
-                "content": content
+                "content": content,
+                "document_type": document_type
             })
 
 except FileNotFoundError:
