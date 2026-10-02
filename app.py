@@ -183,11 +183,14 @@ def retrieve_knowledge(task, documents, max_sections=5):
         # DOCUMENT-AWARE SECTION PARSING
         # --------------------------------------------------
 
+        # --------------------------------------------------
+        # DOCUMENT-AWARE SECTION PARSING
+        # --------------------------------------------------
+
         if document_type == "course_outline":
 
             # Course outlines are structured around the four
-            # main learning outcomes. Match only whole-number
-            # learning outcomes followed by a full stop.
+            # main learning outcomes.
             sections = re.split(
                 r"(?m)(?=^\s*[1-4]\.\s+[A-Z])",
                 content
@@ -196,7 +199,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
         elif document_type == "learning_notes":
 
             # Learning notes are structured around Topic 4
-            # section headings such as 4.1, 4.2, 4.18 and 4.23.
+            # section headings such as 4.1, 4.2 and 4.23.
             sections = re.split(
                 r"(?m)(?=^4\.\d+\s+[A-Z])",
                 content
@@ -204,6 +207,11 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
         else:
 
+            # General documents use generic numbered headings.
+            sections = re.split(
+                r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])",
+                content
+            )
             # General documents use generic numbered headings.
             sections = re.split(
                 r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])",
