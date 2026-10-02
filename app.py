@@ -171,9 +171,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if score <= 0:
                 continue
 
-            # Capture the first numbered heading in the section.
+            # Capture a likely section heading.
             heading_match = re.search(
-                r"(?m)^(\d+(?:\.\d+)*\s+[^\n]+)",
+                r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
                 section_text
             )
 
