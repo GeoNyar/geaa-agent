@@ -107,8 +107,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 for term in related_terms
             )
 
-    # Terms that indicate the type of information
-    # requested by the user.
     DOCUMENT_TYPE_HINTS = {
         "course_outline": [
             "course",
@@ -171,7 +169,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if len(word) > 2
         )
 
-        # Remove document metadata before section parsing.
         content = re.sub(
             r"^---.*?---\s*",
             "",
@@ -179,18 +176,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
             flags=re.DOTALL
         )
 
-        # --------------------------------------------------
-        # DOCUMENT-AWARE SECTION PARSING
-        # --------------------------------------------------
-
-        # --------------------------------------------------
-        # DOCUMENT-AWARE SECTION PARSING
-        # --------------------------------------------------
-
+        # Document-aware section parsing.
         if document_type == "course_outline":
 
-            # Course outlines are structured around the four
-            # main learning outcomes.
             sections = re.split(
                 r"(?m)(?=^\s*[1-4]\.\s+[A-Z])",
                 content
@@ -198,8 +186,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
         elif document_type == "learning_notes":
 
-            # Learning notes are structured around Topic 4
-            # section headings such as 4.1, 4.2 and 4.23.
             sections = re.split(
                 r"(?m)(?=^4\.\d+\s+[A-Z])",
                 content
@@ -207,24 +193,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
         else:
 
-            # General documents use generic numbered headings.
             sections = re.split(
                 r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])",
                 content
-            )
-            # General documents use generic numbered headings.
-            sections = re.split(
-                r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])",
-                content
-            )
-        else:
-
-            # General documents use generic numbered
-            # headings where available.
-            sections = re.split(
-                r"(?=^\d+(?:\.\d+)*\s+)",
-                content,
-                flags=re.MULTILINE
             )
 
         for section in sections:
@@ -249,10 +220,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 expanded_terms.intersection(section_words)
             )
 
-            # --------------------------------------------------
-            # EXACT PHRASE BONUS
-            # --------------------------------------------------
-
+            # Exact phrase bonus.
             phrase_matches = [
                 phrase
                 for phrase in phrase_list
@@ -262,18 +230,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 4 * len(phrase_matches)
 
-            # --------------------------------------------------
-            # FILENAME RELEVANCE
-            # --------------------------------------------------
-
+            # Filename relevance.
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
 
-            # --------------------------------------------------
-            # DOCUMENT-TYPE RELEVANCE
-            # --------------------------------------------------
-
+            # Document-type relevance.
             document_type_hints = DOCUMENT_TYPE_HINTS.get(
                 document_type,
                 []
@@ -287,28 +249,25 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-            # --------------------------------------------------
-            # SECTION HEADING DETECTION
-            # --------------------------------------------------
-
+            # Section heading detection.
             if document_type == "course_outline":
 
                 heading_match = re.search(
-                    r"(?m)^\s*([1-4]\.\s+[^\n]+)",
+                    r"(?m)^\s*([1-4]\.\s+[A-Z][^\n]*)",
                     section_text
                 )
 
             elif document_type == "learning_notes":
 
                 heading_match = re.search(
-                    r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
+                    r"(?m)^(4\.\d+\s+[A-Z][A-Z0-9\s&'():,\-]*)$",
                     section_text
                 )
 
             else:
 
                 heading_match = re.search(
-                    r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
+                    r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]*)$",
                     section_text
                 )
 
@@ -317,10 +276,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             else:
                 section_heading = "Section heading not captured"
 
-            # --------------------------------------------------
-            # HEADING-BASED RELEVANCE
-            # --------------------------------------------------
-
+            # Heading-based relevance.
             heading_lower = section_heading.lower()
 
             heading_concepts = [
@@ -344,10 +300,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 ):
                     score += 8
 
-            # --------------------------------------------------
-            # COURSE-OUTLINE SUBTOPIC RELEVANCE
-            # --------------------------------------------------
-
+            # Course-outline concept relevance.
             if document_type == "course_outline":
 
                 course_concepts = [
@@ -374,10 +327,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if score <= 0:
                 continue
 
-            # --------------------------------------------------
-            # DUPLICATE PREVENTION
-            # --------------------------------------------------
-
+            # Prevent duplicate sections.
             section_key = (
                 document["filename"],
                 section_text
@@ -396,10 +346,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "heading": section_heading
             })
 
-    # ------------------------------------------------------
-    # RANK RESULTS
-    # ------------------------------------------------------
-
+    # Rank retrieved sections.
     matches.sort(
         key=lambda item: item["score"],
         reverse=True
@@ -407,10 +354,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     selected = matches[:max_sections]
 
-    # ------------------------------------------------------
-    # BUILD RETRIEVED CONTEXT
-    # ------------------------------------------------------
-
+    # Build retrieved context.
     retrieved_text = []
 
     for item in selected:
