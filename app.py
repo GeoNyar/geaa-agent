@@ -127,11 +127,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
         )
 
         sections = re.split(
-            r"(?=^\d+(?:\.\d+)*\s+)",
+            r"(?=^4\.\d+\s+)",
             content,
             flags=re.MULTILINE
         )
-
         for section in sections:
             section_text = section.strip()
 
