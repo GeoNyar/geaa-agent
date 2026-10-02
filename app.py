@@ -162,10 +162,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 4 * len(phrase_matches)
 
-            # Filename relevance.
-            score += 3 * len(
-                task_words.intersection(filename_words)
-            )
+# Filename relevance.
+score += 3 * len(
+    task_words.intersection(filename_words)
+)
 
             if score <= 0:
                 continue
