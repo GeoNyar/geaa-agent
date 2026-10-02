@@ -63,12 +63,21 @@ except FileNotFoundError:
 
 def retrieve_knowledge(task, documents, max_sections=5):
     """
-    Simple keyword-based retrieval from GEAA knowledge documents.
-    Returns the most relevant document sections for the user's task.
+    Retrieve the most relevant sections from GEAA knowledge documents.
+
+    Uses:
+    - keyword matching
+    - query expansion
+    - exact phrase matching
+    - filename matching
+    - section heading detection
+    - duplicate removal
     """
 
     if not documents:
         return "", []
+
+    task_lower = task.lower()
 
     task_words = set(
         word.lower()
@@ -79,21 +88,42 @@ def retrieve_knowledge(task, documents, max_sections=5):
     expanded_terms = set(task_words)
 
     for phrase, related_terms in QUERY_EXPANSION.items():
-        if phrase in task.lower():
+        if phrase in task_lower:
             expanded_terms.update(
                 term.lower()
                 for term in related_terms
             )
 
     matches = []
+    seen_sections = set()
+
+    phrase_list = [
+        "activation energy",
+        "enthalpy change",
+        "hess's law",
+        "reaction rate",
+        "energy profile",
+        "collision theory",
+    ]
 
     for document in documents:
         content = document["content"]
 
         filename_words = set(
             word.lower()
-            for word in re.findall(r"[A-Za-z0-9Δ]+", document["filename"])
+            for word in re.findall(
+                r"[A-Za-z0-9Δ]+",
+                document["filename"]
+            )
             if len(word) > 2
+        )
+
+        # Remove document metadata before section retrieval.
+        content = re.sub(
+            r"^---.*?---\s*",
+            "",
+            content,
+            flags=re.DOTALL
         )
 
         sections = re.split(
@@ -103,9 +133,19 @@ def retrieve_knowledge(task, documents, max_sections=5):
         )
 
         for section in sections:
+            section_text = section.strip()
+
+            if not section_text:
+                continue
+
+            section_lower = section_text.lower()
+
             section_words = set(
                 word.lower()
-                for word in re.findall(r"[A-Za-z0-9Δ]+", section)
+                for word in re.findall(
+                    r"[A-Za-z0-9Δ]+",
+                    section_text
+                )
                 if len(word) > 2
             )
 
@@ -113,46 +153,45 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 expanded_terms.intersection(section_words)
             )
 
-            task_lower = task.lower()
-            section_lower = section.lower()
-
+            # Exact phrase bonus.
             phrase_matches = [
                 phrase
-                for phrase in [
-                    "activation energy",
-                    "enthalpy change",
-                    "hess's law",
-                    "reaction rate",
-                    "energy profile",
-                    "collision theory",
-                ]
-                if phrase in task_lower and phrase in section_lower
+                for phrase in phrase_list
+                if phrase in task_lower
+                and phrase in section_lower
             ]
 
             score += 4 * len(phrase_matches)
+
+            # Filename relevance.
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
 
-            if score > 0:
-                section_text = section.strip()
+            if score <= 0:
+                continue
 
-                heading_match = re.search(
-                    r"(?m)^(\d+(?:\.\d+)*\s+[^\n]+)",
-                    section_text
-                )
+            # Capture the first numbered heading in the section.
+            heading_match = re.search(
+                r"(?m)^(\d+(?:\.\d+)*\s+[^\n]+)",
+                section_text
+            )
 
-                if heading_match:
-                    section_heading = heading_match.group(1).strip()
-                else:
-                    section_heading = "Section heading not captured"
+            if heading_match:
+                section_heading = heading_match.group(1).strip()
+            else:
+                section_heading = "Section heading not captured"
 
-                matches.append({
-                    "score": score,
-                    "filename": document["filename"],
-                    "section": section_text,
-                    "heading": section_heading
-                })
+            # Prevent identical retrieved sections from appearing twice.
+            section_key = (
+                document["filename"],
+                section_text
+            )
+
+            if section_key in seen_sections:
+                continue
+
+            seen_sections.add(section_key)
 
             matches.append({
                 "score": score,
@@ -160,6 +199,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "section": section_text,
                 "heading": section_heading
             })
+
     matches.sort(
         key=lambda item: item["score"],
         reverse=True
@@ -171,7 +211,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     for item in selected:
         retrieved_text.append(
-            f"\n--- RETRIEVED KNOWLEDGE: {item['filename']} ---\n"
+            f"\n--- RETRIEVED KNOWLEDGE: "
+            f"{item['filename']} | "
+            f"{item['heading']} ---\n"
             f"{item['section']}\n"
         )
 
