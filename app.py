@@ -185,24 +185,30 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
         if document_type == "course_outline":
 
-            # Course outlines are structured around
-            # numbered learning outcomes.
+            # Course outlines are structured around the four
+            # main learning outcomes. Match only whole-number
+            # learning outcomes followed by a full stop.
             sections = re.split(
-                r"(?=^\s*[1-4]\.\s+)",
-                content,
-                flags=re.MULTILINE
+                r"(?m)(?=^\s*[1-4]\.\s+[A-Z])",
+                content
             )
 
         elif document_type == "learning_notes":
 
-            # Learning notes are structured around
-            # Topic 4 numbered headings.
+            # Learning notes are structured around Topic 4
+            # section headings such as 4.1, 4.2, 4.18 and 4.23.
             sections = re.split(
-                r"(?=^4\.\d+\s+)",
-                content,
-                flags=re.MULTILINE
+                r"(?m)(?=^4\.\d+\s+[A-Z])",
+                content
             )
 
+        else:
+
+            # General documents use generic numbered headings.
+            sections = re.split(
+                r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])",
+                content
+            )
         else:
 
             # General documents use generic numbered
