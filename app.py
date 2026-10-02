@@ -167,22 +167,24 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 task_words.intersection(filename_words)
             )
 
-            # Strong bonus when the section heading directly matches
-            # important concepts in the user's question.
-            heading_concepts = [
-                "activation energy",
-                "enthalpy change",
-                "energy profile",
-                "catalyst",
-                "reaction rate",
-                "collision theory",
-                "hess's law",
-                "bond energy",
-            ]
+# Strong bonus when the section heading directly matches
+# important concepts in the user's question.
+heading_lower = section_heading.lower()
 
-            for concept in heading_concepts:
-                if concept in task_lower and concept in section_lower:
-                    score += 8
+heading_concepts = [
+    "activation energy",
+    "enthalpy change",
+    "energy profile",
+    "catalyst",
+    "reaction rate",
+    "collision theory",
+    "hess's law",
+    "bond energy",
+]
+
+for concept in heading_concepts:
+    if concept in task_lower and concept in heading_lower:
+        score += 8
 
             if score <= 0:
                 continue
