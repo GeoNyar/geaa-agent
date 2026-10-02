@@ -167,24 +167,36 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 task_words.intersection(filename_words)
             )
 
-# Strong bonus when the section heading directly matches
-# important concepts in the user's question.
-heading_lower = section_heading.lower()
+            # Capture the section heading before applying
+            # heading-based relevance.
+            heading_match = re.search(
+                r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
+                section_text
+            )
 
-heading_concepts = [
-    "activation energy",
-    "enthalpy change",
-    "energy profile",
-    "catalyst",
-    "reaction rate",
-    "collision theory",
-    "hess's law",
-    "bond energy",
-]
+            if heading_match:
+                section_heading = heading_match.group(1).strip()
+            else:
+                section_heading = "Section heading not captured"
 
-for concept in heading_concepts:
-    if concept in task_lower and concept in heading_lower:
-        score += 8
+            # Strong bonus when the section heading directly
+            # matches an important concept in the question.
+            heading_lower = section_heading.lower()
+
+            heading_concepts = [
+                "activation energy",
+                "enthalpy change",
+                "energy profile",
+                "catalyst",
+                "reaction rate",
+                "collision theory",
+                "hess's law",
+                "bond energy",
+            ]
+
+            for concept in heading_concepts:
+                if concept in task_lower and concept in heading_lower:
+                    score += 8
 
             if score <= 0:
                 continue
