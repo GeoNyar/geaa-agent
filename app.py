@@ -135,12 +135,24 @@ def retrieve_knowledge(task, documents, max_sections=5):
             )
 
             if score > 0:
-                matches.append({
-                    "score": score,
-                    "filename": document["filename"],
-                    "section": section.strip()
-                })
+            section_text = section.strip()
 
+            heading_match = re.search(
+                r"(?m)^(\d+(?:\.\d+)*\s+[^\n]+)",
+                section_text
+            )
+
+            if heading_match:
+                section_heading = heading_match.group(1).strip()
+            else:
+                section_heading = "Section heading not captured"
+
+            matches.append({
+                "score": score,
+                "filename": document["filename"],
+                "section": section_text,
+                "heading": section_heading
+            })
     matches.sort(
         key=lambda item: item["score"],
         reverse=True
