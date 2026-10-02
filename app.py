@@ -77,6 +77,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
     Retrieve the most relevant sections from GEAA knowledge documents.
 
     Uses:
+    - document-aware section parsing
     - keyword matching
     - query expansion
     - exact phrase matching
@@ -106,7 +107,8 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 for term in related_terms
             )
 
-    # Terms that indicate the type of information the user is requesting.
+    # Terms that indicate the type of information
+    # requested by the user.
     DOCUMENT_TYPE_HINTS = {
         "course_outline": [
             "course",
@@ -152,7 +154,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
     ]
 
     for document in documents:
+
         content = document["content"]
+
         document_type = document.get(
             "document_type",
             "general_knowledge"
@@ -167,7 +171,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if len(word) > 2
         )
 
-        # Remove document metadata before section retrieval.
+        # Remove document metadata before section parsing.
         content = re.sub(
             r"^---.*?---\s*",
             "",
@@ -175,13 +179,42 @@ def retrieve_knowledge(task, documents, max_sections=5):
             flags=re.DOTALL
         )
 
-        sections = re.split(
-            r"(?=^4\.\d+\s+)",
-            content,
-            flags=re.MULTILINE
-        )
+        # --------------------------------------------------
+        # DOCUMENT-AWARE SECTION PARSING
+        # --------------------------------------------------
+
+        if document_type == "course_outline":
+
+            # Course outlines are structured around
+            # numbered learning outcomes.
+            sections = re.split(
+                r"(?=^\s*[1-4]\.\s+)",
+                content,
+                flags=re.MULTILINE
+            )
+
+        elif document_type == "learning_notes":
+
+            # Learning notes are structured around
+            # Topic 4 numbered headings.
+            sections = re.split(
+                r"(?=^4\.\d+\s+)",
+                content,
+                flags=re.MULTILINE
+            )
+
+        else:
+
+            # General documents use generic numbered
+            # headings where available.
+            sections = re.split(
+                r"(?=^\d+(?:\.\d+)*\s+)",
+                content,
+                flags=re.MULTILINE
+            )
 
         for section in sections:
+
             section_text = section.strip()
 
             if not section_text:
@@ -202,7 +235,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 expanded_terms.intersection(section_words)
             )
 
-            # Exact phrase bonus.
+            # --------------------------------------------------
+            # EXACT PHRASE BONUS
+            # --------------------------------------------------
+
             phrase_matches = [
                 phrase
                 for phrase in phrase_list
@@ -212,12 +248,18 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 4 * len(phrase_matches)
 
-            # Filename relevance.
+            # --------------------------------------------------
+            # FILENAME RELEVANCE
+            # --------------------------------------------------
+
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
 
-            # Document-type relevance.
+            # --------------------------------------------------
+            # DOCUMENT-TYPE RELEVANCE
+            # --------------------------------------------------
+
             document_type_hints = DOCUMENT_TYPE_HINTS.get(
                 document_type,
                 []
@@ -231,20 +273,40 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-            # Capture the section heading before applying
-            # heading-based relevance.
-            heading_match = re.search(
-                r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
-                section_text
-            )
+            # --------------------------------------------------
+            # SECTION HEADING DETECTION
+            # --------------------------------------------------
+
+            if document_type == "course_outline":
+
+                heading_match = re.search(
+                    r"(?m)^\s*([1-4]\.\s+[^\n]+)",
+                    section_text
+                )
+
+            elif document_type == "learning_notes":
+
+                heading_match = re.search(
+                    r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
+                    section_text
+                )
+
+            else:
+
+                heading_match = re.search(
+                    r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
+                    section_text
+                )
 
             if heading_match:
                 section_heading = heading_match.group(1).strip()
             else:
                 section_heading = "Section heading not captured"
 
-            # Strong bonus when the section heading directly
-            # matches an important concept in the question.
+            # --------------------------------------------------
+            # HEADING-BASED RELEVANCE
+            # --------------------------------------------------
+
             heading_lower = section_heading.lower()
 
             heading_concepts = [
@@ -256,16 +318,52 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "collision theory",
                 "hess's law",
                 "bond energy",
+                "chemical thermodynamics",
+                "physical chemistry",
             ]
 
             for concept in heading_concepts:
-                if concept in task_lower and concept in heading_lower:
+
+                if (
+                    concept in task_lower
+                    and concept in heading_lower
+                ):
                     score += 8
+
+            # --------------------------------------------------
+            # COURSE-OUTLINE SUBTOPIC RELEVANCE
+            # --------------------------------------------------
+
+            if document_type == "course_outline":
+
+                course_concepts = [
+                    "chemical thermodynamics",
+                    "physical chemistry",
+                    "ionic equilibrium",
+                    "electrochemistry",
+                    "chemical kinetics",
+                    "organic chemistry",
+                    "inorganic chemistry",
+                    "biochemistry",
+                    "learning outcome",
+                    "assessment",
+                ]
+
+                for concept in course_concepts:
+
+                    if (
+                        concept in task_lower
+                        and concept in section_lower
+                    ):
+                        score += 8
 
             if score <= 0:
                 continue
 
-            # Prevent identical retrieved sections from appearing twice.
+            # --------------------------------------------------
+            # DUPLICATE PREVENTION
+            # --------------------------------------------------
+
             section_key = (
                 document["filename"],
                 section_text
@@ -284,6 +382,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "heading": section_heading
             })
 
+    # ------------------------------------------------------
+    # RANK RESULTS
+    # ------------------------------------------------------
+
     matches.sort(
         key=lambda item: item["score"],
         reverse=True
@@ -291,9 +393,14 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     selected = matches[:max_sections]
 
+    # ------------------------------------------------------
+    # BUILD RETRIEVED CONTEXT
+    # ------------------------------------------------------
+
     retrieved_text = []
 
     for item in selected:
+
         retrieved_text.append(
             f"\n--- RETRIEVED KNOWLEDGE: "
             f"{item['filename']} | "
