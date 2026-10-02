@@ -81,6 +81,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
     - query expansion
     - exact phrase matching
     - filename matching
+    - document-type relevance
     - section heading detection
     - duplicate removal
     """
@@ -105,6 +106,39 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 for term in related_terms
             )
 
+    # Terms that indicate the type of information the user is requesting.
+    DOCUMENT_TYPE_HINTS = {
+        "course_outline": [
+            "course",
+            "unit",
+            "learning outcome",
+            "duration",
+            "assessment",
+            "competency",
+            "curriculum",
+            "topics",
+            "covered",
+            "hours",
+        ],
+        "learning_notes": [
+            "explain",
+            "define",
+            "calculate",
+            "formula",
+            "example",
+            "concept",
+            "how",
+            "why",
+            "reaction",
+            "enthalpy",
+            "activation energy",
+            "energy",
+            "theory",
+            "application",
+        ],
+        "general_knowledge": []
+    }
+
     matches = []
     seen_sections = set()
 
@@ -119,6 +153,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     for document in documents:
         content = document["content"]
+        document_type = document.get(
+            "document_type",
+            "general_knowledge"
+        )
 
         filename_words = set(
             word.lower()
@@ -142,6 +180,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             content,
             flags=re.MULTILINE
         )
+
         for section in sections:
             section_text = section.strip()
 
@@ -178,6 +217,20 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 task_words.intersection(filename_words)
             )
 
+            # Document-type relevance.
+            document_type_hints = DOCUMENT_TYPE_HINTS.get(
+                document_type,
+                []
+            )
+
+            document_type_matches = [
+                hint
+                for hint in document_type_hints
+                if hint in task_lower
+            ]
+
+            score += 3 * len(document_type_matches)
+
             # Capture the section heading before applying
             # heading-based relevance.
             heading_match = re.search(
@@ -212,17 +265,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if score <= 0:
                 continue
 
-            # Capture a likely section heading.
-            heading_match = re.search(
-                r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]+)$",
-                section_text
-            )
-
-            if heading_match:
-                section_heading = heading_match.group(1).strip()
-            else:
-                section_heading = "Section heading not captured"
-
             # Prevent identical retrieved sections from appearing twice.
             section_key = (
                 document["filename"],
@@ -237,6 +279,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             matches.append({
                 "score": score,
                 "filename": document["filename"],
+                "document_type": document_type,
                 "section": section_text,
                 "heading": section_heading
             })
@@ -254,6 +297,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
         retrieved_text.append(
             f"\n--- RETRIEVED KNOWLEDGE: "
             f"{item['filename']} | "
+            f"Type: {item['document_type']} | "
             f"{item['heading']} ---\n"
             f"{item['section']}\n"
         )
