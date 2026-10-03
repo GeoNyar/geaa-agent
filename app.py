@@ -41,7 +41,7 @@ import re
 
 
 def parse_knowledge_sections(content, document_type):
-    """Split a knowledge document into meaningful sections."""
+    """Split a knowledge document into meaningful, document-aware sections."""
 
     # Remove YAML-style metadata at the beginning.
     content = re.sub(
@@ -51,29 +51,173 @@ def parse_knowledge_sections(content, document_type):
         flags=re.DOTALL
     ).strip()
 
-    if document_type == "course_outline":
-        # Split only at major learning outcomes such as 1. Apply...
-        pattern = r"(?m)(?=^\s*[1-4]\.\s+[A-Z])"
+    sections = []
 
-    elif document_type == "learning_notes":
-        # Split at numbered topic headings such as 4.1 WHAT IS...
+    if document_type == "learning_notes":
+
+        # Thermodynamics notes use headings such as:
+        # 4.1 WHAT IS THERMODYNAMICS?
         pattern = r"(?m)(?=^\s*4\.\d+\s+[A-Z])"
 
-    else:
-        # Generic numbered headings.
-        pattern = r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])"
+        raw_sections = re.split(pattern, content)
+
+        for raw_section in raw_sections:
+
+            section_text = raw_section.strip()
+
+            if not section_text:
+                continue
+
+            first_line = next(
+                (
+                    line.strip()
+                    for line in section_text.splitlines()
+                    if line.strip()
+                ),
+                "Untitled section"
+            )
+
+            sections.append({
+                "heading": first_line,
+                "content": section_text
+            })
+
+        return sections
+
+    if document_type == "course_outline":
+
+        # -----------------------------------------------------
+        # COURSE OUTLINE
+        # -----------------------------------------------------
+        # The PDF extraction contains several tables that can
+        # flatten into misleading numbered sections.
+        #
+        # We therefore recognize the actual learning-outcome
+        # and subtopic numbering separately.
+        # -----------------------------------------------------
+
+        lines = content.splitlines()
+
+        current_section = None
+
+        for line in lines:
+
+            stripped = line.strip()
+
+            if not stripped:
+                continue
+
+            # -------------------------------------------------
+            # Major learning outcomes
+            # -------------------------------------------------
+
+            major_match = re.match(
+                r"^\s*([1-4])\.\s*(Apply\s+.+?concepts?)"
+                r"(?:\.\s*)?(?:25|45)?\s*$",
+                stripped,
+                flags=re.IGNORECASE
+            )
+
+            if major_match:
+
+                # Save previous section.
+                if current_section is not None:
+                    sections.append(current_section)
+
+                number = major_match.group(1)
+                title = major_match.group(2).strip()
+
+                current_section = {
+                    "heading": f"{number}. {title}",
+                    "content": stripped
+                }
+
+                continue
+
+            # -------------------------------------------------
+            # Detailed subtopics
+            # -------------------------------------------------
+
+            subtopic_match = re.match(
+                r"^\s*(\d+\.\d+)\s+(.+)",
+                stripped
+            )
+
+            if subtopic_match:
+
+                if current_section is not None:
+                    sections.append(current_section)
+
+                number = subtopic_match.group(1)
+                title = subtopic_match.group(2).strip()
+
+                current_section = {
+                    "heading": f"{number} {title}",
+                    "content": stripped
+                }
+
+                continue
+
+            # -------------------------------------------------
+            # Ignore obvious resource/equipment tables as
+            # separate learning sections.
+            # -------------------------------------------------
+
+            resource_starts = (
+                "tools and equipment",
+                "learning facilities",
+                "consumable materials",
+                "lecture/theory room",
+                "fully equipped chemistry laboratory",
+                "projectors",
+                "desktop computers",
+                "internet connection",
+                "power point presentations",
+                "flip charts",
+                "assorted colour",
+            )
+
+            if any(
+                stripped.lower().startswith(item)
+                for item in resource_starts
+            ):
+                continue
+
+            # -------------------------------------------------
+            # Add continuation text to current section.
+            # -------------------------------------------------
+
+            if current_section is not None:
+                current_section["content"] += "\n" + stripped
+
+            else:
+                # Preserve introductory course information.
+                sections.append({
+                    "heading": stripped,
+                    "content": stripped
+                })
+
+        # Save final section.
+        if current_section is not None:
+            sections.append(current_section)
+
+        return sections
+
+    # ---------------------------------------------------------
+    # Generic knowledge documents
+    # ---------------------------------------------------------
+
+    pattern = r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])"
 
     raw_sections = re.split(pattern, content)
 
-    sections = []
-
     for raw_section in raw_sections:
+
         section_text = raw_section.strip()
 
         if not section_text:
             continue
 
-        # Capture the first meaningful line as a provisional heading.
         first_line = next(
             (
                 line.strip()
