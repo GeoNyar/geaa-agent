@@ -29,7 +29,15 @@ try:
         GEAA_INSTRUCTIONS = file.read()
 except FileNotFoundError:
     GEAA_INSTRUCTIONS = """
-You are GEAA, George's Education & Analytics Agent.
+with st.expander("🔍 Knowledge Parser Test"):
+    for document in KNOWLEDGE_DOCUMENTS:
+        st.write(f"**Document:** {document['filename']}")
+        st.write(f"**Type:** {document['document_type']}")
+        st.write(f"**Number of sections:** {len(document['sections'])}")
+
+        for index, section in enumerate(document["sections"], start=1):
+            st.write(f"Section {index}: {section['heading']}")
+            st.caption(section["content"][:300])You are GEAA, George's Education & Analytics Agent.
 Be accurate, practical, clear and evidence-aware.
 Do not invent facts, sources, data or experience.
 """
