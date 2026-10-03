@@ -139,17 +139,18 @@ with st.expander("🔍 Knowledge Parser Test"):
 
 def retrieve_knowledge(task, documents, max_sections=5):
     """
-    Retrieve the most relevant sections from GEAA knowledge documents.
+    Retrieve the most relevant structured sections from GEAA knowledge documents.
 
     Uses:
-    - document-aware section parsing
+    - pre-parsed document sections
+    - document type
     - keyword matching
     - query expansion
     - exact phrase matching
     - filename matching
-    - document-type relevance
-    - section heading detection
-    - duplicate removal
+    - heading relevance
+    - course-outline concept relevance
+    - duplicate prevention
     """
 
     if not documents:
@@ -163,6 +164,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
         if len(word) > 2
     )
 
+    # Expand important concepts into related terms.
     expanded_terms = set(task_words)
 
     for phrase, related_terms in QUERY_EXPANSION.items():
@@ -185,6 +187,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "covered",
             "hours",
         ],
+
         "learning_notes": [
             "explain",
             "define",
@@ -201,11 +204,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "theory",
             "application",
         ],
+
         "general_knowledge": []
     }
-
-    matches = []
-    seen_sections = set()
 
     phrase_list = [
         "activation energy",
@@ -216,61 +217,73 @@ def retrieve_knowledge(task, documents, max_sections=5):
         "collision theory",
     ]
 
-    for document in documents:
+    heading_concepts = [
+        "activation energy",
+        "enthalpy change",
+        "energy profile",
+        "catalyst",
+        "reaction rate",
+        "collision theory",
+        "hess's law",
+        "bond energy",
+        "chemical thermodynamics",
+        "physical chemistry",
+    ]
 
-        content = document["content"]
+    course_concepts = [
+        "chemical thermodynamics",
+        "physical chemistry",
+        "ionic equilibrium",
+        "electrochemistry",
+        "chemical kinetics",
+        "organic chemistry",
+        "inorganic chemistry",
+        "biochemistry",
+        "learning outcome",
+        "assessment",
+    ]
+
+    matches = []
+    seen_sections = set()
+
+    for document in documents:
 
         document_type = document.get(
             "document_type",
             "general_knowledge"
         )
 
+        filename = document["filename"]
+
         filename_words = set(
             word.lower()
             for word in re.findall(
                 r"[A-Za-z0-9Δ]+",
-                document["filename"]
+                filename
             )
             if len(word) > 2
         )
 
-        content = re.sub(
-            r"^---.*?---\s*",
-            "",
-            content,
-            flags=re.DOTALL
-        )
+        # Use the sections already created by parse_knowledge_sections().
+        sections = document.get("sections", [])
 
-        # Document-aware section parsing.
-        if document_type == "course_outline":
+        for section_data in sections:
 
-            sections = re.split(
-                r"(?m)(?=^\s*[1-4]\.\s+[A-Z])",
-                content
-            )
+            section_text = section_data.get(
+                "content",
+                ""
+            ).strip()
 
-        elif document_type == "learning_notes":
-
-            sections = re.split(
-                r"(?m)(?=^4\.\d+\s+[A-Z])",
-                content
-            )
-
-        else:
-
-            sections = re.split(
-                r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])",
-                content
-            )
-
-        for section in sections:
-
-            section_text = section.strip()
+            section_heading = section_data.get(
+                "heading",
+                "Untitled section"
+            ).strip()
 
             if not section_text:
                 continue
 
             section_lower = section_text.lower()
+            heading_lower = section_heading.lower()
 
             section_words = set(
                 word.lower()
@@ -281,11 +294,18 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 if len(word) > 2
             )
 
+            # -------------------------------------------------
+            # 1. Basic keyword relevance
+            # -------------------------------------------------
+
             score = len(
                 expanded_terms.intersection(section_words)
             )
 
-            # Exact phrase bonus.
+            # -------------------------------------------------
+            # 2. Exact phrase relevance
+            # -------------------------------------------------
+
             phrase_matches = [
                 phrase
                 for phrase in phrase_list
@@ -295,12 +315,18 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 4 * len(phrase_matches)
 
-            # Filename relevance.
+            # -------------------------------------------------
+            # 3. Filename relevance
+            # -------------------------------------------------
+
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
 
-            # Document-type relevance.
+            # -------------------------------------------------
+            # 4. Document-type relevance
+            # -------------------------------------------------
+
             document_type_hints = DOCUMENT_TYPE_HINTS.get(
                 document_type,
                 []
@@ -314,48 +340,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-            # Section heading detection.
-            if document_type == "course_outline":
-
-                heading_match = re.search(
-                    r"(?m)^\s*([1-4]\.\s+[A-Z][^\n]*)",
-                    section_text
-                )
-
-            elif document_type == "learning_notes":
-
-                heading_match = re.search(
-                    r"(?m)^(4\.\d+\s+[A-Z][A-Z0-9\s&'():,\-]*)$",
-                    section_text
-                )
-
-            else:
-
-                heading_match = re.search(
-                    r"(?m)^(\d+(?:\.\d+)*\s+[A-Z][A-Z0-9\s&'():,\-]*)$",
-                    section_text
-                )
-
-            if heading_match:
-                section_heading = heading_match.group(1).strip()
-            else:
-                section_heading = "Section heading not captured"
-
-            # Heading-based relevance.
-            heading_lower = section_heading.lower()
-
-            heading_concepts = [
-                "activation energy",
-                "enthalpy change",
-                "energy profile",
-                "catalyst",
-                "reaction rate",
-                "collision theory",
-                "hess's law",
-                "bond energy",
-                "chemical thermodynamics",
-                "physical chemistry",
-            ]
+            # -------------------------------------------------
+            # 5. Heading relevance
+            # -------------------------------------------------
 
             for concept in heading_concepts:
 
@@ -365,21 +352,11 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 ):
                     score += 8
 
-            # Course-outline concept relevance.
-            if document_type == "course_outline":
+            # -------------------------------------------------
+            # 6. Course-outline concept relevance
+            # -------------------------------------------------
 
-                course_concepts = [
-                    "chemical thermodynamics",
-                    "physical chemistry",
-                    "ionic equilibrium",
-                    "electrochemistry",
-                    "chemical kinetics",
-                    "organic chemistry",
-                    "inorganic chemistry",
-                    "biochemistry",
-                    "learning outcome",
-                    "assessment",
-                ]
+            if document_type == "course_outline":
 
                 for concept in course_concepts:
 
@@ -389,12 +366,17 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     ):
                         score += 8
 
+            # Ignore sections with no meaningful connection.
             if score <= 0:
                 continue
 
-            # Prevent duplicate sections.
+            # -------------------------------------------------
+            # 7. Prevent duplicate sections
+            # -------------------------------------------------
+
             section_key = (
-                document["filename"],
+                filename,
+                section_heading,
                 section_text
             )
 
@@ -405,13 +387,16 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             matches.append({
                 "score": score,
-                "filename": document["filename"],
+                "filename": filename,
                 "document_type": document_type,
                 "section": section_text,
                 "heading": section_heading
             })
 
-    # Rank retrieved sections.
+    # ---------------------------------------------------------
+    # Rank sections from most relevant to least relevant.
+    # ---------------------------------------------------------
+
     matches.sort(
         key=lambda item: item["score"],
         reverse=True
@@ -419,7 +404,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     selected = matches[:max_sections]
 
-    # Build retrieved context.
+    # ---------------------------------------------------------
+    # Build the retrieved context sent to Gemini.
+    # ---------------------------------------------------------
+
     retrieved_text = []
 
     for item in selected:
