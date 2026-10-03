@@ -40,6 +40,58 @@ except FileNotFoundError:
 import os
 import re
 
+
+def parse_knowledge_sections(content, document_type):
+    """Split a knowledge document into meaningful sections."""
+
+    # Remove YAML-style metadata at the beginning.
+    content = re.sub(
+        r"\A---\s*\n.*?\n---\s*\n?",
+        "",
+        content,
+        flags=re.DOTALL
+    ).strip()
+
+    if document_type == "course_outline":
+        # Split only at major learning outcomes such as 1. Apply...
+        pattern = r"(?m)(?=^\s*[1-4]\.\s+[A-Z])"
+
+    elif document_type == "learning_notes":
+        # Split at numbered topic headings such as 4.1 WHAT IS...
+        pattern = r"(?m)(?=^\s*4\.\d+\s+[A-Z])"
+
+    else:
+        # Generic numbered headings.
+        pattern = r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])"
+
+    raw_sections = re.split(pattern, content)
+
+    sections = []
+
+    for raw_section in raw_sections:
+        section_text = raw_section.strip()
+
+        if not section_text:
+            continue
+
+        # Capture the first meaningful line as a provisional heading.
+        first_line = next(
+            (
+                line.strip()
+                for line in section_text.splitlines()
+                if line.strip()
+            ),
+            "Untitled section"
+        )
+
+        sections.append({
+            "heading": first_line,
+            "content": section_text
+        })
+
+    return sections
+
+
 KNOWLEDGE_DOCUMENTS = []
 
 try:
@@ -52,7 +104,6 @@ try:
             with open(filepath, "r", encoding="utf-8") as file:
                 content = file.read()
 
-            # Identify the type of knowledge document.
             filename_lower = filename.lower()
 
             if "course_outline" in filename_lower:
@@ -62,13 +113,20 @@ try:
             else:
                 document_type = "general_knowledge"
 
+            sections = parse_knowledge_sections(
+                content,
+                document_type
+            )
+
             KNOWLEDGE_DOCUMENTS.append({
                 "filename": filename,
                 "content": content,
-                "document_type": document_type
+                "document_type": document_type,
+                "sections": sections
             })
 
 except FileNotFoundError:
+    KNOWLEDGE_DOCUMENTS = []
     KNOWLEDGE_DOCUMENTS = []
 
 
