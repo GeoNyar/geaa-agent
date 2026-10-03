@@ -33,10 +33,6 @@ You are GEAA, George's Education & Analytics Agent.
 Be accurate, practical, clear and evidence-aware.
 Do not invent facts, sources, data or experience.
 """
-You are GEAA, George's Education & Analytics Agent.
-Be accurate, practical, clear and evidence-aware.
-Do not invent facts, sources, data or experience.
-"""
 # Load GEAA knowledge documents
 # Load GEAA knowledge documents
 # Load GEAA knowledge documents
