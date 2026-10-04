@@ -751,11 +751,11 @@ if st.button("🚀 Run Task"):
 
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
-            for item in retrieval_details:
-display_section = item.get(
-    "heading",
-    "Section heading not captured"
-)
+for item in retrieval_details:
+    display_section = item.get(
+        "heading",
+        "Section heading not captured"
+    )
 
                 st.write(
                     f"📄 {item['filename']} | "
