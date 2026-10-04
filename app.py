@@ -421,7 +421,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if len(word) > 2
         )
 
-        # Use the sections already created by parse_knowledge_sections().
         sections = document.get("sections", [])
 
         for section_data in sections:
@@ -451,18 +450,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 if len(word) > 2
             )
 
-            # -------------------------------------------------
             # 1. Basic keyword relevance
-            # -------------------------------------------------
-
             score = len(
                 expanded_terms.intersection(section_words)
             )
 
-            # -------------------------------------------------
             # 2. Exact phrase relevance
-            # -------------------------------------------------
-
             phrase_matches = [
                 phrase
                 for phrase in phrase_list
@@ -472,18 +465,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 4 * len(phrase_matches)
 
-            # -------------------------------------------------
             # 3. Filename relevance
-            # -------------------------------------------------
-
             score += 3 * len(
                 task_words.intersection(filename_words)
             )
 
-            # -------------------------------------------------
             # 4. Document-type relevance
-            # -------------------------------------------------
-
             document_type_hints = DOCUMENT_TYPE_HINTS.get(
                 document_type,
                 []
@@ -497,26 +484,17 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-            # -------------------------------------------------
             # 5. Heading relevance
-            # -------------------------------------------------
-
             for concept in heading_concepts:
-
                 if (
                     concept in task_lower
                     and concept in heading_lower
                 ):
                     score += 8
 
-            # -------------------------------------------------
             # 6. Course-outline concept relevance
-            # -------------------------------------------------
-
             if document_type == "course_outline":
-
                 for concept in course_concepts:
-
                     if (
                         concept in task_lower
                         and concept in section_lower
@@ -527,10 +505,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             if score <= 0:
                 continue
 
-            # -------------------------------------------------
             # 7. Prevent duplicate sections
-            # -------------------------------------------------
-
             section_key = (
                 filename,
                 section_heading,
@@ -550,47 +525,42 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "heading": section_heading
             })
 
-    # ---------------------------------------------------------
-# Rank sections from most relevant to least relevant.
-matches.sort(
-    key=lambda item: item["score"],
-    reverse=True
-)
-
-# ---------------------------------------------------------
-# Select the strongest relevant sections.
-#
-# Keep sections that are reasonably close to the best
-# matching section, while respecting max_sections.
-# This makes retrieval more selective for narrow questions.
-# ---------------------------------------------------------
-
-if matches:
-    best_score = matches[0]["score"]
-
-    relevance_threshold = best_score * 0.75
-
-    selected = [
-        item
-        for item in matches
-        if item["score"] >= relevance_threshold
-    ][:max_sections]
-else:
-    selected = []
-
-# Build the retrieved context sent to Gemini.
-retrieved_text = []
-
-for item in selected:
-    retrieved_text.append(
-        f"\n--- RETRIEVED KNOWLEDGE: "
-        f"{item['filename']} | "
-        f"Type: {item['document_type']} | "
-        f"{item['heading']} ---\n"
-        f"{item['section']}\n"
+    # Rank sections from most relevant to least relevant.
+    matches.sort(
+        key=lambda item: item["score"],
+        reverse=True
     )
 
-return "\n".join(retrieved_text), selected
+    # ---------------------------------------------------------
+    # Select the strongest relevant sections.
+    # ---------------------------------------------------------
+
+    if matches:
+        best_score = matches[0]["score"]
+
+        relevance_threshold = best_score * 0.75
+
+        selected = [
+            item
+            for item in matches
+            if item["score"] >= relevance_threshold
+        ][:max_sections]
+    else:
+        selected = []
+
+    # Build the retrieved context sent to Gemini.
+    retrieved_text = []
+
+    for item in selected:
+        retrieved_text.append(
+            f"\n--- RETRIEVED KNOWLEDGE: "
+            f"{item['filename']} | "
+            f"Type: {item['document_type']} | "
+            f"{item['heading']} ---\n"
+            f"{item['section']}\n"
+        )
+
+    return "\n".join(retrieved_text), selected
 try:
     knowledge_folder = "knowledge"
     knowledge_sections = []
