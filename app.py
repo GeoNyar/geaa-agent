@@ -752,24 +752,10 @@ if st.button("🚀 Run Task"):
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
             for item in retrieval_details:
-                lines = item["section"].splitlines()
-
-                section_heading = next(
-                    (
-                        line.strip()
-                        for line in lines
-                        if re.match(
-                            r"^\d+(?:\.\d+)*\s+",
-                            line.strip()
-                        )
-                    ),
-                    None
-                )
-
-                if section_heading:
-                    display_section = section_heading
-                else:
-                    display_section = "Section heading not captured"
+display_section = item.get(
+    "heading",
+    "Section heading not captured"
+)
 
                 st.write(
                     f"📄 {item['filename']} | "
