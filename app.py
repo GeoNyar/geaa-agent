@@ -297,17 +297,6 @@ with st.expander("🔍 Knowledge Parser Test"):
 def retrieve_knowledge(task, documents, max_sections=5):
     """
     Retrieve the most relevant structured sections from GEAA knowledge documents.
-
-    Uses:
-    - pre-parsed document sections
-    - document type
-    - keyword matching
-    - query expansion
-    - exact phrase matching
-    - filename matching
-    - heading relevance
-    - course-outline concept relevance
-    - duplicate prevention
     """
 
     if not documents:
@@ -385,6 +374,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
         "bond energy",
         "chemical thermodynamics",
         "physical chemistry",
+        "organic chemistry",
+        "inorganic chemistry",
+        "biochemistry",
     ]
 
     course_concepts = [
@@ -484,30 +476,31 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-# 5. Heading relevance
-for concept in heading_concepts:
-    if concept in task_lower:
+            # 5. Heading relevance
+            for concept in heading_concepts:
 
-        # Strong bonus when the requested concept
-        # appears in the section heading.
-        if concept in heading_lower:
-            score += 8
+                if concept in task_lower:
 
-        # Extra bonus for an exact subject-area match.
-        # This helps distinguish closely related areas
-        # such as organic and inorganic chemistry.
-        if concept in [
-            "chemical thermodynamics",
-            "physical chemistry",
-            "organic chemistry",
-            "inorganic chemistry",
-            "biochemistry",
-        ]:
-            if concept in heading_lower:
-                score += 12
+                    # Normal heading match
+                    if concept in heading_lower:
+                        score += 8
+
+                    # Stronger subject-area heading match
+                    if concept in [
+                        "chemical thermodynamics",
+                        "physical chemistry",
+                        "organic chemistry",
+                        "inorganic chemistry",
+                        "biochemistry",
+                    ]:
+                        if concept in heading_lower:
+                            score += 12
+
             # 6. Course-outline concept relevance
             if document_type == "course_outline":
+
                 for concept in course_concepts:
+
                     if (
                         concept in task_lower
                         and concept in section_lower
@@ -544,11 +537,9 @@ for concept in heading_concepts:
         reverse=True
     )
 
-    # ---------------------------------------------------------
     # Select the strongest relevant sections.
-    # ---------------------------------------------------------
-
     if matches:
+
         best_score = matches[0]["score"]
 
         relevance_threshold = best_score * 0.75
@@ -558,6 +549,7 @@ for concept in heading_concepts:
             for item in matches
             if item["score"] >= relevance_threshold
         ][:max_sections]
+
     else:
         selected = []
 
@@ -565,6 +557,7 @@ for concept in heading_concepts:
     retrieved_text = []
 
     for item in selected:
+
         retrieved_text.append(
             f"\n--- RETRIEVED KNOWLEDGE: "
             f"{item['filename']} | "
