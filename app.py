@@ -524,6 +524,29 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     ):
                         score += 8
 
+            # -------------------------------------------------
+            # 7. Exclude competing subject areas.
+            #
+            # If the user explicitly asks about one chemistry
+            # subject, do not retrieve another subject's section.
+            # -------------------------------------------------
+
+            if requested_subject is not None:
+
+                competing_subject = None
+
+                for subject in subject_areas:
+
+                    if (
+                        subject in heading_lower
+                        and subject != requested_subject
+                    ):
+                        competing_subject = subject
+                        break
+
+                if competing_subject is not None:
+                    continue
+
             # Ignore sections with no meaningful connection.
             if score <= 0:
                 continue
