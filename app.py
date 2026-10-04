@@ -476,42 +476,42 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-# 5. Heading relevance
+            # 5. Subject-specific heading relevance
 
-subject_areas = [
-    "physical chemistry",
-    "organic chemistry",
-    "inorganic chemistry",
-    "biochemistry",
-]
+            subject_areas = [
+                "physical chemistry",
+                "organic chemistry",
+                "inorganic chemistry",
+                "biochemistry",
+            ]
 
-requested_subject = None
+            requested_subject = None
 
-for subject in subject_areas:
-    if subject in task_lower:
-        requested_subject = subject
-        break
+            for subject in subject_areas:
+                if subject in task_lower:
+                    requested_subject = subject
+                    break
 
-for concept in heading_concepts:
+            for concept in heading_concepts:
 
-    if concept in task_lower:
+                if concept in task_lower:
 
-        # Normal heading match
-        if concept in heading_lower:
-            score += 8
+                    # Normal heading match
+                    if concept in heading_lower:
+                        score += 8
 
-        # Strong subject-area matching
-        if concept in subject_areas:
+                    # Strong subject-area matching
+                    if concept in subject_areas:
 
-            if concept in heading_lower:
+                        if concept in heading_lower:
 
-                # Strong bonus for the exact requested subject.
-                if concept == requested_subject:
-                    score += 20
+                            # Strong bonus for exact requested subject
+                            if concept == requested_subject:
+                                score += 20
 
-                # Strong penalty for a competing subject.
-                elif requested_subject is not None:
-                    score -= 20
+                            # Penalty for competing subject
+                            elif requested_subject is not None:
+                                score -= 20
 
             # 6. Course-outline concept relevance
             if document_type == "course_outline":
