@@ -484,14 +484,27 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 3 * len(document_type_matches)
 
-            # 5. Heading relevance
-            for concept in heading_concepts:
-                if (
-                    concept in task_lower
-                    and concept in heading_lower
-                ):
-                    score += 8
+# 5. Heading relevance
+for concept in heading_concepts:
+    if concept in task_lower:
 
+        # Strong bonus when the requested concept
+        # appears in the section heading.
+        if concept in heading_lower:
+            score += 8
+
+        # Extra bonus for an exact subject-area match.
+        # This helps distinguish closely related areas
+        # such as organic and inorganic chemistry.
+        if concept in [
+            "chemical thermodynamics",
+            "physical chemistry",
+            "organic chemistry",
+            "inorganic chemistry",
+            "biochemistry",
+        ]:
+            if concept in heading_lower:
+                score += 12
             # 6. Course-outline concept relevance
             if document_type == "course_outline":
                 for concept in course_concepts:
