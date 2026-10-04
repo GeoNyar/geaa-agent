@@ -559,7 +559,26 @@ def retrieve_knowledge(task, documents, max_sections=5):
         reverse=True
     )
 
-    selected = matches[:max_sections]
+# ---------------------------------------------------------
+# Select the strongest relevant sections.
+#
+# Keep sections that are reasonably close to the best
+# matching section, while respecting max_sections.
+# This makes retrieval more selective for narrow questions.
+# ---------------------------------------------------------
+
+if matches:
+    best_score = matches[0]["score"]
+
+    relevance_threshold = best_score * 0.75
+
+    selected = [
+        item
+        for item in matches
+        if item["score"] >= relevance_threshold
+    ][:max_sections]
+else:
+    selected = []
 
     # ---------------------------------------------------------
     # Build the retrieved context sent to Gemini.
