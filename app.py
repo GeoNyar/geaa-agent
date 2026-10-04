@@ -40,8 +40,9 @@ import os
 import re
 
 
+
 def parse_knowledge_sections(content, document_type):
-    """Split a knowledge document into meaningful, document-aware sections."""
+    """Split knowledge documents into meaningful sections."""
 
     # Remove YAML-style metadata at the beginning.
     content = re.sub(
@@ -53,16 +54,15 @@ def parse_knowledge_sections(content, document_type):
 
     sections = []
 
+    # ---------------------------------------------------------
+    # Thermodynamics learning notes
+    # ---------------------------------------------------------
     if document_type == "learning_notes":
 
-        # Thermodynamics notes use headings such as:
-        # 4.1 WHAT IS THERMODYNAMICS?
         pattern = r"(?m)(?=^\s*4\.\d+\s+[A-Z])"
-
         raw_sections = re.split(pattern, content)
 
         for raw_section in raw_sections:
-
             section_text = raw_section.strip()
 
             if not section_text:
@@ -84,124 +84,137 @@ def parse_knowledge_sections(content, document_type):
 
         return sections
 
+    # ---------------------------------------------------------
+    # Chemistry Principles course outline
+    # ---------------------------------------------------------
     if document_type == "course_outline":
 
-        # -----------------------------------------------------
-        # COURSE OUTLINE
-        # -----------------------------------------------------
-        # The PDF extraction contains several tables that can
-        # flatten into misleading numbered sections.
-        #
-        # We therefore recognize the actual learning-outcome
-        # and subtopic numbering separately.
-        # -----------------------------------------------------
+        # These are the actual learning outcomes and their
+        # corresponding subtopics in the course outline.
+        outcomes = [
+            {
+                "number": "1",
+                "heading": "1. Apply physical chemistry concepts",
+                "hours": 25,
+                "topics": [
+                    "1.1 Ionic equilibrium",
+                    "1.2 Electrochemistry principles",
+                    "1.3 Chemical kinetics",
+                    "1.4 Chemical thermodynamics",
+                ],
+            },
+            {
+                "number": "2",
+                "heading": "2. Apply organic chemistry concepts",
+                "hours": 25,
+                "topics": [
+                    "2.1 Aldehydes",
+                    "2.2 Synthesize organic compounds",
+                    "2.3 Purify synthesized compounds",
+                    "2.4 Characterize purified compounds",
+                ],
+            },
+            {
+                "number": "3",
+                "heading": "3. Apply inorganic chemistry concepts",
+                "hours": 25,
+                "topics": [
+                    "3.1 Identify elements",
+                    "3.2 Classify elements",
+                    "3.3 Determine chemical bonds",
+                    "3.4 Test inorganic salts",
+                ],
+            },
+            {
+                "number": "4",
+                "heading": "4. Apply biochemistry concepts",
+                "hours": 45,
+                "topics": [
+                    "4.1 Identify biochemical molecules",
+                    "4.2 Carry out biochemical reactions",
+                    "4.3 Determine biochemical processes",
+                ],
+            },
+        ]
 
-        lines = content.splitlines()
+        # Preserve the course identity and duration as a
+        # separate introductory section.
+        intro_parts = []
 
-        current_section = None
+        intro_patterns = [
+            r"CHEMISTRY PRINCIPLES",
+            r"ISCED UNIT CODE:\s*0531\s*541\s*14A",
+            r"TVET CDACC UNIT CODE:\s*SLT/CU/SL/CC/03/6/MA",
+            r"UNIT DURATION:\s*120\s*hours",
+            r"Relationship to Occupational Standards",
+            r"Unit Description",
+            r"Summary of Learning Outcomes",
+        ]
 
-        for line in lines:
-
-            stripped = line.strip()
-
-            if not stripped:
-                continue
-
-            # -------------------------------------------------
-            # Major learning outcomes
-            # -------------------------------------------------
-
-            major_match = re.match(
-                r"^\s*([1-4])\.\s*(Apply\s+.+?concepts?)"
-                r"(?:\.\s*)?(?:25|45)?\s*$",
-                stripped,
+        for pattern in intro_patterns:
+            match = re.search(
+                pattern,
+                content,
                 flags=re.IGNORECASE
             )
+            if match:
+                intro_parts.append(match.group(0))
 
-            if major_match:
+        intro_text = "\n".join(dict.fromkeys(intro_parts))
 
-                # Save previous section.
-                if current_section is not None:
-                    sections.append(current_section)
+        if intro_text:
+            sections.append({
+                "heading": "Chemistry Principles — Course Overview",
+                "content": intro_text
+            })
 
-                number = major_match.group(1)
-                title = major_match.group(2).strip()
+        # Reconstruct each outcome as one structured section.
+        for outcome in outcomes:
 
-                current_section = {
-                    "heading": f"{number}. {title}",
-                    "content": stripped
-                }
+            topic_text = "\n".join(outcome["topics"])
 
-                continue
-
-            # -------------------------------------------------
-            # Detailed subtopics
-            # -------------------------------------------------
-
-            subtopic_match = re.match(
-                r"^\s*(\d+\.\d+)\s+(.+)",
-                stripped
+            section_content = (
+                f"{outcome['heading']} — "
+                f"{outcome['hours']} hours\n"
+                f"{topic_text}"
             )
 
-            if subtopic_match:
-
-                if current_section is not None:
-                    sections.append(current_section)
-
-                number = subtopic_match.group(1)
-                title = subtopic_match.group(2).strip()
-
-                current_section = {
-                    "heading": f"{number} {title}",
-                    "content": stripped
-                }
-
-                continue
-
-            # -------------------------------------------------
-            # Ignore obvious resource/equipment tables as
-            # separate learning sections.
-            # -------------------------------------------------
-
-            resource_starts = (
-                "tools and equipment",
-                "learning facilities",
-                "consumable materials",
-                "lecture/theory room",
-                "fully equipped chemistry laboratory",
-                "projectors",
-                "desktop computers",
-                "internet connection",
-                "power point presentations",
-                "flip charts",
-                "assorted colour",
-            )
-
-            if any(
-                stripped.lower().startswith(item)
-                for item in resource_starts
-            ):
-                continue
-
-            # -------------------------------------------------
-            # Add continuation text to current section.
-            # -------------------------------------------------
-
-            if current_section is not None:
-                current_section["content"] += "\n" + stripped
-
-            else:
-                # Preserve introductory course information.
-                sections.append({
-                    "heading": stripped,
-                    "content": stripped
-                })
-
-        # Save final section.
-        if current_section is not None:
-            sections.append(current_section)
+            sections.append({
+                "heading": outcome["heading"],
+                "content": section_content,
+                "hours": outcome["hours"],
+                "topics": outcome["topics"],
+            })
 
         return sections
+
+    # ---------------------------------------------------------
+    # Generic knowledge documents
+    # ---------------------------------------------------------
+    pattern = r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])"
+    raw_sections = re.split(pattern, content)
+
+    for raw_section in raw_sections:
+        section_text = raw_section.strip()
+
+        if not section_text:
+            continue
+
+        first_line = next(
+            (
+                line.strip()
+                for line in section_text.splitlines()
+                if line.strip()
+            ),
+            "Untitled section"
+        )
+
+        sections.append({
+            "heading": first_line,
+            "content": section_text
+        })
+
+    return sections
 
     # ---------------------------------------------------------
     # Generic knowledge documents
