@@ -750,7 +750,7 @@ if st.button("🚀 Run Task"):
         KNOWLEDGE_DOCUMENTS
     )
 
-        with st.expander("🔎 Retrieved Knowledge"):
+    with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
             for item in retrieval_details:
                 display_section = item.get(
@@ -767,9 +767,9 @@ if st.button("🚀 Run Task"):
             st.write("No relevant knowledge was retrieved.")
 
     st.write("### 📚 Retrieved Text Passed to GEAA")
-    st.text(retrieved_knowledge)    if task.strip():
+    st.text(retrieved_knowledge)
 
-        # Combine instructions and workflow
+    if task.strip():
         full_instructions = (
             GEAA_INSTRUCTIONS
             + "\n\nSELECTED MODE:\n"
