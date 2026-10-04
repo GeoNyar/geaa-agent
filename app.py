@@ -751,40 +751,7 @@ if st.button("🚀 Run Task"):
     )
 
     with st.expander("🔎 Retrieved Knowledge"):
-        if retrieval_details:
-            for item in retrieval_details:
-                display_section = item.get(
-                    "heading",
-                    "Section heading not captured"
-                )
 
-                st.write(
-                    f"📄 {item['filename']} | "
-                    f"Section: {display_section} | "
-                    f"Keyword match score: {item['score']}"
-                )
-        else:
-            st.write("No relevant knowledge was retrieved.")
-
-    st.write("### 📚 Retrieved Text Passed to GEAA")
-    st.text(retrieved_knowledge)
-    if retrieval_details:
-        for item in retrieval_details:
-            display_section = item.get(
-                "heading",
-                "Section heading not captured"
-            )
-
-            st.write(
-                f"📄 {item['filename']} | "
-                f"Section: {display_section} | "
-                f"Keyword match score: {item['score']}"
-            )
-    else:
-        st.write("No relevant knowledge was retrieved.")
-
-    st.write("### 📚 Retrieved Text Passed to GEAA")
-    st.text(retrieved_knowledge)
 
 
 
