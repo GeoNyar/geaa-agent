@@ -551,13 +551,11 @@ def retrieve_knowledge(task, documents, max_sections=5):
             })
 
     # ---------------------------------------------------------
-    # Rank sections from most relevant to least relevant.
-    # ---------------------------------------------------------
-
-    matches.sort(
-        key=lambda item: item["score"],
-        reverse=True
-    )
+# Rank sections from most relevant to least relevant.
+matches.sort(
+    key=lambda item: item["score"],
+    reverse=True
+)
 
 # ---------------------------------------------------------
 # Select the strongest relevant sections.
@@ -580,23 +578,19 @@ if matches:
 else:
     selected = []
 
-    # ---------------------------------------------------------
-    # Build the retrieved context sent to Gemini.
-    # ---------------------------------------------------------
+# Build the retrieved context sent to Gemini.
+retrieved_text = []
 
-    retrieved_text = []
+for item in selected:
+    retrieved_text.append(
+        f"\n--- RETRIEVED KNOWLEDGE: "
+        f"{item['filename']} | "
+        f"Type: {item['document_type']} | "
+        f"{item['heading']} ---\n"
+        f"{item['section']}\n"
+    )
 
-    for item in selected:
-
-        retrieved_text.append(
-            f"\n--- RETRIEVED KNOWLEDGE: "
-            f"{item['filename']} | "
-            f"Type: {item['document_type']} | "
-            f"{item['heading']} ---\n"
-            f"{item['section']}\n"
-        )
-
-    return "\n".join(retrieved_text), selected
+return "\n".join(retrieved_text), selected
 try:
     knowledge_folder = "knowledge"
     knowledge_sections = []
