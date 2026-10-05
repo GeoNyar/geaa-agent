@@ -38,6 +38,7 @@ Do not invent facts, sources, data or experience.
 # Load GEAA knowledge documents
 import os
 import re
+import pandas as pd
 
 
 
@@ -771,8 +772,68 @@ task = st.text_area(
     placeholder="Example: Explain chemical kinetics to Form 3 students..."
 )
 
+st.markdown("### 📊 Optional Data File")
+
+uploaded_file = st.file_uploader(
+    "Upload a CSV file for GEAA to inspect",
+    type=["csv"],
+    help="Upload a CSV dataset when your task requires data analysis."
+)
+
 # Run task
-# Run task
+# Inspect uploaded data
+uploaded_data = None
+
+if uploaded_file is not None:
+
+    try:
+        uploaded_data = pd.read_csv(uploaded_file)
+
+        st.markdown("### 📋 Uploaded Data")
+
+        st.write(
+            f"**File:** {uploaded_file.name}"
+        )
+
+        st.write(
+            f"**Rows:** {uploaded_data.shape[0]} | "
+            f"**Columns:** {uploaded_data.shape[1]}"
+        )
+
+        st.markdown("#### Variables")
+
+        variable_table = pd.DataFrame({
+            "Variable": uploaded_data.columns,
+            "Data type": [
+                str(dtype)
+                for dtype in uploaded_data.dtypes
+            ],
+            "Missing values": [
+                int(uploaded_data[column].isna().sum())
+                for column in uploaded_data.columns
+            ]
+        })
+
+        st.dataframe(
+            variable_table,
+            use_container_width=True
+        )
+
+        st.markdown("#### Preview")
+
+        st.dataframe(
+            uploaded_data.head(10),
+            use_container_width=True
+        )
+
+    except Exception as e:
+
+        st.error(
+            "GEAA could not read the uploaded CSV file."
+        )
+
+        with st.expander("Technical details"):
+            st.code(str(e))# Run task
 if st.button("🚀 Run Task"):
     retrieved_knowledge, retrieval_details = retrieve_knowledge(
         task,
