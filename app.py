@@ -1047,6 +1047,19 @@ if st.button("🚀 Run Task"):
                         + retrieved_knowledge
                         + "\n\nUPLOADED DATA CONTEXT:\n"
                         + data_context
+                        + "\n\nAPPLICATION VISUALIZATION STATUS:\n"
+                        + (
+                            "A native interactive visualization has already "
+                            "been generated in the application interface. "
+                            "Do not create a second text-based, ASCII or "
+                            "Markdown chart. Interpret the existing "
+                            "visualization and the underlying data instead."
+                            if visualization_requested
+                            else
+                            "No native visualization has been generated. "
+                            "Do not create a visualization unless the user "
+                            "specifically requests one."
+                        )
                     ),
                     config=types.GenerateContentConfig(
                         system_instruction=full_instructions
