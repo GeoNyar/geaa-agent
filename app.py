@@ -910,7 +910,9 @@ if uploaded_file is not None:
             st.dataframe(
                 descriptive_summary,
                 use_container_width=True
-            )            st.markdown("#### 📌 Calculated Values")
+            )
+
+            st.markdown("#### 📌 Calculated Values")
 
             for _, row in descriptive_summary.iterrows():
 
