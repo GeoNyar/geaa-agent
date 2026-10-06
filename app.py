@@ -877,7 +877,40 @@ if uploaded_file is not None:
                 numeric_summary,
                 use_container_width=True
             )
+            st.markdown("#### 📊 Descriptive Statistics")
 
+            descriptive_summary = pd.DataFrame({
+                "Variable": numeric_columns,
+                "Count": [
+                    uploaded_data[column].count()
+                    for column in numeric_columns
+                ],
+                "Mean": [
+                    uploaded_data[column].mean()
+                    for column in numeric_columns
+                ],
+                "Median": [
+                    uploaded_data[column].median()
+                    for column in numeric_columns
+                ],
+                "Minimum": [
+                    uploaded_data[column].min()
+                    for column in numeric_columns
+                ],
+                "Maximum": [
+                    uploaded_data[column].max()
+                    for column in numeric_columns
+                ],
+                "Standard deviation": [
+                    uploaded_data[column].std()
+                    for column in numeric_columns
+                ]
+            })
+
+            st.dataframe(
+                descriptive_summary,
+                use_container_width=True
+            )
     except Exception as e:
 
         st.error(
