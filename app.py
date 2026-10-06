@@ -925,6 +925,34 @@ if uploaded_file is not None:
                     f"Maximum: {row['Maximum']:.2f}, "
                     f"Sample standard deviation: {row['Standard deviation']:.2f}"
                 )
+
+            categorical_columns = [
+                column
+                for column in uploaded_data.columns
+                if not pd.api.types.is_numeric_dtype(
+                    uploaded_data[column]
+                )
+            ]
+
+            if (
+                len(numeric_columns) == 1
+                and len(categorical_columns) >= 1
+            ):
+
+                chart_data = uploaded_data[
+                    [
+                        categorical_columns[0],
+                        numeric_columns[0]
+                    ]
+                ].copy()
+
+                st.markdown("#### 📊 Data Visualization")
+
+                st.bar_chart(
+                    chart_data,
+                    x=categorical_columns[0],
+                    y=numeric_columns[0]
+                )
     except Exception as e:
 
         st.error(
