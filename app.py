@@ -990,9 +990,9 @@ Missing cells: {uploaded_data.isna().sum().sum()}
 
 DESCRIPTIVE STATISTICS:
 {descriptive_summary.to_string(index=False)}
-"""response = client.models.generate_content(
+                response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-contents=f"""
+                    contents=f"""
 USER TASK:
 {task}
 
@@ -1006,7 +1006,6 @@ UPLOADED DATA CONTEXT:
                         system_instruction=full_instructions
                     )
                 )
-
                 st.markdown("### GEAA's Response")
                 st.write(response.text)
 
