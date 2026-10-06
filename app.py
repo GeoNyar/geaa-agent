@@ -934,10 +934,14 @@ if uploaded_file is not None:
         with st.expander("Technical details"):
             st.code(str(e))# Run task
 if st.button("🚀 Run Task"):
-    retrieved_knowledge, retrieval_details = retrieve_knowledge(
-        task,
-        KNOWLEDGE_DOCUMENTS
-    )
+    if uploaded_data is not None:
+        retrieved_knowledge = ""
+        retrieval_details = []
+    else:
+        retrieved_knowledge, retrieval_details = retrieve_knowledge(
+            task,
+            KNOWLEDGE_DOCUMENTS
+        )
 
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
