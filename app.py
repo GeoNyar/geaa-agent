@@ -970,14 +970,37 @@ if st.button("🚀 Run Task"):
         with st.spinner("GEAA is working through the task..."):
 
             try:
-                response = client.models.generate_content(
+                                # Prepare uploaded data for Gemini
+                data_context = ""
+
+                if uploaded_data is not None:
+
+                    data_context = f"""
+UPLOADED DATASET:
+File: {uploaded_file.name}
+Rows: {uploaded_data.shape[0]}
+Columns: {uploaded_data.shape[1]}
+
+DATA:
+{uploaded_data.to_string(index=False)}
+
+DATA QUALITY:
+Duplicate rows: {uploaded_data.duplicated().sum()}
+Missing cells: {uploaded_data.isna().sum().sum()}
+
+DESCRIPTIVE STATISTICS:
+{descriptive_summary.to_string(index=False)}
+"""response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-                   contents=f"""
+contents=f"""
 USER TASK:
 {task}
 
 RETRIEVED GEAA KNOWLEDGE:
 {retrieved_knowledge}
+
+UPLOADED DATA CONTEXT:
+{data_context}
 """,
                     config=types.GenerateContentConfig(
                         system_instruction=full_instructions
