@@ -923,7 +923,7 @@ if uploaded_file is not None:
                     f"Median: {row['Median']:.2f}, "
                     f"Minimum: {row['Minimum']:.2f}, "
                     f"Maximum: {row['Maximum']:.2f}, "
-                    f"Standard deviation: {row['Standard deviation']:.2f}"
+                    f"Sample standard deviation: {row['Standard deviation']:.2f}"
                 )
     except Exception as e:
 
