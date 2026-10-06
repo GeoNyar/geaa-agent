@@ -961,13 +961,15 @@ if uploaded_file is not None:
                     ]
                 ].copy()
 
-                st.markdown("#### 📊 Data Visualization")
+                if visualization_requested:
 
-                st.bar_chart(
-                    chart_data,
-                    x=categorical_columns[0],
-                    y=numeric_columns[0]
-                )
+                    st.markdown("#### 📊 Data Visualization")
+
+                    st.bar_chart(
+                        chart_data,
+                        x=categorical_columns[0],
+                        y=numeric_columns[0]
+                    )
     except Exception as e:
 
         st.error(
