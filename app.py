@@ -910,7 +910,19 @@ if uploaded_file is not None:
             st.dataframe(
                 descriptive_summary,
                 use_container_width=True
-            )
+            )            st.markdown("#### 📌 Calculated Values")
+
+            for _, row in descriptive_summary.iterrows():
+
+                st.write(
+                    f"**{row['Variable']}** — "
+                    f"Count: {int(row['Count'])}, "
+                    f"Mean: {row['Mean']:.2f}, "
+                    f"Median: {row['Median']:.2f}, "
+                    f"Minimum: {row['Minimum']:.2f}, "
+                    f"Maximum: {row['Maximum']:.2f}, "
+                    f"Standard deviation: {row['Standard deviation']:.2f}"
+                )
     except Exception as e:
 
         st.error(
