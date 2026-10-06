@@ -1091,9 +1091,146 @@ if st.button("🚀 Run Task"):
                         + uploaded_data.to_string(index=False)
                         + "\n\nDATA QUALITY:\n"
                         + f"Duplicate rows: {uploaded_data.duplicated().sum()}\n"
-                        + f"Missing cells: {uploaded_data.isna().sum().sum()}\n\n"
-                        + "DESCRIPTIVE STATISTICS:\n"
-                        + descriptive_summary.to_string(index=False)
+                        + f"Missing cells: {uploaded_data.isna().sum().sum()}\n"
+                    )
+
+                    numeric_columns_for_analysis = [
+                        column
+                        for column in uploaded_data.columns
+                        if pd.api.types.is_numeric_dtype(
+                            uploaded_data[column]
+                        )
+                    ]
+
+                    if numeric_columns_for_analysis:
+
+                        descriptive_summary_for_analysis = pd.DataFrame({
+                            "Variable": numeric_columns_for_analysis,
+                            "Count": [
+                                uploaded_data[column].count()
+                                for column in numeric_columns_for_analysis
+                            ],
+                            "Mean": [
+                                uploaded_data[column].mean()
+                                for column in numeric_columns_for_analysis
+                            ],
+                            "Median": [
+                                uploaded_data[column].median()
+                                for column in numeric_columns_for_analysis
+                            ],
+                            "Minimum": [
+                                uploaded_data[column].min()
+                                for column in numeric_columns_for_analysis
+                            ],
+                            "Maximum": [
+                                uploaded_data[column].max()
+                                for column in numeric_columns_for_analysis
+                            ],
+                            "Standard deviation": [
+                                uploaded_data[column].std()
+                                for column in numeric_columns_for_analysis
+                            ]
+                        })
+
+                        data_context += (
+                            "\nDESCRIPTIVE STATISTICS:\n"
+                            + descriptive_summary_for_analysis.to_string(
+                                index=False
+                            )
+                        )
+
+                    if len(numeric_columns_for_analysis) == 2:
+
+                        predictor_terms = [
+                            "study",
+                            "hours",
+                            "attendance",
+                            "age",
+                            "experience",
+                            "time",
+                            "practice",
+                            "training",
+                            "input",
+                            "exposure"
+                        ]
+
+                        outcome_terms = [
+                            "score",
+                            "mark",
+                            "grade",
+                            "result",
+                            "performance",
+                            "achievement",
+                            "outcome",
+                            "rating"
+                        ]
+
+                        x_column = numeric_columns_for_analysis[0]
+                        y_column = numeric_columns_for_analysis[1]
+
+                        for column in numeric_columns_for_analysis:
+
+                            column_lower = column.lower()
+
+                            if any(
+                                term in column_lower
+                                for term in predictor_terms
+                            ):
+                                x_column = column
+
+                            if any(
+                                term in column_lower
+                                for term in outcome_terms
+                            ):
+                                y_column = column
+
+                        relationship_data = uploaded_data[
+                            [
+                                x_column,
+                                y_column
+                            ]
+                        ].dropna()
+
+                        if len(relationship_data) >= 2:
+
+                            x_values = relationship_data[x_column]
+                            y_values = relationship_data[y_column]
+
+                            correlation = x_values.corr(y_values)
+
+                            x_variance = x_values.var()
+
+                            if x_variance != 0:
+
+                                slope = (
+                                    x_values.cov(y_values)
+                                    / x_variance
+                                )
+
+                                intercept = (
+                                    y_values.mean()
+                                    - slope * x_values.mean()
+                                )
+
+                                r_squared = correlation ** 2
+
+                                data_context += (
+                                    "\nRELATIONSHIP ANALYSIS:\n"
+                                    + f"X variable: {x_column}\n"
+                                    + f"Y variable: {y_column}\n"
+                                    + f"Pearson correlation (r): "
+                                    + f"{correlation:.3f}\n"
+                                    + f"Regression slope: "
+                                    + f"{slope:.3f}\n"
+                                    + f"Regression intercept: "
+                                    + f"{intercept:.3f}\n"
+                                    + f"R-squared (R²): "
+                                    + f"{r_squared:.3f}\n"
+                                    + "Regression equation: "
+                                    + f"{y_column} = "
+                                    + f"{intercept:.3f} + "
+                                    + f"{slope:.3f} × {x_column}\n"
+                                )
                     )
 
                 response = client.models.generate_content(
