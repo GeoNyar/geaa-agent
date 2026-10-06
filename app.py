@@ -1139,92 +1139,98 @@ if st.button("🚀 Run Task"):
                             )
                         )
 
-                    if len(numeric_columns_for_analysis) == 2:
+                        if len(numeric_columns_for_analysis) == 2:
 
-                        x_column = numeric_columns_for_analysis[0]
-                        y_column = numeric_columns_for_analysis[1]
+                            x_column = numeric_columns_for_analysis[0]
+                            y_column = numeric_columns_for_analysis[1]
 
-                        predictor_terms = [
-                            "study",
-                            "hours",
-                            "attendance",
-                            "age",
-                            "experience",
-                            "time",
-                            "practice",
-                            "training",
-                            "input",
-                            "exposure"
-                        ]
-
-                        outcome_terms = [
-                            "score",
-                            "mark",
-                            "grade",
-                            "result",
-                            "performance",
-                            "achievement",
-                            "outcome",
-                            "rating"
-                        ]
-
-                        for column in numeric_columns_for_analysis:
-
-                            column_lower = column.lower()
-
-                            if any(
-                                term in column_lower
-                                for term in predictor_terms
-                            ):
-                                x_column = column
-
-                            if any(
-                                term in column_lower
-                                for term in outcome_terms
-                            ):
-                                y_column = column
-
-                        relationship_data = uploaded_data[
-                            [
-                                x_column,
-                                y_column
+                            predictor_terms = [
+                                "study",
+                                "hours",
+                                "attendance",
+                                "age",
+                                "experience",
+                                "time",
+                                "practice",
+                                "training",
+                                "input",
+                                "exposure"
                             ]
-                        ].dropna()
 
-                        if len(relationship_data) >= 2:
+                            outcome_terms = [
+                                "score",
+                                "mark",
+                                "grade",
+                                "result",
+                                "performance",
+                                "achievement",
+                                "outcome",
+                                "rating"
+                            ]
 
-                            x_values = relationship_data[x_column]
-                            y_values = relationship_data[y_column]
+                            for column in numeric_columns_for_analysis:
 
-                            correlation = x_values.corr(y_values)
+                                column_lower = column.lower()
 
-                            if x_values.var() != 0:
+                                if any(
+                                    term in column_lower
+                                    for term in predictor_terms
+                                ):
+                                    x_column = column
 
-                                slope = (
-                                    x_values.cov(y_values)
-                                    / x_values.var()
-                                )
+                                if any(
+                                    term in column_lower
+                                    for term in outcome_terms
+                                ):
+                                    y_column = column
 
-                                intercept = (
-                                    y_values.mean()
-                                    - slope * x_values.mean()
-                                )
+                            relationship_data = uploaded_data[
+                                [
+                                    x_column,
+                                    y_column
+                                ]
+                            ].dropna()
 
-                                r_squared = correlation ** 2
+                            if len(relationship_data) >= 2:
 
-                                data_context += (
-                                    "\nRELATIONSHIP ANALYSIS:\n"
-                                    + f"X variable: {x_column}\n"
-                                    + f"Y variable: {y_column}\n"
-                                    + f"Pearson correlation (r): {correlation:.3f}\n"
-                                    + f"Regression slope: {slope:.3f}\n"
-                                    + f"Regression intercept: {intercept:.3f}\n"
-                                    + f"R-squared (R²): {r_squared:.3f}\n"
-                                    + "Regression equation: "
-                                    + f"{y_column} = "
-                                    + f"{intercept:.3f} + "
-                                    + f"{slope:.3f} × {x_column}\n"
-                                )
+                                x_values = relationship_data[x_column]
+                                y_values = relationship_data[y_column]
+
+                                correlation = x_values.corr(y_values)
+
+                                if x_values.var() != 0:
+
+                                    slope = (
+                                        x_values.cov(y_values)
+                                        / x_values.var()
+                                    )
+
+                                    intercept = (
+                                        y_values.mean()
+                                        - slope * x_values.mean()
+                                    )
+
+                                    r_squared = correlation ** 2
+
+                                    data_context += (
+                                        "\nRELATIONSHIP ANALYSIS:\n"
+                                        + f"X variable: {x_column}\n"
+                                        + f"Y variable: {y_column}\n"
+                                        + f"Pearson correlation (r): "
+                                        + f"{correlation:.3f}\n"
+                                        + f"Regression slope: "
+                                        + f"{slope:.3f}\n"
+                                        + f"Regression intercept: "
+                                        + f"{intercept:.3f}\n"
+                                        + f"R-squared (R²): "
+                                        + f"{r_squared:.3f}\n"
+                                        + "Regression equation: "
+                                        + f"{y_column} = "
+                                        + f"{intercept:.3f} + "
+                                        + f"{slope:.3f} × {x_column}\n"
+                                    )
+
+                response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
                     contents=(
                         "USER TASK:\n"
@@ -1251,6 +1257,7 @@ if st.button("🚀 Run Task"):
                         system_instruction=full_instructions
                     )
                 )
+
                 st.markdown("### GEAA's Response")
                 st.write(response.text)
 
