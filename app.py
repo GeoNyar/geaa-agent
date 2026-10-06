@@ -949,26 +949,41 @@ if uploaded_file is not None:
                 )
             ]
 
-            if (
-                len(numeric_columns) == 1
-                and len(categorical_columns) >= 1
-            ):
+            if visualization_requested:
 
-                chart_data = uploaded_data[
-                    [
-                        categorical_columns[0],
-                        numeric_columns[0]
-                    ]
-                ].copy()
+                st.markdown("#### 📊 Data Visualization")
 
-                if visualization_requested:
+                if (
+                    len(numeric_columns) == 1
+                    and len(categorical_columns) >= 1
+                ):
 
-                    st.markdown("#### 📊 Data Visualization")
+                    chart_data = uploaded_data[
+                        [
+                            categorical_columns[0],
+                            numeric_columns[0]
+                        ]
+                    ].copy()
 
                     st.bar_chart(
                         chart_data,
                         x=categorical_columns[0],
                         y=numeric_columns[0]
+                    )
+
+                elif len(numeric_columns) == 2:
+
+                    scatter_data = uploaded_data[
+                        [
+                            numeric_columns[0],
+                            numeric_columns[1]
+                        ]
+                    ].copy()
+
+                    st.scatter_chart(
+                        scatter_data,
+                        x=numeric_columns[0],
+                        y=numeric_columns[1]
                     )
     except Exception as e:
 
