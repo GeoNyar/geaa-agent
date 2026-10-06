@@ -1141,6 +1141,9 @@ if st.button("🚀 Run Task"):
 
                     if len(numeric_columns_for_analysis) == 2:
 
+                        x_column = numeric_columns_for_analysis[0]
+                        y_column = numeric_columns_for_analysis[1]
+
                         predictor_terms = [
                             "study",
                             "hours",
@@ -1164,9 +1167,6 @@ if st.button("🚀 Run Task"):
                             "outcome",
                             "rating"
                         ]
-
-                        x_column = numeric_columns_for_analysis[0]
-                        y_column = numeric_columns_for_analysis[1]
 
                         for column in numeric_columns_for_analysis:
 
@@ -1198,13 +1198,11 @@ if st.button("🚀 Run Task"):
 
                             correlation = x_values.corr(y_values)
 
-                            x_variance = x_values.var()
-
-                            if x_variance != 0:
+                            if x_values.var() != 0:
 
                                 slope = (
                                     x_values.cov(y_values)
-                                    / x_variance
+                                    / x_values.var()
                                 )
 
                                 intercept = (
@@ -1218,22 +1216,15 @@ if st.button("🚀 Run Task"):
                                     "\nRELATIONSHIP ANALYSIS:\n"
                                     + f"X variable: {x_column}\n"
                                     + f"Y variable: {y_column}\n"
-                                    + f"Pearson correlation (r): "
-                                    + f"{correlation:.3f}\n"
-                                    + f"Regression slope: "
-                                    + f"{slope:.3f}\n"
-                                    + f"Regression intercept: "
-                                    + f"{intercept:.3f}\n"
-                                    + f"R-squared (R²): "
-                                    + f"{r_squared:.3f}\n"
+                                    + f"Pearson correlation (r): {correlation:.3f}\n"
+                                    + f"Regression slope: {slope:.3f}\n"
+                                    + f"Regression intercept: {intercept:.3f}\n"
+                                    + f"R-squared (R²): {r_squared:.3f}\n"
                                     + "Regression equation: "
                                     + f"{y_column} = "
                                     + f"{intercept:.3f} + "
                                     + f"{slope:.3f} × {x_column}\n"
                                 )
-                    )
-
-                response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
                     contents=(
                         "USER TASK:\n"
