@@ -826,6 +826,58 @@ if uploaded_file is not None:
             use_container_width=True
         )
 
+        st.markdown("#### 🔎 Data Quality Check")
+
+        duplicate_rows = int(
+            uploaded_data.duplicated().sum()
+        )
+
+        missing_cells = int(
+            uploaded_data.isna().sum().sum()
+        )
+
+        numeric_columns = [
+            column
+            for column in uploaded_data.columns
+            if pd.api.types.is_numeric_dtype(
+                uploaded_data[column]
+            )
+        ]
+
+        st.write(
+            f"**Duplicate rows:** {duplicate_rows}"
+        )
+
+        st.write(
+            f"**Missing cells:** {missing_cells}"
+        )
+
+        st.write(
+            f"**Numeric variables:** "
+            f"{len(numeric_columns)}"
+        )
+
+        if numeric_columns:
+
+            numeric_summary = pd.DataFrame({
+                "Variable": numeric_columns,
+                "Minimum": [
+                    uploaded_data[column].min()
+                    for column in numeric_columns
+                ],
+                "Maximum": [
+                    uploaded_data[column].max()
+                    for column in numeric_columns
+                ]
+            })
+
+            st.markdown("#### Numerical Range")
+
+            st.dataframe(
+                numeric_summary,
+                use_container_width=True
+            )
+
     except Exception as e:
 
         st.error(
