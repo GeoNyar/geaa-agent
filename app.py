@@ -973,17 +973,60 @@ if uploaded_file is not None:
 
                 elif len(numeric_columns) == 2:
 
+                    predictor_terms = [
+                        "study",
+                        "hours",
+                        "attendance",
+                        "age",
+                        "experience",
+                        "time",
+                        "practice",
+                        "training",
+                        "input",
+                        "exposure"
+                    ]
+
+                    outcome_terms = [
+                        "score",
+                        "mark",
+                        "grade",
+                        "result",
+                        "performance",
+                        "achievement",
+                        "outcome",
+                        "rating"
+                    ]
+
+                    x_column = numeric_columns[0]
+                    y_column = numeric_columns[1]
+
+                    for column in numeric_columns:
+
+                        column_lower = column.lower()
+
+                        if any(
+                            term in column_lower
+                            for term in predictor_terms
+                        ):
+                            x_column = column
+
+                        if any(
+                            term in column_lower
+                            for term in outcome_terms
+                        ):
+                            y_column = column
+
                     scatter_data = uploaded_data[
                         [
-                            numeric_columns[0],
-                            numeric_columns[1]
+                            x_column,
+                            y_column
                         ]
                     ].copy()
 
                     st.scatter_chart(
                         scatter_data,
-                        x=numeric_columns[0],
-                        y=numeric_columns[1]
+                        x=x_column,
+                        y=y_column
                     )
     except Exception as e:
 
