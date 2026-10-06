@@ -772,6 +772,21 @@ task = st.text_area(
     placeholder="Example: Explain chemical kinetics to Form 3 students..."
 )
 
+visualization_requested = any(
+    keyword in task.lower()
+    for keyword in [
+        "visualize",
+        "visualisation",
+        "visualization",
+        "chart",
+        "graph",
+        "plot",
+        "bar chart",
+        "line graph",
+        "pie chart",
+        "scatter plot"
+    ]
+)
 st.markdown("### 📊 Optional Data File")
 
 uploaded_file = st.file_uploader(
