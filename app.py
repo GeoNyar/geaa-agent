@@ -992,16 +992,14 @@ DESCRIPTIVE STATISTICS:
 {descriptive_summary.to_string(index=False)}
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-                    contents=f"""
-USER TASK:
-{task}
-
-RETRIEVED GEAA KNOWLEDGE:
-{retrieved_knowledge}
-
-UPLOADED DATA CONTEXT:
-{data_context}
-""",
+                    contents=(
+                        "USER TASK:\n"
+                        + task
+                        + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
+                        + retrieved_knowledge
+                        + "\n\nUPLOADED DATA CONTEXT:\n"
+                        + data_context
+                    ),
                     config=types.GenerateContentConfig(
                         system_instruction=full_instructions
                     )
