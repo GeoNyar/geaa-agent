@@ -787,6 +787,23 @@ visualization_requested = any(
         "scatter plot"
     ]
 )
+
+research_question_requested = any(
+    phrase in task.lower()
+    for phrase in [
+        "research question",
+        "research problem",
+        "research variables",
+        "identify variables",
+        "independent variable",
+        "dependent variable",
+        "predictor variable",
+        "outcome variable",
+        "research design",
+        "methodology",
+        "study variables"
+    ]
+)
 st.markdown("### 📊 Optional Data File")
 
 uploaded_file = st.file_uploader(
