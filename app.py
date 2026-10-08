@@ -297,10 +297,17 @@ with st.expander("🔍 Knowledge Parser Test"):
 
 def retrieve_knowledge(task, documents, max_sections=5):
     """
-    Retrieve knowledge sections using concept-aware relevance scoring.
+    Retrieve knowledge sections using precision-oriented,
+    concept-aware relevance scoring.
 
-    The retrieval system is deliberately conservative:
-    generic word overlap alone should not be enough to retrieve
+    The retrieval system prioritizes:
+    - exact concept matches
+    - specific subject terminology
+    - heading relevance
+    - domain compatibility
+    - meaningful keyword overlap
+
+    Generic word overlap alone should not be enough to retrieve
     unrelated knowledge.
     """
 
@@ -327,7 +334,8 @@ def retrieve_knowledge(task, documents, max_sections=5):
     task_words = {
         word.lower()
         for word in re.findall(r"[A-Za-z0-9Δ]+", task)
-        if len(word) > 2 and word.lower() not in stop_words
+        if len(word) > 2
+        and word.lower() not in stop_words
     }
 
     # ---------------------------------------------------------
@@ -346,9 +354,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     # ---------------------------------------------------------
     # 3. Explicit knowledge domains
-    #
-    # These help GEAA distinguish chemistry questions from
-    # education/research/analytics questions.
     # ---------------------------------------------------------
     DOMAIN_TERMS = {
 
@@ -557,11 +562,100 @@ def retrieve_knowledge(task, documents, max_sections=5):
         "general_knowledge": set()
     }
 
+    # ---------------------------------------------------------
+    # 6. Terms that are too generic to strongly influence
+    #    retrieval on their own
+    # ---------------------------------------------------------
+    weak_terms = {
+        "energy",
+        "change",
+        "reaction",
+        "chemical",
+        "compound",
+        "process",
+        "theory",
+        "application",
+        "concept",
+        "system",
+        "data",
+        "analysis",
+        "relationship",
+        "education",
+        "learning",
+        "teaching",
+        "performance",
+        "school",
+        "student",
+        "teacher"
+    }
+
+    # ---------------------------------------------------------
+    # 7. Highly specific concepts
+    #
+    # These receive strong weighting because they are much more
+    # useful for identifying the correct knowledge section.
+    # ---------------------------------------------------------
+    specific_terms = {
+        "teacher digital competence",
+        "student achievement",
+        "research question",
+        "research problem",
+        "independent variable",
+        "dependent variable",
+        "predictor variable",
+        "outcome variable",
+        "public secondary schools",
+        "school effectiveness",
+        "chemical thermodynamics",
+        "ionic equilibrium",
+        "electrochemistry",
+        "chemical kinetics",
+        "organic chemistry",
+        "inorganic chemistry",
+        "biochemistry",
+        "hess's law",
+        "enthalpy change",
+        "activation energy",
+        "collision theory",
+        "energy profile",
+        "reaction rate",
+        "le chatelier",
+        "equilibrium constant"
+    }
+
+    # ---------------------------------------------------------
+    # 8. Important phrases that deserve exact-match weighting
+    # ---------------------------------------------------------
+    important_phrases = [
+        "teacher digital competence",
+        "student achievement",
+        "research question",
+        "research problem",
+        "independent variable",
+        "dependent variable",
+        "predictor variable",
+        "outcome variable",
+        "public secondary schools",
+        "school effectiveness",
+        "enthalpy change",
+        "activation energy",
+        "reaction rate",
+        "chemical thermodynamics",
+        "hess's law",
+        "energy profile",
+        "collision theory",
+        "ionic equilibrium",
+        "electrochemistry",
+        "organic chemistry",
+        "inorganic chemistry",
+        "biochemistry"
+    ]
+
     matches = []
     seen_sections = set()
 
     # ---------------------------------------------------------
-    # 6. Score each knowledge section
+    # 9. Score each knowledge section
     # ---------------------------------------------------------
     for document in documents:
 
@@ -571,13 +665,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
         )
 
         filename = document["filename"]
-
         filename_lower = filename.lower()
 
         sections = document.get("sections", [])
 
         # -----------------------------------------------------
-        # Infer document domain from filename/content
+        # Infer document domain from filename
         # -----------------------------------------------------
         document_domains = set()
 
@@ -623,31 +716,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     ):
                         matched_domain_terms += 1
 
-                # A domain should normally require at least
-                # two meaningful domain indicators.
-                #
-                # A highly specific phrase can establish the
-                # domain by itself.
-                specific_terms = {
-                    "teacher digital competence",
-                    "student achievement",
-                    "research question",
-                    "research problem",
-                    "independent variable",
-                    "dependent variable",
-                    "chemical thermodynamics",
-                    "ionic equilibrium",
-                    "electrochemistry",
-                    "chemical kinetics",
-                    "organic chemistry",
-                    "inorganic chemistry",
-                    "biochemistry",
-                    "hess's law",
-                    "collision theory",
-                    "energy profile"
-                }
-
-                specific_match = any(
+                domain_specific_match = any(
                     term in heading_lower
                     or term in section_lower
                     for term in specific_terms.intersection(terms)
@@ -655,7 +724,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
                 if (
                     matched_domain_terms >= 2
-                    or specific_match
+                    or domain_specific_match
                 ):
                     section_domains.add(domain)
 
@@ -676,27 +745,29 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 section_words
             )
 
-            score = len(keyword_matches)
+            # Generic word overlap receives only a small
+            # contribution.
+            strong_keyword_matches = {
+                word
+                for word in keyword_matches
+                if word not in weak_terms
+            }
+
+            weak_keyword_matches = (
+                keyword_matches - strong_keyword_matches
+            )
+
+            score = (
+                len(strong_keyword_matches) * 3
+                + len(weak_keyword_matches) * 1
+            )
 
             # -------------------------------------------------
-            # Exact task phrase matches
+            # Exact phrase matches
+            #
+            # A phrase appearing in both the user's task and
+            # the section is strong evidence of relevance.
             # -------------------------------------------------
-            important_phrases = [
-                "teacher digital competence",
-                "student achievement",
-                "research question",
-                "research problem",
-                "independent variable",
-                "dependent variable",
-                "enthalpy change",
-                "activation energy",
-                "reaction rate",
-                "chemical thermodynamics",
-                "hess's law",
-                "energy profile",
-                "collision theory"
-            ]
-
             exact_phrase_matches = [
                 phrase
                 for phrase in important_phrases
@@ -704,18 +775,46 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 and phrase in section_lower
             ]
 
-            score += 8 * len(exact_phrase_matches)
+            score += 12 * len(exact_phrase_matches)
+
+            # -------------------------------------------------
+            # Specific concept matches
+            # -------------------------------------------------
+            specific_matches = [
+                term
+                for term in specific_terms
+                if term in task_lower
+                and term in section_lower
+            ]
+
+            score += 8 * len(specific_matches)
 
             # -------------------------------------------------
             # Heading relevance
+            #
+            # A matching heading is stronger evidence than a
+            # term appearing somewhere deep in the section.
             # -------------------------------------------------
             heading_matches = [
                 term
                 for term in expanded_terms
-                if term in heading_lower
+                if len(term) > 2
+                and term not in weak_terms
+                and term in heading_lower
             ]
 
-            score += 5 * len(heading_matches)
+            score += 7 * len(heading_matches)
+
+            # Exact phrase in heading receives an additional
+            # strong bonus.
+            heading_phrase_matches = [
+                phrase
+                for phrase in important_phrases
+                if phrase in task_lower
+                and phrase in heading_lower
+            ]
+
+            score += 10 * len(heading_phrase_matches)
 
             # -------------------------------------------------
             # Document-type relevance
@@ -728,19 +827,16 @@ def retrieve_knowledge(task, documents, max_sections=5):
             for hint in document_type_hints:
 
                 if hint in task_lower:
-                    score += 2
+                    score += 1
 
             # -------------------------------------------------
             # Domain relevance
-            #
-            # Strong positive bonus if the document section
-            # belongs to the same domain as the user's task.
             # -------------------------------------------------
             if requested_domain is not None:
 
                 if requested_domain in section_domains:
 
-                    score += 15
+                    score += 20
 
                 else:
 
@@ -751,10 +847,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             # -------------------------------------------------
             # Competing-domain protection
-            #
-            # If the user clearly asks an education/research
-            # question, chemistry learning notes should not
-            # survive simply because of generic word overlap.
             # -------------------------------------------------
             if requested_domain in {
                 "education_research",
@@ -775,7 +867,24 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     chemistry_domains
                 ):
 
-                    score -= 25
+                    score -= 30
+
+            # -------------------------------------------------
+            # Peripheral-match penalty
+            #
+            # If a section only matches weak generic terms and
+            # has no strong phrase, specific concept, or heading
+            # evidence, reduce its score.
+            # -------------------------------------------------
+            has_strong_evidence = (
+                len(exact_phrase_matches) > 0
+                or len(specific_matches) > 0
+                or len(heading_matches) > 0
+                or len(heading_phrase_matches) > 0
+            )
+
+            if not has_strong_evidence:
+                score -= 3
 
             # -------------------------------------------------
             # Ignore sections with no meaningful connection.
@@ -806,7 +915,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
             })
 
     # ---------------------------------------------------------
-    # 7. Rank results
+    # 10. Rank results
     # ---------------------------------------------------------
     matches.sort(
         key=lambda item: item["score"],
@@ -814,18 +923,18 @@ def retrieve_knowledge(task, documents, max_sections=5):
     )
 
     # ---------------------------------------------------------
-    # 8. Conservative selection
+    # 11. Conservative selection
     #
-    # A result must either have a meaningful absolute score
-    # or be reasonably close to the strongest result.
+    # Strong results should be retained while weak peripheral
+    # results should be excluded.
     # ---------------------------------------------------------
     if matches:
 
         best_score = matches[0]["score"]
 
-        minimum_score = 8
+        minimum_score = 12
 
-        relative_threshold = best_score * 0.70
+        relative_threshold = best_score * 0.65
 
         selected = [
             item
@@ -841,7 +950,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
         selected = []
 
     # ---------------------------------------------------------
-    # 9. Build retrieved context
+    # 12. Build retrieved context
     # ---------------------------------------------------------
     retrieved_text = []
 
