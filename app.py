@@ -944,13 +944,36 @@ def retrieve_knowledge(task, documents, max_sections=5):
             # -------------------------------------------------
             if requested_domain is not None:
 
-                if requested_domain in section_domains:
+                domain_match = (
+                    requested_domain in section_domains
+                )
+
+                # A strong query-specific concept can establish
+                # relevance even when the section's broader
+                # domain classification is incomplete.
+                #
+                # Example:
+                # "photosynthesis" should retrieve a section
+                # containing photosynthesis even if that section
+                # was not automatically classified as
+                # biochemistry.
+
+                strong_query_concept_match = (
+                    len(exact_phrase_matches) > 0
+                    or len(specific_matches) > 0
+                )
+
+                if domain_match:
 
                     score += 20
 
-                else:
-                    continue
+                elif strong_query_concept_match:
 
+                    score += 10
+
+                else:
+
+                    continue
             # -------------------------------------------------
             # Minimum relevance evidence gate
             # -------------------------------------------------
