@@ -341,7 +341,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
     # ---------------------------------------------------------
     # 2. Query expansion
     # ---------------------------------------------------------
-    expanded_terms = set(task_words)
+    primary_terms = set(task_words)
+
+    expanded_terms = set(primary_terms)
 
     for phrase, related_terms in QUERY_EXPANSION.items():
 
@@ -351,6 +353,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 term.lower()
                 for term in related_terms
             )
+
+    # Terms introduced by query expansion rather than
+    # explicitly written by the user.
+    expansion_terms = (
+        expanded_terms - primary_terms
+    )
 
     # ---------------------------------------------------------
     # 3. Explicit knowledge domains
@@ -911,18 +919,61 @@ def retrieve_knowledge(task, documents, max_sections=5):
             # -------------------------------------------------
             retrieval_reasons = []
 
+            # ---------------------------------------------
+            # Primary query matches
+            # ---------------------------------------------
+            primary_matches = {
+                term
+                for term in keyword_matches
+                if term in primary_terms
+            }
+
+            if primary_matches:
+                retrieval_reasons.append(
+                    "Primary query match: "
+                    + ", ".join(
+                        sorted(primary_matches)
+                    )
+                )
+
+            # ---------------------------------------------
+            # Expanded query matches
+            # ---------------------------------------------
+            expansion_matches = {
+                term
+                for term in keyword_matches
+                if term in expansion_terms
+            }
+
+            if expansion_matches:
+                retrieval_reasons.append(
+                    "Expanded query match: "
+                    + ", ".join(
+                        sorted(expansion_matches)
+                    )
+                )
+
+            # ---------------------------------------------
+            # Exact phrase matches
+            # ---------------------------------------------
             if exact_phrase_matches:
                 retrieval_reasons.append(
                     "Exact phrase match: "
                     + ", ".join(exact_phrase_matches)
                 )
 
+            # ---------------------------------------------
+            # Specific concept matches
+            # ---------------------------------------------
             if specific_matches:
                 retrieval_reasons.append(
                     "Specific concept match: "
                     + ", ".join(specific_matches)
                 )
 
+            # ---------------------------------------------
+            # Heading relevance
+            # ---------------------------------------------
             if heading_phrase_matches:
                 retrieval_reasons.append(
                     "Heading phrase match: "
@@ -935,6 +986,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     + ", ".join(heading_matches)
                 )
 
+            # ---------------------------------------------
+            # Other keyword overlap
+            # ---------------------------------------------
             if strong_keyword_matches:
                 retrieval_reasons.append(
                     "Strong keyword overlap: "
@@ -951,6 +1005,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     )
                 )
 
+            # ---------------------------------------------
+            # Domain relevance
+            # ---------------------------------------------
             if requested_domain is not None:
                 retrieval_reasons.append(
                     "Domain match: "
