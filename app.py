@@ -1302,14 +1302,29 @@ if uploaded_file is not None:
         with st.expander("Technical details"):
             st.code(str(e))# Run task
 if st.button("🚀 Run Task"):
-    if uploaded_data is not None or research_question_requested:
-        retrieved_knowledge = ""
-        retrieval_details = []
-    else:
-        retrieved_knowledge, retrieval_details = retrieve_knowledge(
-            task,
-            KNOWLEDGE_DOCUMENTS
-        )
+if uploaded_data is not None or research_question_requested:
+    retrieved_knowledge = ""
+    retrieval_details = []
+else:
+    retrieved_knowledge, retrieval_details = retrieve_knowledge(
+        task,
+        KNOWLEDGE_DOCUMENTS
+    )
+
+# Determine the provenance of the knowledge available to GEAA.
+if retrieved_knowledge.strip():
+    knowledge_status = (
+        "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+        "The response may use the retrieved knowledge as "
+        "user-provided evidence."
+    )
+else:
+    knowledge_status = (
+        "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+        "The response must rely on the user's task, "
+        "general AI knowledge, reasoning, and clearly "
+        "labelled proposals or inferences."
+    )
 
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
@@ -1337,6 +1352,66 @@ if st.button("🚀 Run Task"):
             + mode
             + "\n\nMODE WORKFLOW:\n"
             + workflows[mode]
+            + """
+
+EVIDENCE AND PROVENANCE RULES
+
+GEAA must clearly distinguish between information obtained
+from the user's knowledge base, general AI knowledge, and
+new reasoning or proposals.
+
+1. KNOWLEDGE-BASE EVIDENCE
+Use this label when a statement is directly supported by
+RETRIEVED GEAA KNOWLEDGE supplied in the prompt.
+
+Do not claim that a statement comes from the GEAA knowledge
+base unless relevant retrieved knowledge was actually supplied.
+
+2. GENERAL AI KNOWLEDGE
+When no relevant GEAA knowledge has been retrieved, answer
+using general knowledge and reasoning available to the model.
+Do not present general AI knowledge as if it came from the
+user's knowledge base.
+
+3. USER-PROVIDED INFORMATION
+Clearly identify information that comes directly from the
+USER TASK or UPLOADED DATA.
+
+4. PROPOSED / INFERRED CONTENT
+Clearly label interpretations, suggestions, operational
+definitions, methodological recommendations, assumptions,
+examples, or other content that is not directly established
+by the user's task, uploaded data, or retrieved knowledge.
+
+Use labels such as:
+- QUESTION-PROVIDED
+- UPLOADED-DATA
+- KNOWLEDGE-BASE
+- GENERAL KNOWLEDGE
+- PROPOSED
+- INFERRED
+- NEEDS VERIFICATION
+
+5. NO FABRICATION OF KNOWLEDGE-BASE SUPPORT
+If GEAA KNOWLEDGE STATUS says that no relevant knowledge was
+retrieved, do not cite, imply, or suggest that the user's
+knowledge base supports the answer.
+
+6. AVOID FALSE CERTAINTY
+When evidence is unavailable, distinguish established facts
+from reasonable interpretation and proposed methodology.
+
+7. RESEARCH TASKS
+For research questions, distinguish:
+- what the research question explicitly provides;
+- what can reasonably be inferred from the wording;
+- what is being proposed for a possible study design;
+- what requires verification from literature, policy documents,
+  or empirical data.
+
+Do not fabricate citations, studies, statistics, instruments,
+policy requirements, or findings.
+"""
         )
 
         with st.spinner("GEAA is working through the task..."):
@@ -1497,13 +1572,19 @@ if st.button("🚀 Run Task"):
 
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-                    contents=(
-                        "USER TASK:\n"
-                        + task
-                        + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
-                        + retrieved_knowledge
-                        + "\n\nUPLOADED DATA CONTEXT:\n"
-                        + data_context
+contents=(
+    "USER TASK:\n"
+    + task
+    + "\n\nGEAA KNOWLEDGE STATUS:\n"
+    + knowledge_status
+    + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
+    + (
+        retrieved_knowledge
+        if retrieved_knowledge.strip()
+        else "[NO RELEVANT GEAA KNOWLEDGE RETRIEVED]"
+    )
+    + "\n\nUPLOADED DATA CONTEXT:\n"
+    + data_context
                         + "\n\nAPPLICATION VISUALIZATION STATUS:\n"
                         + (
                             "A native interactive visualization has already "
