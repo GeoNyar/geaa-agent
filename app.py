@@ -822,9 +822,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             # -------------------------------------------------
             # Heading relevance
-            #
-            # A matching heading is stronger evidence than a
-            # term appearing somewhere deep in the section.
             # -------------------------------------------------
             heading_matches = [
                 term
@@ -836,8 +833,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 7 * len(heading_matches)
 
-            # Exact phrase in heading receives an additional
-            # strong bonus.
             heading_phrase_matches = [
                 phrase
                 for phrase in important_phrases
@@ -846,6 +841,37 @@ def retrieve_knowledge(task, documents, max_sections=5):
             ]
 
             score += 10 * len(heading_phrase_matches)
+
+            # -------------------------------------------------
+            # Primary concept priority for broad queries
+            # -------------------------------------------------
+            if is_broad_query:
+
+                primary_heading_matches = [
+                    term
+                    for term in primary_terms
+                    if len(term) > 2
+                    and term not in weak_terms
+                    and term in heading_lower
+                ]
+
+                primary_content_matches = [
+                    term
+                    for term in primary_terms
+                    if len(term) > 2
+                    and term not in weak_terms
+                    and term in section_lower
+                ]
+
+                score += (
+                    20
+                    * len(primary_heading_matches)
+                )
+
+                score += (
+                    8
+                    * len(primary_content_matches)
+                )
 
             # -------------------------------------------------
             # Document-type relevance
@@ -1008,6 +1034,27 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     "Heading relevance: "
                     + ", ".join(heading_matches)
                 )
+
+            # ---------------------------------------------
+            # Broad-query primary concept priority
+            # ---------------------------------------------
+            if is_broad_query:
+
+                if primary_heading_matches:
+                    retrieval_reasons.append(
+                        "Broad-query primary heading match: "
+                        + ", ".join(
+                            primary_heading_matches
+                        )
+                    )
+
+                if primary_content_matches:
+                    retrieval_reasons.append(
+                        "Broad-query primary concept match: "
+                        + ", ".join(
+                            primary_content_matches
+                        )
+                    )
 
             # ---------------------------------------------
             # Other keyword overlap
