@@ -873,9 +873,36 @@ research question:
 11. When a possible research design can reasonably be inferred, distinguish
     the inference from a formal methodological recommendation.
 
-12. When identifying a population or setting, use only what is explicitly
-    stated or clearly implied by the question. Do not invent sample size,
-    sampling method, institutions or sub-locations.
+12. Distinguish carefully between POPULATION, SETTING and UNIT OF ANALYSIS.
+
+    - SETTING:
+      The geographical, institutional or contextual environment in which
+      the study is situated.
+
+    - POPULATION:
+      The broader group of people, institutions or observations to which
+      the study may reasonably refer or generalise.
+
+    - UNIT OF ANALYSIS:
+      The entity about which the main analytical measurements or conclusions
+      are made, such as an individual teacher, student, school, classroom
+      or linked teacher-student observation.
+
+    If the research question explicitly identifies one of these, label it
+    QUESTION-PROVIDED.
+
+    If it is only reasonably implied, label it INFERRED.
+
+    If it cannot be established from the question, state:
+    "Not specified in the research question."
+
+    Never classify an inferred population or unit of analysis as
+    QUESTION-PROVIDED.
+
+    Do not invent sample size, sampling method, institutions, sub-locations
+    or units of analysis.
+
+    Do not assume that the population and unit of analysis are the same.
 
 13. When identifying possible data requirements, label them PROPOSED unless
     they are explicitly specified by the user.
