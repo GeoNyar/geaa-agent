@@ -942,6 +942,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
             # -------------------------------------------------
             # Domain relevance
             # -------------------------------------------------
+            domain_match = False
+            strong_query_concept_match = False
+
+            domain_match = False
+            strong_query_concept_match = False
+
             if requested_domain is not None:
 
                 domain_match = (
