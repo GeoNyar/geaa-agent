@@ -906,12 +906,69 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             seen_sections.add(section_key)
 
+            # -------------------------------------------------
+            # Explain why this section was retrieved
+            # -------------------------------------------------
+            retrieval_reasons = []
+
+            if exact_phrase_matches:
+                retrieval_reasons.append(
+                    "Exact phrase match: "
+                    + ", ".join(exact_phrase_matches)
+                )
+
+            if specific_matches:
+                retrieval_reasons.append(
+                    "Specific concept match: "
+                    + ", ".join(specific_matches)
+                )
+
+            if heading_phrase_matches:
+                retrieval_reasons.append(
+                    "Heading phrase match: "
+                    + ", ".join(heading_phrase_matches)
+                )
+
+            if heading_matches:
+                retrieval_reasons.append(
+                    "Heading relevance: "
+                    + ", ".join(heading_matches)
+                )
+
+            if strong_keyword_matches:
+                retrieval_reasons.append(
+                    "Strong keyword overlap: "
+                    + ", ".join(
+                        sorted(strong_keyword_matches)
+                    )
+                )
+
+            if weak_keyword_matches:
+                retrieval_reasons.append(
+                    "General keyword overlap: "
+                    + ", ".join(
+                        sorted(weak_keyword_matches)
+                    )
+                )
+
+            if requested_domain is not None:
+                retrieval_reasons.append(
+                    "Domain match: "
+                    + requested_domain
+                )
+
+            if not retrieval_reasons:
+                retrieval_reasons.append(
+                    "General relevance match"
+                )
+
             matches.append({
                 "score": score,
                 "filename": filename,
                 "document_type": document_type,
                 "section": section_text,
-                "heading": section_heading
+                "heading": section_heading,
+                "retrieval_reasons": retrieval_reasons
             })
 
     # ---------------------------------------------------------
@@ -1437,7 +1494,9 @@ if st.button("🚀 Run Task"):
 
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
+
             for item in retrieval_details:
+
                 display_section = item.get(
                     "heading",
                     "Section heading not captured"
@@ -1448,9 +1507,27 @@ if st.button("🚀 Run Task"):
                     f"Section: {display_section} | "
                     f"Keyword match score: {item['score']}"
                 )
-        else:
-            st.write("No relevant knowledge was retrieved.")
 
+                reasons = item.get(
+                    "retrieval_reasons",
+                    []
+                )
+
+                if reasons:
+
+                    st.markdown(
+                        "**Why this section was retrieved:**"
+                    )
+
+                    for reason in reasons:
+                        st.write(
+                            f"• {reason}"
+                        )
+
+        else:
+            st.write(
+                "No relevant knowledge was retrieved."
+            )
     st.write("### 📚 Retrieved Text Passed to GEAA")
 
     if retrieved_knowledge.strip():
