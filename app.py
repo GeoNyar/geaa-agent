@@ -1171,11 +1171,25 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             # Domain relevance
             if requested_domain is not None:
-                retrieval_reasons.append(
-                    "Domain match: "
-                    + requested_domain
-                )
 
+                if domain_match:
+
+                    retrieval_reasons.append(
+                        "Domain match: "
+                        + requested_domain
+                    )
+
+                elif strong_query_concept_match:
+
+                    retrieval_reasons.append(
+                        "Strong concept override: "
+                        + ", ".join(
+                            sorted(
+                                set(exact_phrase_matches)
+                                | set(specific_matches)
+                            )
+                        )
+                    )
             if not retrieval_reasons:
                 retrieval_reasons.append(
                     "General relevance match"
