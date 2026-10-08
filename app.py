@@ -713,6 +713,56 @@ def retrieve_knowledge(task, documents, max_sections=5):
             heading_lower = section_heading.lower()
 
             # -------------------------------------------------
+            # Classify the role of the knowledge section
+            # -------------------------------------------------
+            section_role = "general"
+
+            foundational_patterns = [
+                "what is",
+                "introduction",
+                "overview",
+                "basic",
+                "fundamental",
+                "topic overview",
+                "course overview"
+            ]
+
+            application_patterns = [
+                "application",
+                "applications",
+                "and biochemistry",
+                "in biology",
+                "in biological",
+                "industrial",
+                "real life"
+            ]
+
+            definition_patterns = [
+                "definition",
+                "defined as",
+                "meaning of",
+                "is the study of"
+            ]
+
+            if any(
+                pattern in heading_lower
+                for pattern in foundational_patterns
+            ):
+                section_role = "foundational"
+
+            elif any(
+                pattern in heading_lower
+                for pattern in definition_patterns
+            ):
+                section_role = "foundational"
+
+            elif any(
+                pattern in heading_lower
+                for pattern in application_patterns
+            ):
+                section_role = "application"
+
+            # -------------------------------------------------
             # Determine domains represented by this section
             # -------------------------------------------------
             section_domains = set(document_domains)
@@ -849,6 +899,21 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     * len(primary_heading_matches)
                 )
 
+                score += (
+                    8
+                    * len(primary_content_matches)
+                )
+
+                # Foundational sections should be preferred
+                # for broad explanatory questions.
+                if section_role == "foundational":
+                    score += 15
+
+                # Application sections remain useful, but
+                # should not outrank introductory material
+                # merely because they contain the topic word.
+                elif section_role == "application":
+                    score -= 5
                 score += (
                     8
                     * len(primary_content_matches)
@@ -1001,6 +1066,15 @@ def retrieve_knowledge(task, documents, max_sections=5):
                         )
                     )
 
+                if section_role == "foundational":
+                    retrieval_reasons.append(
+                        "Section role: foundational"
+                    )
+
+                elif section_role == "application":
+                    retrieval_reasons.append(
+                        "Section role: application"
+                    )
             # Other keyword overlap
             if strong_keyword_matches:
                 retrieval_reasons.append(
@@ -1047,6 +1121,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "document_type": document_type,
                 "section": section_text,
                 "heading": section_heading,
+                "section_role": section_role,
                 "retrieval_reasons": retrieval_reasons
             })
 
