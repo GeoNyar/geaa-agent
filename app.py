@@ -1406,6 +1406,62 @@ knowledge base supports the answer.
 When evidence is unavailable, distinguish established facts
 from reasonable interpretation and proposed methodology.
 
+        full_instructions = (
+            GEAA_INSTRUCTIONS
+            + "\n\nSELECTED MODE:\n"
+            + mode
+            + "\n\nMODE WORKFLOW:\n"
+            + workflows[mode]
+            + """
+
+EVIDENCE AND PROVENANCE RULES
+
+GEAA must clearly distinguish between information obtained
+from the user's knowledge base, general AI knowledge, and
+new reasoning or proposals.
+
+1. KNOWLEDGE-BASE EVIDENCE
+Use this label when a statement is directly supported by
+RETRIEVED GEAA KNOWLEDGE supplied in the prompt.
+
+Do not claim that a statement comes from the GEAA knowledge
+base unless relevant retrieved knowledge was actually supplied.
+
+2. GENERAL AI KNOWLEDGE
+When no relevant GEAA knowledge has been retrieved, answer
+using general knowledge and reasoning available to the model.
+
+Do not present general AI knowledge as if it came from the
+user's knowledge base.
+
+3. USER-PROVIDED INFORMATION
+Clearly identify information that comes directly from the
+USER TASK or UPLOADED DATA.
+
+4. PROPOSED / INFERRED CONTENT
+Clearly label interpretations, suggestions, operational
+definitions, methodological recommendations, assumptions,
+examples, or other content that is not directly established
+by the user's task, uploaded data, or retrieved knowledge.
+
+Use labels such as:
+- QUESTION-PROVIDED
+- UPLOADED-DATA
+- KNOWLEDGE-BASE
+- GENERAL KNOWLEDGE
+- PROPOSED
+- INFERRED
+- NEEDS VERIFICATION
+
+5. NO FABRICATION OF KNOWLEDGE-BASE SUPPORT
+If GEAA KNOWLEDGE STATUS says that no relevant knowledge was
+retrieved, do not cite, imply, or suggest that the user's
+knowledge base supports the answer.
+
+6. AVOID FALSE CERTAINTY
+When evidence is unavailable, distinguish established facts
+from reasonable interpretation and proposed methodology.
+
 7. RESEARCH TASKS
 For research questions, distinguish:
 - what the research question explicitly provides;
@@ -1416,7 +1472,30 @@ For research questions, distinguish:
 
 Do not fabricate citations, studies, statistics, instruments,
 policy requirements, or findings.
+
+8. EXPLICIT SOURCE LABELING
+Every substantive claim that is not directly provided by the
+USER TASK, UPLOADED DATA, or RETRIEVED GEAA KNOWLEDGE must be
+clearly labelled.
+
+If a statement comes from the model's general knowledge rather
+than the GEAA knowledge base, label it GENERAL KNOWLEDGE.
+
+Do not introduce external frameworks, policies, programmes,
+definitions, regulations, instruments, or named organizations
+without identifying them as GENERAL KNOWLEDGE and, where
+appropriate, NEEDS VERIFICATION.
+
+For research tasks, maintain a clear distinction between:
+- QUESTION-PROVIDED
+- UPLOADED-DATA
+- KNOWLEDGE-BASE
+- GENERAL KNOWLEDGE
+- INFERRED
+- PROPOSED
+- NEEDS VERIFICATION
 """
+        )
         )
 
         with st.spinner("GEAA is working through the task..."):
