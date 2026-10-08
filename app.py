@@ -1326,35 +1326,6 @@ if st.button("🚀 Run Task"):
             "labelled proposals or inferences."
         )
 
-        # Determine the provenance of the knowledge available to GEAA.
-        if retrieved_knowledge.strip():
-            knowledge_status = (
-                "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-                "The response may use the retrieved knowledge as "
-                "user-provided evidence."
-            )
-        else:
-            knowledge_status = (
-                "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-                "The response must rely on the user's task, "
-                "general AI knowledge, reasoning, and clearly "
-                "labelled proposals or inferences."
-            )
-# Determine the provenance of the knowledge available to GEAA.
-    if retrieved_knowledge.strip():
-        knowledge_status = (
-            "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-            "The response may use the retrieved knowledge as "
-            "user-provided evidence."
-        )
-else:
-    knowledge_status = (
-        "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-        "The response must rely on the user's task, "
-        "general AI knowledge, reasoning, and clearly "
-        "labelled proposals or inferences."
-    )
-
     with st.expander("🔎 Retrieved Knowledge"):
         if retrieval_details:
             for item in retrieval_details:
@@ -1372,6 +1343,11 @@ else:
             st.write("No relevant knowledge was retrieved.")
 
     st.write("### 📚 Retrieved Text Passed to GEAA")
+
+    if retrieved_knowledge.strip():
+        st.text(retrieved_knowledge)
+    else:
+        st.write("No retrieved knowledge was passed to GEAA.")
     st.text(retrieved_knowledge)
 
     if task.strip():
