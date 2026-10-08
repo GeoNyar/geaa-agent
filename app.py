@@ -1457,7 +1457,7 @@ if st.button("🚀 Run Task"):
         st.text(retrieved_knowledge)
     else:
         st.write("No retrieved knowledge was passed to GEAA.")
-    st.text(retrieved_knowledge)
+
 
     if task.strip():
         full_instructions = (
