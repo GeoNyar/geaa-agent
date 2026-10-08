@@ -361,6 +361,29 @@ def retrieve_knowledge(task, documents, max_sections=5):
     )
 
     # ---------------------------------------------------------
+    # Detect broad-topic queries
+    # ---------------------------------------------------------
+    broad_topic_patterns = [
+        "explain",
+        "describe",
+        "introduction to",
+        "overview of",
+        "what is",
+        "teach me",
+        "give an overview",
+        "discuss"
+    ]
+
+    is_broad_query = (
+        any(
+            pattern in task_lower
+            for pattern in broad_topic_patterns
+        )
+        and len(primary_terms) <= 4
+    )
+    )
+
+    # ---------------------------------------------------------
     # 3. Explicit knowledge domains
     # ---------------------------------------------------------
     DOMAIN_TERMS = {
