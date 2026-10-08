@@ -306,9 +306,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
     - heading relevance
     - domain compatibility
     - meaningful keyword overlap
-
-    Generic word overlap alone should not be enough to retrieve
-    unrelated knowledge.
+    - primary concepts for broad queries
     """
 
     if not documents or not task.strip():
@@ -381,13 +379,11 @@ def retrieve_knowledge(task, documents, max_sections=5):
         )
         and len(primary_terms) <= 4
     )
-    )
 
     # ---------------------------------------------------------
     # 3. Explicit knowledge domains
     # ---------------------------------------------------------
     DOMAIN_TERMS = {
-
         "thermodynamics": {
             "thermodynamics",
             "enthalpy",
@@ -408,7 +404,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "q=mc",
             "delta h"
         },
-
         "kinetics": {
             "kinetics",
             "reaction rate",
@@ -418,7 +413,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "catalyst",
             "reaction mechanism"
         },
-
         "electrochemistry": {
             "electrochemistry",
             "electrochemical",
@@ -431,7 +425,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "cell potential",
             "electrochemical cell"
         },
-
         "equilibrium": {
             "equilibrium",
             "equilibrium constant",
@@ -440,7 +433,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "equilibrium concentration",
             "reversible reaction"
         },
-
         "organic_chemistry": {
             "organic chemistry",
             "aldehyde",
@@ -453,7 +445,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "synthesis",
             "purification"
         },
-
         "inorganic_chemistry": {
             "inorganic chemistry",
             "element",
@@ -464,7 +455,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "group i",
             "group ii"
         },
-
         "biochemistry": {
             "biochemistry",
             "biochemical",
@@ -477,7 +467,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "atp",
             "metabolism"
         },
-
         "education_research": {
             "research",
             "research question",
@@ -507,7 +496,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "secondary schools",
             "school effectiveness"
         },
-
         "analytics": {
             "data",
             "dataset",
@@ -559,7 +547,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
     # 5. Document type hints
     # ---------------------------------------------------------
     DOCUMENT_TYPE_HINTS = {
-
         "course_outline": {
             "course",
             "unit",
@@ -572,7 +559,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "covered",
             "hours"
         },
-
         "learning_notes": {
             "explain",
             "define",
@@ -589,7 +575,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "theory",
             "application"
         },
-
         "general_knowledge": set()
     }
 
@@ -622,9 +607,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     # ---------------------------------------------------------
     # 7. Highly specific concepts
-    #
-    # These receive strong weighting because they are much more
-    # useful for identifying the correct knowledge section.
     # ---------------------------------------------------------
     specific_terms = {
         "teacher digital competence",
@@ -776,8 +758,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 section_words
             )
 
-            # Generic word overlap receives only a small
-            # contribution.
             strong_keyword_matches = {
                 word
                 for word in keyword_matches
@@ -795,9 +775,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             # -------------------------------------------------
             # Exact phrase matches
-            #
-            # A phrase appearing in both the user's task and
-            # the section is strong evidence of relevance.
             # -------------------------------------------------
             exact_phrase_matches = [
                 phrase
@@ -845,6 +822,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
             # -------------------------------------------------
             # Primary concept priority for broad queries
             # -------------------------------------------------
+            primary_heading_matches = []
+
+            primary_content_matches = []
+
             if is_broad_query:
 
                 primary_heading_matches = [
@@ -896,10 +877,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     score += 20
 
                 else:
-
-                    # A clear domain mismatch should prevent
-                    # generic keyword overlap from rescuing
-                    # an unrelated knowledge section.
                     continue
 
             # -------------------------------------------------
@@ -928,49 +905,27 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             # -------------------------------------------------
             # Peripheral-match penalty
-            #
-            # If a section only matches weak generic terms and
-            # has no strong phrase, specific concept, or heading
-            # evidence, reduce its score.
             # -------------------------------------------------
             has_strong_evidence = (
                 len(exact_phrase_matches) > 0
                 or len(specific_matches) > 0
                 or len(heading_matches) > 0
                 or len(heading_phrase_matches) > 0
+                or len(primary_heading_matches) > 0
             )
 
             if not has_strong_evidence:
                 score -= 3
 
-            # -------------------------------------------------
-            # Ignore sections with no meaningful connection.
-            # -------------------------------------------------
             if score <= 0:
                 continue
-
-            # -------------------------------------------------
-            # Prevent duplicate sections.
-            # -------------------------------------------------
-            section_key = (
-                filename,
-                section_heading,
-                section_text
-            )
-
-            if section_key in seen_sections:
-                continue
-
-            seen_sections.add(section_key)
 
             # -------------------------------------------------
             # Explain why this section was retrieved
             # -------------------------------------------------
             retrieval_reasons = []
 
-            # ---------------------------------------------
             # Primary query matches
-            # ---------------------------------------------
             primary_matches = {
                 term
                 for term in keyword_matches
@@ -985,9 +940,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     )
                 )
 
-            # ---------------------------------------------
             # Expanded query matches
-            # ---------------------------------------------
             expansion_matches = {
                 term
                 for term in keyword_matches
@@ -1002,27 +955,21 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     )
                 )
 
-            # ---------------------------------------------
             # Exact phrase matches
-            # ---------------------------------------------
             if exact_phrase_matches:
                 retrieval_reasons.append(
                     "Exact phrase match: "
                     + ", ".join(exact_phrase_matches)
                 )
 
-            # ---------------------------------------------
             # Specific concept matches
-            # ---------------------------------------------
             if specific_matches:
                 retrieval_reasons.append(
                     "Specific concept match: "
                     + ", ".join(specific_matches)
                 )
 
-            # ---------------------------------------------
             # Heading relevance
-            # ---------------------------------------------
             if heading_phrase_matches:
                 retrieval_reasons.append(
                     "Heading phrase match: "
@@ -1035,9 +982,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     + ", ".join(heading_matches)
                 )
 
-            # ---------------------------------------------
             # Broad-query primary concept priority
-            # ---------------------------------------------
             if is_broad_query:
 
                 if primary_heading_matches:
@@ -1056,9 +1001,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                         )
                     )
 
-            # ---------------------------------------------
             # Other keyword overlap
-            # ---------------------------------------------
             if strong_keyword_matches:
                 retrieval_reasons.append(
                     "Strong keyword overlap: "
@@ -1075,9 +1018,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     )
                 )
 
-            # ---------------------------------------------
             # Domain relevance
-            # ---------------------------------------------
             if requested_domain is not None:
                 retrieval_reasons.append(
                     "Domain match: "
@@ -1088,6 +1029,17 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 retrieval_reasons.append(
                     "General relevance match"
                 )
+
+            section_key = (
+                filename,
+                section_heading,
+                section_text
+            )
+
+            if section_key in seen_sections:
+                continue
+
+            seen_sections.add(section_key)
 
             matches.append({
                 "score": score,
@@ -1108,9 +1060,6 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
     # ---------------------------------------------------------
     # 11. Conservative selection
-    #
-    # Strong results should be retained while weak peripheral
-    # results should be excluded.
     # ---------------------------------------------------------
     if matches:
 
