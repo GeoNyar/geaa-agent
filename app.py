@@ -1481,7 +1481,6 @@ contents=(
                 st.write(response.text)
 
             except Exception as e:
-
                 st.error("GEAA could not complete the request.")
 
                 with st.expander("Technical details"):
