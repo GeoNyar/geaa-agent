@@ -446,23 +446,30 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "research",
             "research question",
             "research problem",
+            "research objective",
             "research design",
+            "research methodology",
             "methodology",
             "variable",
             "variables",
             "independent variable",
             "dependent variable",
-            "predictor",
-            "outcome",
+            "predictor variable",
+            "outcome variable",
             "student achievement",
             "academic achievement",
             "teacher competence",
+            "teacher digital competence",
             "digital competence",
+            "teacher performance",
             "school leadership",
-            "education",
-            "learning",
-            "teaching",
-            "teacher performance"
+            "educational leadership",
+            "education policy",
+            "education management",
+            "educational management",
+            "public secondary schools",
+            "secondary schools",
+            "school effectiveness"
         },
 
         "analytics": {
@@ -606,13 +613,51 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             for domain, terms in DOMAIN_TERMS.items():
 
+                matched_domain_terms = 0
+
                 for term in terms:
 
                     if (
                         term in heading_lower
                         or term in section_lower
                     ):
-                        section_domains.add(domain)
+                        matched_domain_terms += 1
+
+                # A domain should normally require at least
+                # two meaningful domain indicators.
+                #
+                # A highly specific phrase can establish the
+                # domain by itself.
+                specific_terms = {
+                    "teacher digital competence",
+                    "student achievement",
+                    "research question",
+                    "research problem",
+                    "independent variable",
+                    "dependent variable",
+                    "chemical thermodynamics",
+                    "ionic equilibrium",
+                    "electrochemistry",
+                    "chemical kinetics",
+                    "organic chemistry",
+                    "inorganic chemistry",
+                    "biochemistry",
+                    "hess's law",
+                    "collision theory",
+                    "energy profile"
+                }
+
+                specific_match = any(
+                    term in heading_lower
+                    or term in section_lower
+                    for term in specific_terms.intersection(terms)
+                )
+
+                if (
+                    matched_domain_terms >= 2
+                    or specific_match
+                ):
+                    section_domains.add(domain)
 
             # -------------------------------------------------
             # Basic word overlap
@@ -699,8 +744,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
                 else:
 
-                    # Strong penalty for unrelated domains.
-                    score -= 15
+                    # A clear domain mismatch should prevent
+                    # generic keyword overlap from rescuing
+                    # an unrelated knowledge section.
+                    continue
 
             # -------------------------------------------------
             # Competing-domain protection
