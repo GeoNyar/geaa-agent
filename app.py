@@ -1302,15 +1302,44 @@ if uploaded_file is not None:
         with st.expander("Technical details"):
             st.code(str(e))# Run task
 if st.button("🚀 Run Task"):
-if uploaded_data is not None or research_question_requested:
-    retrieved_knowledge = ""
-    retrieval_details = []
-else:
-    retrieved_knowledge, retrieval_details = retrieve_knowledge(
-        task,
-        KNOWLEDGE_DOCUMENTS
-    )
+    if uploaded_data is not None or research_question_requested:
+        retrieved_knowledge = ""
+        retrieval_details = []
+    else:
+        retrieved_knowledge, retrieval_details = retrieve_knowledge(
+            task,
+            KNOWLEDGE_DOCUMENTS
+        )
 
+    # Determine the provenance of the knowledge available to GEAA.
+    if retrieved_knowledge.strip():
+        knowledge_status = (
+            "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+            "The response may use the retrieved knowledge as "
+            "user-provided evidence."
+        )
+    else:
+        knowledge_status = (
+            "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+            "The response must rely on the user's task, "
+            "general AI knowledge, reasoning, and clearly "
+            "labelled proposals or inferences."
+        )
+
+        # Determine the provenance of the knowledge available to GEAA.
+        if retrieved_knowledge.strip():
+            knowledge_status = (
+                "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+                "The response may use the retrieved knowledge as "
+                "user-provided evidence."
+            )
+        else:
+            knowledge_status = (
+                "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+                "The response must rely on the user's task, "
+                "general AI knowledge, reasoning, and clearly "
+                "labelled proposals or inferences."
+            )
 # Determine the provenance of the knowledge available to GEAA.
 if retrieved_knowledge.strip():
     knowledge_status = (
