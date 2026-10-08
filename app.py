@@ -1443,21 +1443,23 @@ For research tasks, maintain a clear distinction between:
         )
 
         with st.spinner("GEAA is working through the task..."):
+
+            try:
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
-contents=(
-    "USER TASK:\n"
-    + task
-    + "\n\nGEAA KNOWLEDGE STATUS:\n"
-    + knowledge_status
-    + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
-    + (
-        retrieved_knowledge
-        if retrieved_knowledge.strip()
-        else "[NO RELEVANT GEAA KNOWLEDGE RETRIEVED]"
-    )
-    + "\n\nUPLOADED DATA CONTEXT:\n"
-    + data_context
+                    contents=(
+                        "USER TASK:\n"
+                        + task
+                        + "\n\nGEAA KNOWLEDGE STATUS:\n"
+                        + knowledge_status
+                        + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
+                        + (
+                            retrieved_knowledge
+                            if retrieved_knowledge.strip()
+                            else "[NO RELEVANT GEAA KNOWLEDGE RETRIEVED]"
+                        )
+                        + "\n\nUPLOADED DATA CONTEXT:\n"
+                        + data_context
                         + "\n\nAPPLICATION VISUALIZATION STATUS:\n"
                         + (
                             "A native interactive visualization has already "
