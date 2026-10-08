@@ -297,32 +297,227 @@ with st.expander("🔍 Knowledge Parser Test"):
 
 def retrieve_knowledge(task, documents, max_sections=5):
     """
-    Retrieve the most relevant structured sections from GEAA knowledge documents.
+    Retrieve knowledge sections using concept-aware relevance scoring.
+
+    The retrieval system is deliberately conservative:
+    generic word overlap alone should not be enough to retrieve
+    unrelated knowledge.
     """
 
-    if not documents:
+    if not documents or not task.strip():
         return "", []
 
     task_lower = task.lower()
 
-    task_words = set(
+    # ---------------------------------------------------------
+    # 1. Stop words
+    # ---------------------------------------------------------
+    stop_words = {
+        "what", "why", "how", "when", "where", "which",
+        "who", "does", "do", "did", "is", "are", "was",
+        "were", "the", "and", "or", "for", "from", "with",
+        "about", "into", "between", "this", "that", "these",
+        "those", "can", "could", "would", "should", "will",
+        "may", "might", "explain", "describe", "discuss",
+        "identify", "state", "give", "define", "show",
+        "calculate", "using", "use", "student", "students",
+        "teacher", "teachers", "school", "schools"
+    }
+
+    task_words = {
         word.lower()
         for word in re.findall(r"[A-Za-z0-9Δ]+", task)
-        if len(word) > 2
-    )
+        if len(word) > 2 and word.lower() not in stop_words
+    }
 
-    # Expand important concepts into related terms.
+    # ---------------------------------------------------------
+    # 2. Query expansion
+    # ---------------------------------------------------------
     expanded_terms = set(task_words)
 
     for phrase, related_terms in QUERY_EXPANSION.items():
+
         if phrase in task_lower:
+
             expanded_terms.update(
                 term.lower()
                 for term in related_terms
             )
 
+    # ---------------------------------------------------------
+    # 3. Explicit knowledge domains
+    #
+    # These help GEAA distinguish chemistry questions from
+    # education/research/analytics questions.
+    # ---------------------------------------------------------
+    DOMAIN_TERMS = {
+
+        "thermodynamics": {
+            "thermodynamics",
+            "enthalpy",
+            "enthalpy change",
+            "heat change",
+            "exothermic",
+            "endothermic",
+            "heat energy",
+            "energy profile",
+            "bond energy",
+            "bonds broken",
+            "bonds formed",
+            "hess",
+            "hess's law",
+            "activation energy",
+            "energy change",
+            "calorimetry",
+            "q=mc",
+            "delta h"
+        },
+
+        "kinetics": {
+            "kinetics",
+            "reaction rate",
+            "rate of reaction",
+            "activation energy",
+            "collision theory",
+            "catalyst",
+            "reaction mechanism"
+        },
+
+        "electrochemistry": {
+            "electrochemistry",
+            "electrochemical",
+            "electrode",
+            "electrolyte",
+            "electrolysis",
+            "oxidation",
+            "reduction",
+            "redox",
+            "cell potential",
+            "electrochemical cell"
+        },
+
+        "equilibrium": {
+            "equilibrium",
+            "equilibrium constant",
+            "ionic equilibrium",
+            "le chatelier",
+            "equilibrium concentration",
+            "reversible reaction"
+        },
+
+        "organic_chemistry": {
+            "organic chemistry",
+            "aldehyde",
+            "ketone",
+            "alcohol",
+            "carboxylic acid",
+            "ester",
+            "amine",
+            "organic compound",
+            "synthesis",
+            "purification"
+        },
+
+        "inorganic_chemistry": {
+            "inorganic chemistry",
+            "element",
+            "periodicity",
+            "periodic table",
+            "inorganic salt",
+            "chemical bond",
+            "group i",
+            "group ii"
+        },
+
+        "biochemistry": {
+            "biochemistry",
+            "biochemical",
+            "protein",
+            "carbohydrate",
+            "lipid",
+            "enzyme",
+            "respiration",
+            "photosynthesis",
+            "atp",
+            "metabolism"
+        },
+
+        "education_research": {
+            "research",
+            "research question",
+            "research problem",
+            "research design",
+            "methodology",
+            "variable",
+            "variables",
+            "independent variable",
+            "dependent variable",
+            "predictor",
+            "outcome",
+            "student achievement",
+            "academic achievement",
+            "teacher competence",
+            "digital competence",
+            "school leadership",
+            "education",
+            "learning",
+            "teaching",
+            "teacher performance"
+        },
+
+        "analytics": {
+            "data",
+            "dataset",
+            "analysis",
+            "analytics",
+            "correlation",
+            "regression",
+            "mean",
+            "median",
+            "standard deviation",
+            "visualization",
+            "dashboard",
+            "trend",
+            "relationship"
+        }
+    }
+
+    # ---------------------------------------------------------
+    # 4. Detect the user's main domain
+    # ---------------------------------------------------------
+    requested_domains = []
+
+    for domain, terms in DOMAIN_TERMS.items():
+
+        domain_matches = 0
+
+        for term in terms:
+
+            if term in task_lower:
+                domain_matches += 1
+
+        if domain_matches > 0:
+            requested_domains.append(
+                (domain, domain_matches)
+            )
+
+    requested_domains.sort(
+        key=lambda item: item[1],
+        reverse=True
+    )
+
+    requested_domain = (
+        requested_domains[0][0]
+        if requested_domains
+        else None
+    )
+
+    # ---------------------------------------------------------
+    # 5. Document type hints
+    # ---------------------------------------------------------
     DOCUMENT_TYPE_HINTS = {
-        "course_outline": [
+
+        "course_outline": {
             "course",
             "unit",
             "learning outcome",
@@ -332,10 +527,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "curriculum",
             "topics",
             "covered",
-            "hours",
-        ],
+            "hours"
+        },
 
-        "learning_notes": [
+        "learning_notes": {
             "explain",
             "define",
             "calculate",
@@ -349,53 +544,18 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "activation energy",
             "energy",
             "theory",
-            "application",
-        ],
+            "application"
+        },
 
-        "general_knowledge": []
+        "general_knowledge": set()
     }
-
-    phrase_list = [
-        "activation energy",
-        "enthalpy change",
-        "hess's law",
-        "reaction rate",
-        "energy profile",
-        "collision theory",
-    ]
-
-    heading_concepts = [
-        "activation energy",
-        "enthalpy change",
-        "energy profile",
-        "catalyst",
-        "reaction rate",
-        "collision theory",
-        "hess's law",
-        "bond energy",
-        "chemical thermodynamics",
-        "physical chemistry",
-        "organic chemistry",
-        "inorganic chemistry",
-        "biochemistry",
-    ]
-
-    course_concepts = [
-        "chemical thermodynamics",
-        "physical chemistry",
-        "ionic equilibrium",
-        "electrochemistry",
-        "chemical kinetics",
-        "organic chemistry",
-        "inorganic chemistry",
-        "biochemistry",
-        "learning outcome",
-        "assessment",
-    ]
 
     matches = []
     seen_sections = set()
 
+    # ---------------------------------------------------------
+    # 6. Score each knowledge section
+    # ---------------------------------------------------------
     for document in documents:
 
         document_type = document.get(
@@ -405,16 +565,21 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
         filename = document["filename"]
 
-        filename_words = set(
-            word.lower()
-            for word in re.findall(
-                r"[A-Za-z0-9Δ]+",
-                filename
-            )
-            if len(word) > 2
-        )
+        filename_lower = filename.lower()
 
         sections = document.get("sections", [])
+
+        # -----------------------------------------------------
+        # Infer document domain from filename/content
+        # -----------------------------------------------------
+        document_domains = set()
+
+        for domain, terms in DOMAIN_TERMS.items():
+
+            for term in terms:
+
+                if term in filename_lower:
+                    document_domains.add(domain)
 
         for section_data in sections:
 
@@ -434,125 +599,146 @@ def retrieve_knowledge(task, documents, max_sections=5):
             section_lower = section_text.lower()
             heading_lower = section_heading.lower()
 
-            section_words = set(
+            # -------------------------------------------------
+            # Determine domains represented by this section
+            # -------------------------------------------------
+            section_domains = set(document_domains)
+
+            for domain, terms in DOMAIN_TERMS.items():
+
+                for term in terms:
+
+                    if (
+                        term in heading_lower
+                        or term in section_lower
+                    ):
+                        section_domains.add(domain)
+
+            # -------------------------------------------------
+            # Basic word overlap
+            # -------------------------------------------------
+            section_words = {
                 word.lower()
                 for word in re.findall(
                     r"[A-Za-z0-9Δ]+",
                     section_text
                 )
                 if len(word) > 2
+                and word.lower() not in stop_words
+            }
+
+            keyword_matches = expanded_terms.intersection(
+                section_words
             )
 
-            # 1. Basic keyword relevance
-            score = len(
-                expanded_terms.intersection(section_words)
-            )
+            score = len(keyword_matches)
 
-            # 2. Exact phrase relevance
-            phrase_matches = [
+            # -------------------------------------------------
+            # Exact task phrase matches
+            # -------------------------------------------------
+            important_phrases = [
+                "teacher digital competence",
+                "student achievement",
+                "research question",
+                "research problem",
+                "independent variable",
+                "dependent variable",
+                "enthalpy change",
+                "activation energy",
+                "reaction rate",
+                "chemical thermodynamics",
+                "hess's law",
+                "energy profile",
+                "collision theory"
+            ]
+
+            exact_phrase_matches = [
                 phrase
-                for phrase in phrase_list
+                for phrase in important_phrases
                 if phrase in task_lower
                 and phrase in section_lower
             ]
 
-            score += 4 * len(phrase_matches)
+            score += 8 * len(exact_phrase_matches)
 
-            # 3. Filename relevance
-            score += 3 * len(
-                task_words.intersection(filename_words)
-            )
+            # -------------------------------------------------
+            # Heading relevance
+            # -------------------------------------------------
+            heading_matches = [
+                term
+                for term in expanded_terms
+                if term in heading_lower
+            ]
 
-            # 4. Document-type relevance
+            score += 5 * len(heading_matches)
+
+            # -------------------------------------------------
+            # Document-type relevance
+            # -------------------------------------------------
             document_type_hints = DOCUMENT_TYPE_HINTS.get(
                 document_type,
-                []
+                set()
             )
 
-            document_type_matches = [
-                hint
-                for hint in document_type_hints
-                if hint in task_lower
-            ]
+            for hint in document_type_hints:
 
-            score += 3 * len(document_type_matches)
-
-            # 5. Subject-specific heading relevance
-
-            subject_areas = [
-                "physical chemistry",
-                "organic chemistry",
-                "inorganic chemistry",
-                "biochemistry",
-            ]
-
-            requested_subject = None
-
-            for subject in subject_areas:
-                if subject in task_lower:
-                    requested_subject = subject
-                    break
-
-            for concept in heading_concepts:
-
-                if concept in task_lower:
-
-                    # Normal heading match
-                    if concept in heading_lower:
-                        score += 8
-
-                    # Strong subject-area matching
-                    if concept in subject_areas:
-
-                        if concept in heading_lower:
-
-                            # Strong bonus for exact requested subject
-                            if concept == requested_subject:
-                                score += 20
-
-                            # Penalty for competing subject
-                            elif requested_subject is not None:
-                                score -= 20
-
-            # 6. Course-outline concept relevance
-            if document_type == "course_outline":
-
-                for concept in course_concepts:
-
-                    if (
-                        concept in task_lower
-                        and concept in section_lower
-                    ):
-                        score += 8
+                if hint in task_lower:
+                    score += 2
 
             # -------------------------------------------------
-            # 7. Exclude competing subject areas.
+            # Domain relevance
             #
-            # If the user explicitly asks about one chemistry
-            # subject, do not retrieve another subject's section.
+            # Strong positive bonus if the document section
+            # belongs to the same domain as the user's task.
             # -------------------------------------------------
+            if requested_domain is not None:
 
-            if requested_subject is not None:
+                if requested_domain in section_domains:
 
-                competing_subject = None
+                    score += 15
 
-                for subject in subject_areas:
+                else:
 
-                    if (
-                        subject in heading_lower
-                        and subject != requested_subject
-                    ):
-                        competing_subject = subject
-                        break
+                    # Strong penalty for unrelated domains.
+                    score -= 15
 
-                if competing_subject is not None:
-                    continue
+            # -------------------------------------------------
+            # Competing-domain protection
+            #
+            # If the user clearly asks an education/research
+            # question, chemistry learning notes should not
+            # survive simply because of generic word overlap.
+            # -------------------------------------------------
+            if requested_domain in {
+                "education_research",
+                "analytics"
+            }:
 
+                chemistry_domains = {
+                    "thermodynamics",
+                    "kinetics",
+                    "electrochemistry",
+                    "equilibrium",
+                    "organic_chemistry",
+                    "inorganic_chemistry",
+                    "biochemistry"
+                }
+
+                if section_domains.intersection(
+                    chemistry_domains
+                ):
+
+                    score -= 25
+
+            # -------------------------------------------------
             # Ignore sections with no meaningful connection.
+            # -------------------------------------------------
             if score <= 0:
                 continue
 
-            # 7. Prevent duplicate sections
+            # -------------------------------------------------
+            # Prevent duplicate sections.
+            # -------------------------------------------------
             section_key = (
                 filename,
                 section_heading,
@@ -572,29 +758,44 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 "heading": section_heading
             })
 
-    # Rank sections from most relevant to least relevant.
+    # ---------------------------------------------------------
+    # 7. Rank results
+    # ---------------------------------------------------------
     matches.sort(
         key=lambda item: item["score"],
         reverse=True
     )
 
-    # Select the strongest relevant sections.
+    # ---------------------------------------------------------
+    # 8. Conservative selection
+    #
+    # A result must either have a meaningful absolute score
+    # or be reasonably close to the strongest result.
+    # ---------------------------------------------------------
     if matches:
 
         best_score = matches[0]["score"]
 
-        relevance_threshold = best_score * 0.75
+        minimum_score = 8
+
+        relative_threshold = best_score * 0.70
 
         selected = [
             item
             for item in matches
-            if item["score"] >= relevance_threshold
+            if (
+                item["score"] >= minimum_score
+                and item["score"] >= relative_threshold
+            )
         ][:max_sections]
 
     else:
+
         selected = []
 
-    # Build the retrieved context sent to Gemini.
+    # ---------------------------------------------------------
+    # 9. Build retrieved context
+    # ---------------------------------------------------------
     retrieved_text = []
 
     for item in selected:
