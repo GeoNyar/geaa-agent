@@ -945,6 +945,47 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     continue
 
             # -------------------------------------------------
+            # Minimum relevance evidence gate
+            # -------------------------------------------------
+            # A domain match by itself is not sufficient to
+            # retrieve a section.
+            #
+            # The section must also contain meaningful evidence
+            # connecting it to the user's actual query.
+            #
+            # This prevents unrelated sections from being
+            # retrieved merely because they belong to the same
+            # broad subject domain.
+
+            meaningful_primary_matches = {
+                term
+                for term in keyword_matches
+                if term in primary_terms
+                and term not in weak_terms
+            }
+
+            meaningful_expansion_matches = {
+                term
+                for term in keyword_matches
+                if term in expansion_terms
+                and term not in weak_terms
+            }
+
+            has_relevance_evidence = (
+                len(exact_phrase_matches) > 0
+                or len(specific_matches) > 0
+                or len(heading_matches) > 0
+                or len(heading_phrase_matches) > 0
+                or len(primary_heading_matches) > 0
+                or len(primary_content_matches) > 0
+                or len(meaningful_primary_matches) > 0
+                or len(meaningful_expansion_matches) > 0
+            )
+
+            if not has_relevance_evidence:
+                continue
+
+            # -------------------------------------------------
             # Competing-domain protection
             # -------------------------------------------------
             if requested_domain in {
