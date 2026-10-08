@@ -1445,6 +1445,22 @@ For research tasks, maintain a clear distinction between:
         with st.spinner("GEAA is working through the task..."):
 
             try:
+                # Prepare uploaded data for Gemini
+                data_context = ""
+
+                if uploaded_data is not None:
+
+                    data_context = (
+                        "UPLOADED DATASET:\n"
+                        + f"File: {uploaded_file.name}\n"
+                        + f"Rows: {uploaded_data.shape[0]}\n"
+                        + f"Columns: {uploaded_data.shape[1]}\n\n"
+                        + "DATA:\n"
+                        + uploaded_data.to_string(index=False)
+                        + "\n\nDATA QUALITY:\n"
+                        + f"Duplicate rows: {uploaded_data.duplicated().sum()}\n"
+                        + f"Missing cells: {uploaded_data.isna().sum().sum()}\n"
+                    )
                 response = client.models.generate_content(
                     model="gemini-3.5-flash-lite",
                     contents=(
