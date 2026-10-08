@@ -1341,12 +1341,12 @@ if st.button("🚀 Run Task"):
                 "labelled proposals or inferences."
             )
 # Determine the provenance of the knowledge available to GEAA.
-if retrieved_knowledge.strip():
-    knowledge_status = (
-        "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-        "The response may use the retrieved knowledge as "
-        "user-provided evidence."
-    )
+    if retrieved_knowledge.strip():
+        knowledge_status = (
+            "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+            "The response may use the retrieved knowledge as "
+            "user-provided evidence."
+        )
 else:
     knowledge_status = (
         "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
