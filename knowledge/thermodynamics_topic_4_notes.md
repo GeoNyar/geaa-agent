@@ -379,6 +379,75 @@ Explain what the sign of your answer means.
 Would adding a catalyst change your calculated Δ𝐻?
 5.
 Explain how the reaction's energy profile would change if a catalyst were added.
+## 4.24 GIBBS FREE ENERGY AND THERMODYNAMIC FAVOURABILITY
+
+### What Is Gibbs Free Energy?
+
+Gibbs free energy change, represented by ΔG, helps predict whether a process is thermodynamically favourable at constant temperature and pressure.
+
+The relationship is:
+
+**ΔG = ΔH − TΔS**
+
+Where:
+
+* ΔG = Gibbs free energy change
+* ΔH = enthalpy change
+* T = absolute temperature in kelvin (K)
+* ΔS = entropy change
+
+Use consistent units for all quantities. For example, if ΔH is in kJ mol⁻¹, express TΔS in kJ mol⁻¹ as well.
+
+### Interpreting Gibbs Free Energy
+
+* **ΔG < 0:** The forward process is thermodynamically favourable.
+* **ΔG > 0:** The forward process is thermodynamically unfavourable; the reverse process is favoured under the same conditions.
+* **ΔG = 0:** The system is at equilibrium.
+
+A thermodynamically favourable process does not necessarily occur quickly. Gibbs free energy indicates thermodynamic favourability, while activation energy influences reaction rate.
+
+### Relationship Between ΔG, ΔH and Activation Energy
+
+These three quantities describe different aspects of a reaction:
+
+* **ΔG:** Indicates thermodynamic favourability.
+* **ΔH:** Describes the overall enthalpy change between reactants and products.
+* **Activation energy (Ea):** Represents the energy barrier that reactants must overcome for a reaction to proceed.
+
+A reaction may have ΔG < 0 but still occur slowly if its activation energy is high.
+
+A catalyst provides an alternative reaction pathway with lower activation energy. It increases the reaction rate but does not change ΔG or ΔH for the same reaction under the same conditions.
+
+A negative ΔH alone does not guarantee that ΔG is negative because entropy and temperature also influence Gibbs free energy.
+
+### Worked Example
+
+A reaction has:
+
+* ΔH = −40 kJ mol⁻¹
+* TΔS = −10 kJ mol⁻¹
+
+Calculate ΔG.
+
+**Solution**
+
+ΔG = ΔH − TΔS
+
+ΔG = −40 − (−10)
+
+ΔG = −30 kJ mol⁻¹
+
+Since ΔG is negative, the forward reaction is thermodynamically favourable under the stated conditions.
+
+This result does not tell us how fast the reaction occurs. Its rate also depends on kinetic factors, including activation energy.
+
+### Check Your Understanding
+
+1. Define Gibbs free energy change.
+2. State the meaning of ΔG < 0, ΔG > 0 and ΔG = 0.
+3. Calculate ΔG when ΔH = +25 kJ mol⁻¹ and TΔS = +40 kJ mol⁻¹.
+4. Explain why a reaction with negative ΔG may occur slowly.
+5. Distinguish between ΔG, ΔH and activation energy.
 TOPIC SUMMARY
 Remember the central relationships: 𝑞=𝑚𝑐Δ𝑇 Δ𝐻=𝐻products−𝐻reactants Δ𝐻<0 Exothermic Δ𝐻>0 Endothermic Δ𝐻=Σ𝐸(bonds broken)−Σ𝐸(bonds formed)
 And: Catalyst lowers 𝐸𝑎 but does not change Δ𝐻
