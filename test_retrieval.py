@@ -103,8 +103,7 @@ class TestKnowledgeRetrieval(unittest.TestCase):
     def setUpClass(cls):
         cls.namespace = load_retrieval_functions()
         cls.documents = load_knowledge_documents(cls.namespace)
-        cls.retrieve = cls.namespace["retrieve_knowledge"]
-
+        cls.retrieve = staticmethod(cls.namespace["retrieve_knowledge"])
     def retrieve_text(self, query):
         text, selected = self.retrieve(query, self.documents)
         return text, selected
