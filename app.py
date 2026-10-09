@@ -924,11 +924,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 # should not outrank introductory material
                 # merely because they contain the topic word.
                 elif section_role == "application":
-                    score -= 5
-                score += (
-                    8
-                    * len(primary_content_matches)
-                )
+
 
             # -------------------------------------------------
             # Document-type relevance
