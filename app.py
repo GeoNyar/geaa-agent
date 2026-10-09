@@ -361,6 +361,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
     DOMAIN_TERMS = {
         "thermodynamics": {
             "thermodynamics",
+            "gibbs free energy",
+            "gibbs energy",
+            "delta g",
             "enthalpy",
             "enthalpy change",
             "heat change",
@@ -469,7 +472,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "educational management",
             "public secondary schools",
             "secondary schools",
-            "school effectiveness"
+        "school effectiveness",
+        "gibbs free energy",
+        "photosynthesis",
         },
         "analytics": {
             "data",
@@ -700,6 +705,8 @@ def retrieve_knowledge(task, documents, max_sections=5):
         "outcome variable",
         "public secondary schools",
         "school effectiveness",
+        "gibbs free energy",
+        "enthalpy change",
         "enthalpy change",
         "activation energy",
         "reaction rate",
