@@ -915,6 +915,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     * len(primary_content_matches)
                 )
 
+
                 # Foundational sections should be preferred
                 # for broad explanatory questions.
                 if section_role == "foundational":
@@ -924,6 +925,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 # should not outrank introductory material
                 # merely because they contain the topic word.
                 elif section_role == "application":
+                    score -= 5
 
 
             # -------------------------------------------------
