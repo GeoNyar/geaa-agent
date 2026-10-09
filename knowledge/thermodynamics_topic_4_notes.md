@@ -448,7 +448,7 @@ This result does not tell us how fast the reaction occurs. Its rate also depends
 3. Calculate ΔG when ΔH = +25 kJ mol⁻¹ and TΔS = +40 kJ mol⁻¹.
 4. Explain why a reaction with negative ΔG may occur slowly.
 5. Distinguish between ΔG, ΔH and activation energy.
-TOPIC SUMMARY
+## TOPIC SUMMARY
 Remember the central relationships: 𝑞=𝑚𝑐Δ𝑇 Δ𝐻=𝐻products−𝐻reactants Δ𝐻<0 Exothermic Δ𝐻>0 Endothermic Δ𝐻=Σ𝐸(bonds broken)−Σ𝐸(bonds formed)
 And: Catalyst lowers 𝐸𝑎 but does not change Δ𝐻
 The key conceptual distinction
@@ -458,8 +458,9 @@ Thermodynamics asks:
 What energy changes are associated with the reaction?
 13
 This distinction is important because a reaction can be thermodynamically favourable yet kinetically slow if its activation energy is high.
-Key Formulae 𝑞=𝑚𝑐Δ𝑇 Δ𝑇=𝑇𝑓−𝑇𝑖 Δ𝐻=𝑞𝑛 Δ𝐻=𝐻products−𝐻reactants Δ𝐻=Σ𝐸(bonds broken)−Σ𝐸(bonds formed)
-SELF-ASSESSMENT
+## KEY FORMULAE
+𝑞=𝑚𝑐Δ𝑇 Δ𝑇=𝑇𝑓−𝑇𝑖 Δ𝐻=𝑞𝑛 Δ𝐻=𝐻products−𝐻reactants Δ𝐻=Σ𝐸(bonds broken)−Σ𝐸(bonds formed)
+## SELF-ASSESSMENT
 Statement
 Not yet
 Developing
