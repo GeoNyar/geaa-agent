@@ -60,7 +60,7 @@ def parse_knowledge_sections(content, document_type):
     # ---------------------------------------------------------
     if document_type == "learning_notes":
 
-        pattern = r"(?m)(?=^\s*4\.\d+\s+[A-Z])"
+        pattern = r"(?m)(?=^\s*(?:#+\s*)?4\.\d+\s+[A-Z])"
         raw_sections = re.split(pattern, content)
 
         for raw_section in raw_sections:
