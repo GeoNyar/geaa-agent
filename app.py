@@ -586,7 +586,9 @@ def retrieve_knowledge(task, documents, max_sections=5):
     # 6. Terms that are too generic to strongly influence
     #    retrieval on their own
     # ---------------------------------------------------------
+
     weak_terms = {
+        # Broad subject words
         "energy",
         "change",
         "reaction",
@@ -606,9 +608,71 @@ def retrieve_knowledge(task, documents, max_sections=5):
         "performance",
         "school",
         "student",
-        "teacher"
-    }
+        "teacher",
 
+        # Generic instruction and question words
+        "explain",
+        "describe",
+        "discuss",
+        "define",
+        "identify",
+        "outline",
+        "state",
+        "show",
+        "give",
+        "provide",
+        "answer",
+        "distinguish",
+        "compare",
+        "contrast",
+        "illustrate",
+        "calculate",
+        "determine",
+        "explain why",
+        "occur",
+        "occurs",
+        "occurring",
+        "happen",
+        "happens",
+        "slowly",
+        "still",
+        "however",
+        "therefore",
+        "using",
+        "used",
+        "use",
+        "how",
+        "why",
+        "what",
+        "when",
+        "where",
+        "which",
+        "their",
+        "your",
+        "this",
+        "that",
+        "can",
+        "does",
+        "do",
+        "is",
+        "are",
+        "and",
+        "but",
+        "for",
+        "with",
+        "from",
+        "into",
+        "between",
+        "the",
+        "a",
+        "an",
+        "of",
+        "to",
+        "in",
+        "on",
+        "at",
+        "by"
+    }
     # ---------------------------------------------------------
     # 7. Highly specific concepts
     # ---------------------------------------------------------
