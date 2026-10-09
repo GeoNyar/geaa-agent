@@ -542,7 +542,11 @@ def retrieve_knowledge(task, documents, max_sections=5):
         if requested_domains
         else None
     )
-
+    # ---------------------------------------------------------
+    # 4A. Reject queries outside supported knowledge domains
+    # ---------------------------------------------------------
+    if requested_domain is None:
+        return "", []
     # ---------------------------------------------------------
     # 5. Document type hints
     # ---------------------------------------------------------
