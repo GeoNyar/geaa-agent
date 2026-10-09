@@ -60,7 +60,8 @@ def parse_knowledge_sections(content, document_type):
     # ---------------------------------------------------------
     if document_type == "learning_notes":
 
-        pattern = r"(?m)(?=^\s*(?:#+\s*)?(?:4\.\d+\s+[A-Z]|TOPIC SUMMARY|KEY FORMULAE|SELF-ASSESSMENT)\s*$)"
+
+        pattern = r"(?im)(?=^\s*(?:#+\s*)?(?:4\.\d+\s+.*|TOPIC SUMMARY|KEY FORMULAE|SELF-ASSESSMENT)\s*$)"
         raw_sections = re.split(pattern, content)
 
         for raw_section in raw_sections:
@@ -217,36 +218,7 @@ def parse_knowledge_sections(content, document_type):
 
     return sections
 
-    # ---------------------------------------------------------
-    # Generic knowledge documents
-    # ---------------------------------------------------------
 
-    pattern = r"(?m)(?=^\s*\d+(?:\.\d+)*\s+[A-Z])"
-
-    raw_sections = re.split(pattern, content)
-
-    for raw_section in raw_sections:
-
-        section_text = raw_section.strip()
-
-        if not section_text:
-            continue
-
-        first_line = next(
-            (
-                line.strip()
-                for line in section_text.splitlines()
-                if line.strip()
-            ),
-            "Untitled section"
-        )
-
-        sections.append({
-            "heading": first_line,
-            "content": section_text
-        })
-
-    return sections
 
 
 KNOWLEDGE_DOCUMENTS = []
