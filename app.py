@@ -330,12 +330,12 @@ def retrieve_knowledge(task, documents, max_sections=5):
     }
 
 
+
     task_words = {
         word.lower()
         for word in re.findall(r"[A-Za-z0-9Δ]+", task)
         if len(word) > 2
         and word.lower() not in stop_words
-        and word.lower() not in weak_terms
     }
 
     # ---------------------------------------------------------
