@@ -912,6 +912,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 12 * len(exact_phrase_matches)
 
+
             # -------------------------------------------------
             # Specific concept matches
             # -------------------------------------------------
@@ -922,8 +923,13 @@ def retrieve_knowledge(task, documents, max_sections=5):
                 and term in section_lower
             ]
 
-            score += 8 * len(specific_matches)
+            meaningful_specific_matches = [
+                term
+                for term in specific_matches
+                if term not in weak_terms
+            ]
 
+            score += 8 * len(meaningful_specific_matches)
             # -------------------------------------------------
             # Heading relevance
             # -------------------------------------------------
