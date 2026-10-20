@@ -177,5 +177,28 @@ class TestKnowledgeRetrieval(unittest.TestCase):
         )
 
 
+
+    def test_08_course_outline_total_duration_is_retrieved(self):
+        text, _ = self.retrieve_text(
+            "What is the total duration of Chemistry Principles?"
+        )
+        self.assertIn("120", text)
+        self.assertIn("Chemistry Principles", text)
+
+    def test_09_biochemistry_outcome_and_hours_are_retrieved(self):
+        text, _ = self.retrieve_text(
+            "How many hours are allocated to biochemistry concepts?"
+        )
+        self.assertIn("Apply biochemistry concepts", text)
+        self.assertIn("45 hours", text)
+
+    def test_10_physical_chemistry_topics_are_retrieved(self):
+        text, _ = self.retrieve_text(
+            "Which topics are covered under physical chemistry?"
+        )
+        self.assertIn("Ionic equilibrium", text)
+        self.assertIn("Electrochemistry principles", text)
+        self.assertIn("Chemical kinetics", text)
+        self.assertIn("Chemical thermodynamics", text)
 if __name__ == "__main__":
     unittest.main(verbosity=2)
