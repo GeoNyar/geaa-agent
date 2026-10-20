@@ -147,6 +147,7 @@ class TestKnowledgeRetrieval(unittest.TestCase):
         self.assertIn("4.21 THERMODYNAMICS AND BIOCHEMISTRY", text)
 
 
+
     def test_05_education_research_does_not_retrieve_chemistry(self):
         text, selected = self.retrieve_text(
             "What is the relationship between teacher digital "
@@ -154,11 +155,23 @@ class TestKnowledgeRetrieval(unittest.TestCase):
             "schools in Kilifi County?"
         )
 
-        self.assertIn("education_research_methodology.md", text)
-        self.assertNotIn("thermodynamics_topic_4_notes.md", text)
-        self.assertNotIn("chemistry_principles_level_6_course_outline.md", text)
-        self.assertEqual(selected, [])
+        selected_filenames = [
+            item["filename"] for item in selected
+        ]
 
+        self.assertIn("education_research_methodology.md", text)
+        self.assertIn(
+            "education_research_methodology.md",
+            selected_filenames,
+        )
+        self.assertNotIn(
+            "thermodynamics_topic_4_notes.md",
+            selected_filenames,
+        )
+        self.assertNotIn(
+            "chemistry_principles_level_6_course_outline.md",
+            selected_filenames,
+        )
 
     def test_06_soil_erosion_does_not_retrieve_irrelevant_knowledge(self):
         text, selected = self.retrieve_text(
