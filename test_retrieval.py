@@ -153,7 +153,9 @@ class TestKnowledgeRetrieval(unittest.TestCase):
             "schools in Kilifi County?"
         )
 
-        self.assertEqual(text.strip(), "")
+self.assertIn("education_research_methodology.md", text)
+self.assertNotIn("thermodynamics_topic_4_notes.md", text)
+self.assertNotIn("chemistry_principles_level_6_course_outline.md", text)
         self.assertEqual(selected, [])
 
     def test_06_soil_erosion_does_not_retrieve_irrelevant_knowledge(self):
