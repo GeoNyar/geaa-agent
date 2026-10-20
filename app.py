@@ -1345,15 +1345,8 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     retrieval_reasons.append(
                         "Section role: application"
                     )
-# Other keyword overlap
-if strong_keyword_matches:
-    retrieval_reasons.append(
-        "Strong keyword overlap: "
-        + ", ".join(
-            sorted(strong_keyword_matches)
-        )
-    )
 
+            # Other keyword overlap
             filtered_strong_keyword_matches = {
                 term
                 for term in strong_keyword_matches
@@ -1383,6 +1376,7 @@ if strong_keyword_matches:
                         sorted(filtered_weak_keyword_matches)
                     )
                 )
+
 
             # Domain relevance
             if requested_domain is not None:
