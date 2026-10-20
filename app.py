@@ -1354,19 +1354,33 @@ if strong_keyword_matches:
         )
     )
 
-if weak_keyword_matches:
-    retrieval_reasons.append(
-        "General keyword overlap: "
-        + ", ".join(
-            sorted(weak_keyword_matches)
-        )
-    )
+            filtered_strong_keyword_matches = {
+                term
+                for term in strong_keyword_matches
+                if term not in weak_terms
+                and len(term) > 2
+            }
 
-            if weak_keyword_matches:
+            filtered_weak_keyword_matches = {
+                term
+                for term in weak_keyword_matches
+                if term not in weak_terms
+                and len(term) > 2
+            }
+
+            if filtered_strong_keyword_matches:
+                retrieval_reasons.append(
+                    "Strong keyword overlap: "
+                    + ", ".join(
+                        sorted(filtered_strong_keyword_matches)
+                    )
+                )
+
+            if filtered_weak_keyword_matches:
                 retrieval_reasons.append(
                     "General keyword overlap: "
                     + ", ".join(
-                        sorted(weak_keyword_matches)
+                        sorted(filtered_weak_keyword_matches)
                     )
                 )
 
