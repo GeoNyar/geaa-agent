@@ -1254,11 +1254,14 @@ def retrieve_knowledge(task, documents, max_sections=5):
             # -------------------------------------------------
             retrieval_reasons = []
 
+
             # Primary query matches
             primary_matches = {
                 term
                 for term in keyword_matches
                 if term in primary_terms
+                and term not in weak_terms
+                and len(term) > 2
             }
 
             if primary_matches:
@@ -1269,11 +1272,14 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     )
                 )
 
+
             # Expanded query matches
             expansion_matches = {
                 term
                 for term in keyword_matches
                 if term in expansion_terms
+                and term not in weak_terms
+                and len(term) > 2
             }
 
             if expansion_matches:
@@ -1339,14 +1345,22 @@ def retrieve_knowledge(task, documents, max_sections=5):
                     retrieval_reasons.append(
                         "Section role: application"
                     )
-            # Other keyword overlap
-            if strong_keyword_matches:
-                retrieval_reasons.append(
-                    "Strong keyword overlap: "
-                    + ", ".join(
-                        sorted(strong_keyword_matches)
-                    )
-                )
+# Other keyword overlap
+if strong_keyword_matches:
+    retrieval_reasons.append(
+        "Strong keyword overlap: "
+        + ", ".join(
+            sorted(strong_keyword_matches)
+        )
+    )
+
+if weak_keyword_matches:
+    retrieval_reasons.append(
+        "General keyword overlap: "
+        + ", ".join(
+            sorted(weak_keyword_matches)
+        )
+    )
 
             if weak_keyword_matches:
                 retrieval_reasons.append(
