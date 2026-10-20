@@ -242,14 +242,16 @@ def parse_knowledge_sections(content, document_type):
         return unique_sections
 
 
+
     # ---------------------------------------------------------
     # Generic knowledge documents
     # ---------------------------------------------------------
-    # Split on numbered section headings, with or without
-    # Markdown heading markers such as ## or ###.
+    # Split only on numbered headings written in uppercase.
+    # This avoids splitting on ordinary numbered objectives
+    # such as "3. To examine the association...".
     pattern = (
         r"(?im)(?=^\s*(?:#{1,6}\s*)?"
-        r"\d+(?:\.\d+)*\.?\s+[A-Z][^\n]*$)"
+        r"\d+(?:\.\d+)*\.?\s+[A-Z][A-Z0-9\s:&(),/'-]*$)"
     )
 
     raw_sections = re.split(pattern, content)
@@ -269,8 +271,11 @@ def parse_knowledge_sections(content, document_type):
             "Untitled section"
         )
 
-        # Remove Markdown heading markers for cleaner labels.
-        heading = re.sub(r"^#{1,6}\s*", "", first_line).strip()
+        heading = re.sub(
+            r"^#{1,6}\s*",
+            "",
+            first_line
+        ).strip()
 
         sections.append({
             "heading": heading,
