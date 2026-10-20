@@ -90,10 +90,14 @@ def parse_knowledge_sections(content, document_type):
     # ---------------------------------------------------------
     # Chemistry Principles course outline
     # ---------------------------------------------------------
+
     if document_type == "course_outline":
 
-        # These are the actual learning outcomes and their
-        # corresponding subtopics in the course outline.
+        # Preserve the original course document as searchable
+        # sections instead of relying only on reconstructed data.
+        original_content = content.strip()
+
+        # These outcomes preserve the known course structure.
         outcomes = [
             {
                 "number": "1",
@@ -140,24 +144,20 @@ def parse_knowledge_sections(content, document_type):
             },
         ]
 
-        # Preserve the course identity and duration as a
-        # separate introductory section.
-        intro_parts = []
-
+        # Keep the course identity and duration together.
         intro_patterns = [
             r"CHEMISTRY PRINCIPLES",
             r"ISCED UNIT CODE:\s*0531\s*541\s*14A",
             r"TVET CDACC UNIT CODE:\s*SLT/CU/SL/CC/03/6/MA",
             r"UNIT DURATION:\s*120\s*hours",
-            r"Relationship to Occupational Standards",
-            r"Unit Description",
-            r"Summary of Learning Outcomes",
         ]
+
+        intro_parts = []
 
         for pattern in intro_patterns:
             match = re.search(
                 pattern,
-                content,
+                original_content,
                 flags=re.IGNORECASE
             )
             if match:
@@ -168,12 +168,46 @@ def parse_knowledge_sections(content, document_type):
         if intro_text:
             sections.append({
                 "heading": "Chemistry Principles — Course Overview",
-                "content": intro_text
+                "content": intro_text,
             })
 
-        # Reconstruct each outcome as one structured section.
-        for outcome in outcomes:
+        # Preserve detailed source sections under their original
+        # headings wherever the Markdown uses heading syntax.
+        raw_sections = re.split(
+            r"(?m)(?=^#{1,6}\s+)",
+            original_content
+        )
 
+        for raw_section in raw_sections:
+            section_text = raw_section.strip()
+
+            if not section_text:
+                continue
+
+            first_line = next(
+                (
+                    line.strip().lstrip("#").strip()
+                    for line in section_text.splitlines()
+                    if line.strip()
+                ),
+                "Untitled section"
+            )
+
+            # Avoid adding the whole document as one section.
+            if len(section_text) > 12000:
+                continue
+
+            # Skip the introductory metadata block if present.
+            if first_line == "---":
+                continue
+
+            sections.append({
+                "heading": first_line,
+                "content": section_text,
+            })
+
+        # Retain the existing structured outcome sections.
+        for outcome in outcomes:
             topic_text = "\n".join(outcome["topics"])
 
             section_content = (
@@ -189,7 +223,22 @@ def parse_knowledge_sections(content, document_type):
                 "topics": outcome["topics"],
             })
 
-        return sections
+        # Remove exact duplicate sections without changing order.
+        unique_sections = []
+        seen = set()
+
+        for section in sections:
+            key = (
+                section.get("heading", ""),
+                section.get("content", ""),
+            )
+
+            if key not in seen:
+                seen.add(key)
+                unique_sections.append(section)
+
+        return unique_sections
+
 
     # ---------------------------------------------------------
     # Generic knowledge documents
