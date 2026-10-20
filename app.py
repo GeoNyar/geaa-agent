@@ -359,6 +359,18 @@ def retrieve_knowledge(task, documents, max_sections=5):
     # 3. Explicit knowledge domains
     # ---------------------------------------------------------
     DOMAIN_TERMS = {
+
+        "curriculum": {
+            "chemistry principles",
+            "physical chemistry",
+            "course outline",
+            "unit duration",
+            "course duration",
+            "learning outcome",
+            "curriculum",
+            "assessment",
+            "topics covered"
+        },
         "thermodynamics": {
             "thermodynamics",
             "gibbs free energy",
