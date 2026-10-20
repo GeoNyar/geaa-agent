@@ -972,6 +972,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
 
             score += 8 * len(meaningful_specific_matches)
             # -------------------------------------------------
+            # -------------------------------------------------
             # Heading relevance
             # -------------------------------------------------
             heading_matches = [
@@ -983,6 +984,17 @@ def retrieve_knowledge(task, documents, max_sections=5):
             ]
 
             score += 7 * len(heading_matches)
+
+            # Give an exact primary-topic heading additional
+            # weight for broad explanatory queries.
+            if is_broad_query:
+                if any(
+                    term in heading_lower
+                    for term in primary_terms
+                    if len(term) > 2
+                    and term not in weak_terms
+                ):
+                    score += 12
 
             heading_phrase_matches = [
                 phrase
