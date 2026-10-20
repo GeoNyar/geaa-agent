@@ -287,12 +287,16 @@ try:
 
             filename_lower = filename.lower()
 
+
             if "course_outline" in filename_lower:
                 document_type = "course_outline"
             elif "notes" in filename_lower:
                 document_type = "learning_notes"
+            elif "education_research" in filename_lower:
+                document_type = "education_research"
             else:
                 document_type = "general_knowledge"
+
 
             sections = parse_knowledge_sections(
                 content,
