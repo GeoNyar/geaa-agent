@@ -9,8 +9,8 @@ Do not interpret its results as findings about actual teachers or schools.
 """
 
 from pathlib import Path
-
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 # Locate the CSV relative to this script, so the script can be run
@@ -98,6 +98,81 @@ def main():
     print(df.groupby("school_id").size().describe().round(2).to_string())
 
     OUTPUT_DIR.mkdir(exist_ok=True)
+
+# All figures use synthetic data and must not be interpreted as real findings.
+
+# 1. Teacher digital competence versus current class mean achievement
+plt.figure(figsize=(8, 5))
+plt.scatter(
+    df["teacher_digital_competence_score"],
+    df["current_class_mean_achievement_score"],
+    alpha=0.75
+)
+plt.xlabel("Teacher digital competence score")
+plt.ylabel("Current class mean achievement score")
+plt.title(
+    "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
+    "Digital Competence and Class Mean Achievement"
+)
+plt.tight_layout()
+plt.savefig(
+    OUTPUT_DIR / "teacher_competence_vs_achievement.png",
+    dpi=150
+)
+plt.close()
+
+# 2. Compare the distributions of baseline and current class mean scores
+plt.figure(figsize=(8, 5))
+plt.hist(
+    df["baseline_class_mean_score"],
+    bins=12,
+    alpha=0.6,
+    label="Baseline class mean score"
+)
+plt.hist(
+    df["current_class_mean_achievement_score"],
+    bins=12,
+    alpha=0.6,
+    label="Current class mean achievement score"
+)
+plt.xlabel("Class mean score")
+plt.ylabel("Number of records")
+plt.title(
+    "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
+    "Baseline and Current Score Distributions"
+)
+plt.legend()
+plt.tight_layout()
+plt.savefig(
+    OUTPUT_DIR / "baseline_current_score_distributions.png",
+    dpi=150
+)
+plt.close()
+
+# 3. Distribution of teacher digital competence scores
+plt.figure(figsize=(8, 5))
+plt.hist(
+    df["teacher_digital_competence_score"],
+    bins=12,
+    edgecolor="black"
+)
+plt.xlabel("Teacher digital competence score")
+plt.ylabel("Number of records")
+plt.title(
+    "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
+    "Distribution of Teacher Digital Competence Scores"
+)
+plt.tight_layout()
+plt.savefig(
+    OUTPUT_DIR / "teacher_digital_competence_distribution.png",
+    dpi=150
+)
+plt.close()
+
+print("\nSynthetic visualisations saved to:", OUTPUT_DIR)
+print("- teacher_competence_vs_achievement.png")
+print("- baseline_current_score_distributions.png")
+print("- teacher_digital_competence_distribution.png")
 
     df[numeric_columns].describe().round(2).to_csv(
         OUTPUT_DIR / "descriptive_statistics.csv"
