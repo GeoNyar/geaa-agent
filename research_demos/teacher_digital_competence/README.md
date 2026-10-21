@@ -57,7 +57,7 @@ teacher_digital_competence/
     ├── baseline_current_score_distributions.png
     └── teacher_digital_competence_distribution.png
 ```
-
+Note: The outputs/ directory contains generated analysis results. GitHub Actions produces these files during execution and packages them as a downloadable artifact. The output files are not necessarily committed to the repository.
 The `outputs/` directory is generated when the analysis script runs. The CSV outputs and PNG charts are also packaged as downloadable artifacts by the GitHub Actions workflow.
 
 ## 5. Analytical Workflow
@@ -95,10 +95,8 @@ The project uses Python, pandas and Matplotlib.
 
 From the repository root, run:
 
-```bash
 python -m pip install pandas matplotlib
 python research_demos/teacher_digital_competence/analyse_synthetic_data.py
-```
 
 The script generates the output files in the demonstration's `outputs/` directory.
 
