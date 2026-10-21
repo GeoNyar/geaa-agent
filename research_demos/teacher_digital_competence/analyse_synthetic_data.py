@@ -86,6 +86,7 @@ def main():
         if column not in EXPECTED_COLUMNS
     ]
 
+
     if missing_columns or unexpected_columns:
         raise ValueError(
             f"Schema check failed. Missing columns: {missing_columns}; "
@@ -100,7 +101,7 @@ def main():
             f"Expected 120 synthetic records, but found {len(df)}."
         )
 
-    # Check for missing values.
+    # Check for missing values before analysis.
     if df.isna().any().any():
         missing_counts = df.isna().sum()
         raise ValueError(
@@ -108,7 +109,7 @@ def main():
             + missing_counts[missing_counts > 0].to_string()
         )
 
-    # Confirm that expected numerical variables contain valid numbers.
+    # Confirm that required numerical variables contain valid numbers.
     for column in NUMERIC_COLUMNS:
         converted = pd.to_numeric(df[column], errors="coerce")
 
@@ -120,7 +121,7 @@ def main():
 
         df[column] = converted
 
-    # Check important variable ranges and coding rules.
+    # Check variable ranges and coding rules.
     if not df[COMPETENCE].between(0, 100).all():
         raise ValueError(
             "Data quality check failed: digital competence "
@@ -160,7 +161,19 @@ def main():
             "cannot be negative."
         )
 
-    # Check identifiers and the expected school structure.
+    if not df["baseline_class_mean_score"].between(0, 100).all():
+        raise ValueError(
+            "Data quality check failed: baseline class mean scores "
+            "must be between 0 and 100."
+        )
+
+    if not df[ACHIEVEMENT].between(0, 100).all():
+        raise ValueError(
+            "Data quality check failed: current class mean achievement "
+            "scores must be between 0 and 100."
+        )
+
+    # Check identifiers and expected school structure.
     if df["teacher_id"].duplicated().any():
         raise ValueError(
             "Data quality check failed: duplicate teacher IDs found."
@@ -190,6 +203,7 @@ def main():
             "Data integrity check failed: every row must be labelled "
             "SYNTHETIC_NOT_REAL."
         )
+
 
     print("\n2. DATA QUALITY")
     print("Missing values: none")
