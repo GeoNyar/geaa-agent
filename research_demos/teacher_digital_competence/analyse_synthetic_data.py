@@ -340,12 +340,60 @@ def main():
         ).to_csv(OUTPUT_DIR / "exploratory_correlation.csv", index=False)
 
     print(f"\nSummary files saved in: {OUTPUT_DIR}")
+
     print("\nINTERPRETATION AND LIMITATIONS")
-    print("- These are synthetic data, not observations from real schools.")
-    print("- Any association is a property of the data-generation process.")
-    print("- Correlation does not establish causation.")
-    print("- Records are grouped within schools; independence cannot be assumed.")
-    print("- Do not present these results as empirical research findings.")
+    print("-" * 60)
+    print("1. DATA PROVENANCE")
+    print(
+        "   All records are synthetic and were created for "
+        "demonstration purposes."
+    )
+    print(
+        "   They are not observations from actual teachers, "
+        "learners, or schools."
+    )
+
+    print("\n2. INTERPRETING THE RESULTS")
+    print(
+        "   Descriptive statistics summarise the generated "
+        "dataset only."
+    )
+    print(
+        "   The Pearson correlation describes a linear association "
+        "within these synthetic records."
+    )
+    print(
+        "   Any observed association reflects the data-generation "
+        "process and must not be presented as an empirical finding."
+    )
+
+    print("\n3. METHODOLOGICAL LIMITATIONS")
+    print(
+        "   Correlation does not establish causation."
+    )
+    print(
+        "   Records are grouped within schools, so observations "
+        "may not be statistically independent."
+    )
+    print(
+        "   The unadjusted correlation does not control for "
+        "potential confounding variables or school-level clustering."
+    )
+
+    print("\n4. IMPLICATIONS FOR REAL EDUCATION RESEARCH")
+    print(
+        "   A real study would require authentic data, ethical "
+        "approval where applicable, valid measures, and a justified "
+        "sampling and analysis strategy."
+    )
+    print(
+        "   Statistical results should be interpreted in light of "
+        "the research design and data limitations."
+    )
+
+    print("\n" + "-" * 60)
+    print("END OF SYNTHETIC RESEARCH DEMONSTRATION")
+
 
 
 if __name__ == "__main__":
