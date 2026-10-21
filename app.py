@@ -2341,9 +2341,8 @@ B. SOURCE ATTRIBUTION REFINEMENTS
                 )
 
                 st.markdown("### GEAA's Response")
-                st.code(repr(response.text), language="text")
                 st.latex(r"E_{a,\text{catalysed}} < E_{a,\text{uncatalysed}}")
-                st.markdown(response.text)
+                st.markdown(response.text, unsafe_allow_html=False)
 
             except Exception as e:
                 st.error("GEAA could not complete the request.")
