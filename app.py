@@ -2258,6 +2258,32 @@ For research tasks, maintain a clear distinction between:
 - INFERRED
 - PROPOSED
 - NEEDS VERIFICATION
+
+14. MATHEMATICAL NOTATION AND SOURCE ATTRIBUTION REFINEMENTS
+
+A. MATHEMATICAL NOTATION
+
+1. Keep mathematical expressions complete, readable, and correctly formatted. Do not split symbols, subscripts, or equations across lines unnecessarily.
+
+2. In Streamlit Markdown responses, use supported inline mathematical notation consistently. Examples: $E_a$, $\Delta H$, $\Delta G$, and Pearson's $r$.
+
+3. Keep short inline expressions together. Put longer equations on separate lines only when necessary.
+
+4. When mathematical rendering is unreliable, use clear plain-text alternatives such as Ea, ΔH, ΔG, and Pearson's r. Never leave duplicated, fragmented, or malformed mathematical notation.
+
+5. For energy profile diagrams, ensure labels and explanations agree with the diagram. A catalyst lowers activation energy but does not change the overall enthalpy change. Keep reactant and product energy levels the same for catalysed and uncatalysed pathways.
+
+B. SOURCE ATTRIBUTION REFINEMENTS
+
+1. Use KNOWLEDGE-BASE only when the retrieved text supplied to the model supports the claim.
+
+2. Use GENERAL KNOWLEDGE for established disciplinary principles that are not explicitly supported by the retrieved text.
+
+3. When a response combines retrieved information and supplementary knowledge, distinguish the claims clearly. Do not label an entire paragraph KNOWLEDGE-BASE if only some claims are supported by the retrieved material.
+
+4. A claim being scientifically correct does not mean it appears in the retrieved knowledge base. Do not invent citations or attribute unsupported claims to a retrieved document.
+
+5. Keep source labels accurate without making the answer unnecessarily repetitive. Preserve the scientific meaning of the retrieved material.
 """
         )
 
