@@ -38,7 +38,36 @@ def main():
             "Keep the CSV in the same folder as this Python script."
         )
 
+
     df = pd.read_csv(DATA_FILE)
+
+    EXPECTED_COLUMNS = [
+        "school_id",
+        "subcounty_label",
+        "teacher_id",
+        "teacher_years_experience",
+        "teacher_digital_competence_score",
+        "digital_training_past_2_years",
+        "school_resource_access_index",
+        "internet_reliability_rating_1_5",
+        "device_access_rating_1_5",
+        "class_size",
+        "baseline_class_mean_score",
+        "current_class_mean_achievement_score",
+        "data_status",
+    ]
+
+    NUMERIC_COLUMNS = [
+        "teacher_years_experience",
+        "teacher_digital_competence_score",
+        "digital_training_past_2_years",
+        "school_resource_access_index",
+        "internet_reliability_rating_1_5",
+        "device_access_rating_1_5",
+        "class_size",
+        "baseline_class_mean_score",
+        "current_class_mean_achievement_score",
+    ]
 
     print("\n1. DATASET OVERVIEW")
     print(f"Rows: {df.shape[0]}")
@@ -47,24 +76,130 @@ def main():
     print("\nColumn names:")
     print(df.columns.tolist())
 
-    required_columns = [
-        COMPETENCE,
-        ACHIEVEMENT,
-        BASELINE,
-        STATUS,
-        "school_id",
-    ]
+    # Check the expected dataset structure.
     missing_columns = [
-        column for column in required_columns if column not in df.columns
+        column for column in EXPECTED_COLUMNS
+        if column not in df.columns
     ]
-    if missing_columns:
-        raise ValueError(f"Required columns missing: {missing_columns}")
+    unexpected_columns = [
+        column for column in df.columns
+        if column not in EXPECTED_COLUMNS
+    ]
 
+    if missing_columns or unexpected_columns:
+        raise ValueError(
+            f"Schema check failed. Missing columns: {missing_columns}; "
+            f"unexpected columns: {unexpected_columns}"
+        )
+
+    if df.empty:
+        raise ValueError("Data quality check failed: the dataset is empty.")
+
+    if len(df) != 120:
+        raise ValueError(
+            f"Expected 120 synthetic records, but found {len(df)}."
+        )
+
+    # Check for missing values.
+    if df.isna().any().any():
+        missing_counts = df.isna().sum()
+        raise ValueError(
+            "Data quality check failed: missing values found.\n"
+            + missing_counts[missing_counts > 0].to_string()
+        )
+
+    # Confirm that expected numerical variables contain valid numbers.
+    for column in NUMERIC_COLUMNS:
+        converted = pd.to_numeric(df[column], errors="coerce")
+
+        if converted.isna().any():
+            raise ValueError(
+                f"Data quality check failed: "
+                f"'{column}' contains non-numeric values."
+            )
+
+        df[column] = converted
+
+    # Check important variable ranges and coding rules.
+    if not df[COMPETENCE].between(0, 100).all():
+        raise ValueError(
+            "Data quality check failed: digital competence "
+            "scores must be between 0 and 100."
+        )
+
+    for column in [
+        "internet_reliability_rating_1_5",
+        "device_access_rating_1_5",
+    ]:
+        if not df[column].between(1, 5).all():
+            raise ValueError(
+                f"Data quality check failed: '{column}' "
+                "must be between 1 and 5."
+            )
+
+    if not df["digital_training_past_2_years"].isin([0, 1]).all():
+        raise ValueError(
+            "Data quality check failed: digital training "
+            "indicator must contain only 0 or 1."
+        )
+
+    if (df["teacher_years_experience"] < 0).any():
+        raise ValueError(
+            "Data quality check failed: teaching experience "
+            "cannot be negative."
+        )
+
+    if (df["class_size"] <= 0).any():
+        raise ValueError(
+            "Data quality check failed: class size must be positive."
+        )
+
+    if (df["school_resource_access_index"] < 0).any():
+        raise ValueError(
+            "Data quality check failed: resource access index "
+            "cannot be negative."
+        )
+
+    # Check identifiers and the expected school structure.
+    if df["teacher_id"].duplicated().any():
+        raise ValueError(
+            "Data quality check failed: duplicate teacher IDs found."
+        )
+
+    if df["school_id"].isna().any() or df["teacher_id"].isna().any():
+        raise ValueError(
+            "Data quality check failed: missing school or teacher IDs."
+        )
+
+    if df["school_id"].nunique() != 20:
+        raise ValueError(
+            "Data quality check failed: expected 20 synthetic schools."
+        )
+
+    records_per_school = df.groupby("school_id").size()
+
+    if not records_per_school.eq(6).all():
+        raise ValueError(
+            "Data quality check failed: each synthetic school "
+            "must have exactly 6 records."
+        )
+
+    # Protect the provenance of the demonstration dataset.
     if not df[STATUS].eq("SYNTHETIC_NOT_REAL").all():
         raise ValueError(
             "Data integrity check failed: every row must be labelled "
             "SYNTHETIC_NOT_REAL."
         )
+
+    print("\n2. DATA QUALITY")
+    print("Missing values: none")
+    print("All expected columns are present; no unexpected columns.")
+    print("Numeric variables and specified ranges: passed")
+    print("Teacher IDs are unique: passed")
+    print("School structure: 20 schools, 6 records per school")
+    print("All rows correctly labelled synthetic: passed")
+    print("Data-quality checks passed.")
+
 
     print("\n2. DATA QUALITY")
     print("Missing values by column:")
