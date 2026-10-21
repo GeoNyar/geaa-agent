@@ -2342,6 +2342,7 @@ B. SOURCE ATTRIBUTION REFINEMENTS
 
                 st.markdown("### GEAA's Response")
                 st.code(repr(response.text), language="text")
+                st.latex(r"E_{a,\text{catalysed}} < E_{a,\text{uncatalysed}}")
                 st.markdown(response.text)
 
             except Exception as e:
