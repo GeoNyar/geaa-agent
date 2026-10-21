@@ -1,1 +1,29 @@
 
+name: Synthetic Education Research Demo
+
+on:
+  push:
+    paths:
+      - "research_demos/teacher_digital_competence/**"
+      - ".github/workflows/synthetic-research-demo.yml"
+  workflow_dispatch:
+
+jobs:
+  run-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install analysis dependency
+        run: python -m pip install pandas
+
+      - name: Run synthetic research analysis
+        run: python research_demos/teacher_digital_competence/analyse_synthetic_data.py
+
