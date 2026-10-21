@@ -1,6 +1,8 @@
 import streamlit as st
 from google import genai
 from google.genai import types
+from pptx import Presentation
+from pptx.util import Inches, Pt
 # GEAA query expansion terms
 QUERY_EXPANSION = {
     "hess": ["enthalpy", "energy", "reaction", "steps"],
