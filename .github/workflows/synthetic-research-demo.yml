@@ -35,5 +35,6 @@ jobs:
           path: |
             research_demos/teacher_digital_competence/outputs/*.csv
             research_demos/teacher_digital_competence/outputs/*.png
+            research_demos/teacher_digital_competence/outputs/*.md
           if-no-files-found: error
 
