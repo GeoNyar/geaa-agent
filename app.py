@@ -1995,7 +1995,7 @@ if st.button("🚀 Run Task"):
             + mode
             + "\n\nMODE WORKFLOW:\n"
             + workflows[mode]
-            + """
+            + r"""
 
 EVIDENCE AND PROVENANCE RULES
 
