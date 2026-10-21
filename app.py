@@ -2341,7 +2341,7 @@ B. SOURCE ATTRIBUTION REFINEMENTS
                 )
 
                 st.markdown("### GEAA's Response")
-                st.write(response.text)
+                st.markdown(response.text)
 
             except Exception as e:
                 st.error("GEAA could not complete the request.")
