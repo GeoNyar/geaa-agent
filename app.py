@@ -15,6 +15,62 @@ QUERY_EXPANSION = {
     "photosynthesis": ["biochemistry", "thermodynamics", "endothermic", "energy", "sunlight", "glucose"],
     "several steps": ["hess", "hess's law", "route", "reaction pathway"],
 }
+
+def create_geaa_presentation(slide_text):
+    """Convert GEAA's numbered slide response into an editable PowerPoint."""
+
+    prs = Presentation()
+    prs.core_properties.title = "GEAA Education and Research Presentation"
+    prs.core_properties.author = "GEAA — George's Education & Analytics Agent"
+
+    current_slide = None
+
+    for raw_line in slide_text.splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            continue
+
+        # Recognise headings such as: Slide 1: Title
+        if re.match(r"^(#{1,3}\s*)?Slide\s+\d+\s*[:—-]", line, re.IGNORECASE):
+            heading = re.sub(r"^#{1,3}\s*", "", line)
+            heading = re.sub(r"^Slide\s+\d+\s*[:—-]\s*", "", heading, flags=re.IGNORECASE)
+
+            current_slide = prs.slides.add_slide(prs.slide_layouts[1])
+            current_slide.shapes.title.text = heading or "Untitled Slide"
+            continue
+
+        # Treat Markdown headings as slide headings if no slide exists yet.
+        if line.startswith("# "):
+            current_slide = prs.slides.add_slide(prs.slide_layouts[1])
+            current_slide.shapes.title.text = line[2:].strip()
+            continue
+
+        # Start a title slide if the response does not use slide headings.
+        if current_slide is None:
+            current_slide = prs.slides.add_slide(prs.slide_layouts[1])
+            current_slide.shapes.title.text = "GEAA Presentation"
+            body = current_slide.placeholders[1].text_frame
+            body.text = line
+            continue
+
+        # Add response lines as editable bullet points.
+        body = current_slide.placeholders[1].text_frame
+        paragraph = body.add_paragraph()
+        paragraph.text = re.sub(r"^[-*•]\s*", "", line)
+        paragraph.level = 0
+        paragraph.font.size = Pt(20)
+
+    if len(prs.slides) == 0:
+        slide = prs.slides.add_slide(prs.slide_layouts[1])
+        slide.shapes.title.text = "GEAA Presentation"
+        slide.placeholders[1].text = slide_text[:1000]
+
+    output = __import__("io").BytesIO()
+    prs.save(output)
+    output.seek(0)
+    return output.getvalue()
+
 # Page configuration
 st.set_page_config(
     page_title="GEAA",
@@ -2348,6 +2404,14 @@ B. SOURCE ATTRIBUTION REFINEMENTS
                 st.markdown("### GEAA's Response")
                 st.latex(r"E_{a,\text{catalysed}} < E_{a,\text{uncatalysed}}")
                 st.markdown(response.text, unsafe_allow_html=False)
+
+                st.download_button(
+                    label="📥 Download editable PowerPoint",
+                    data=create_geaa_presentation(response.text),
+                    file_name="GEAA_presentation.pptx",
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    key="download_geaa_presentation"
+                )
 
             except Exception as e:
                 st.error("GEAA could not complete the request.")
