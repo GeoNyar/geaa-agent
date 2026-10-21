@@ -2273,6 +2273,20 @@ A. MATHEMATICAL NOTATION
 
 5. For energy profile diagrams, ensure labels and explanations agree with the diagram. A catalyst lowers activation energy but does not change the overall enthalpy change. Keep reactant and product energy levels the same for catalysed and uncatalysed pathways.
 
+
+7. RELIABLE MATHEMATICAL DISPLAY
+
+a. Use plain-text scientific notation when mathematical rendering is uncertain: Ea for activation energy and ΔH for enthalpy change.
+
+b. Write comparisons clearly, for example: Ea (catalysed) < Ea (uncatalysed).
+
+c. Write equations in readable plain text, for example: ΔH (catalysed) = ΔH (uncatalysed).
+
+d. Do not place the entire response inside a code block or use a fenced math block.
+
+e. Keep Markdown headings, bullet points, and source-attribution labels intact.
+
+f. Do not sacrifice scientific accuracy to achieve visual formatting.
 B. SOURCE ATTRIBUTION REFINEMENTS
 
 1. Use KNOWLEDGE-BASE only when the retrieved text supplied to the model supports the claim.
