@@ -2341,6 +2341,7 @@ B. SOURCE ATTRIBUTION REFINEMENTS
                 )
 
                 st.markdown("### GEAA's Response")
+                st.code(repr(response.text), language="text")
                 st.markdown(response.text)
 
             except Exception as e:
