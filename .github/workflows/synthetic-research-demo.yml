@@ -27,10 +27,13 @@ jobs:
       - name: Run synthetic research analysis
         run: python research_demos/teacher_digital_competence/analyse_synthetic_data.py
 
+
       - name: Save analysis results as downloadable artifacts
         uses: actions/upload-artifact@v4
         with:
           name: synthetic-education-research-results
-          path: research_demos/teacher_digital_competence/outputs/*.csv
+          path: |
+            research_demos/teacher_digital_competence/outputs/*.csv
+            research_demos/teacher_digital_competence/outputs/*.png
           if-no-files-found: error
 
