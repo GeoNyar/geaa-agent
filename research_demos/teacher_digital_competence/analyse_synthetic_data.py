@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_FILE = SCRIPT_DIR / "geaa_synthetic_teacher_digital_competence.csv"
 OUTPUT_DIR = SCRIPT_DIR / "outputs"
-
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 COMPETENCE = "teacher_digital_competence_score"
 ACHIEVEMENT = "current_class_mean_achievement_score"
 BASELINE = "baseline_class_mean_score"
