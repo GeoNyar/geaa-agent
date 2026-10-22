@@ -77,25 +77,27 @@ The correlation is an exploratory, unadjusted analysis. It does not account for 
 
 ## 6. Research Outputs
 
-The analysis script generates six output files.
+The analysis script generates nine output files.
 
 ### Statistical outputs
 
 - `descriptive_statistics.csv` — descriptive statistics for selected numerical variables.
-- `exploratory_correlation.csv` — exploratory Pearson correlation, variables compared, number of complete records and synthetic-data status.
+- `exploratory_correlation.csv` — exploratory Pearson correlation results, including the variables compared, number of complete records and synthetic-data status.
+- `school_level_summary.csv` — summary measures for each fictional school.
+- `school_level_variation.csv` — estimates of variation between and within fictional schools, supporting an exploratory examination of school-level clustering.
 
 ### Visual outputs
 
 - `teacher_competence_vs_achievement.png` — scatter plot of teacher digital competence and current class mean achievement.
 - `baseline_current_score_distributions.png` — comparison of baseline and current class mean score distributions.
 - `teacher_digital_competence_distribution.png` — distribution of teacher digital competence scores.
+- `school_level_achievement_means.png` — comparison of mean achievement across fictional schools.
 
 ### Research report
 
 - `synthetic_research_report.md` — automatically generated Markdown report containing the dataset overview, descriptive statistics, exploratory correlation, methodological limitations and requirements for a real study.
 
-All outputs describe synthetic data only. The baseline/current score comparison does not establish actual change over time, and the correlation does not demonstrate causation. The files are available in the downloadable GitHub Actions artifact after a successful workflow run.
-
+All outputs describe synthetic data only. The baseline/current score comparison does not establish actual change over time, and the correlation does not demonstrate causation. School-level summaries and variation estimates are also illustrative and cannot establish real differences between schools. The files are available in the downloadable GitHub Actions artifact after a successful workflow run.
 ## 7. Reproducibility
 
 The project uses Python, pandas and Matplotlib.
