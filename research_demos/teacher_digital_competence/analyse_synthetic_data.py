@@ -343,14 +343,18 @@ mean current achievement scores.
 {icc_text}
 
 The ICC is an exploratory one-way random-effects estimate for the
-balanced synthetic dataset. It describes the estimated share of outcome
-variance associated with between-school differences under that model.
-It does not identify the causes of those differences.
+balanced synthetic dataset. It summarises the estimated between-school
+variation relative to the total estimated variance under the specified
+model. It does not identify the causes of school-level differences.
 
-The estimate is sensitive to the data-generating process and the
-random-effects assumptions. It is not evidence about real schools.
-A negative raw ICC estimate may occur due to sampling variation and
-should be reported transparently rather than silently treated as zero.
+The estimate depends on the data-generating process and the
+random-effects assumptions. A negative raw ICC can arise when the
+estimated between-school variance component is negative. Such an
+estimate should be reported transparently and interpreted as an
+estimation result, not as a literal negative proportion of variance.
+In applied research, the ICC interpretation should be checked against
+the model, design and uncertainty in the estimate. This synthetic
+analysis is not evidence about real schools.
 
 ## 6. Methodological limitations
 
