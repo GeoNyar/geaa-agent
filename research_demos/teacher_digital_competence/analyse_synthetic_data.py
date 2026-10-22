@@ -178,7 +178,24 @@ def validate_dataset(df):
     if not counts.eq(6).all():
         raise ValueError("Each synthetic school must have 6 records.")
 
+    school_level_columns = [
+        "subcounty_label",
+        "school_resource_access_index",
+        "internet_reliability_rating_1_5",
+        "device_access_rating_1_5",
+    ]
+
+    for col in school_level_columns:
+        values_per_school = df.groupby("school_id")[col].nunique()
+        if not values_per_school.eq(1).all():
+            raise ValueError(
+                f"'{col}' must have one consistent value per school."
+            )
+
     if not df[STATUS].eq("SYNTHETIC_NOT_REAL").all():
+        raise ValueError(
+            "Every record must be labelled SYNTHETIC_NOT_REAL."
+        )
         raise ValueError(
             "Every record must be labelled SYNTHETIC_NOT_REAL."
         )
