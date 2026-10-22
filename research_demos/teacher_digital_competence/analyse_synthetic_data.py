@@ -5,78 +5,70 @@ Topic: Teacher digital competence and class mean achievement.
 
 IMPORTANT:
 This dataset is synthetic demonstration data, not real research evidence.
-Do not interpret its results as findings about actual teachers or schools.
+Results must not be interpreted as findings about actual teachers or schools.
 """
 
 from pathlib import Path
-import pandas as pd
+import math
+
+import matplotlib
+matplotlib.use("Agg")  # Suitable for automated, non-interactive runs.
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
-# Locate the CSV relative to this script, so the script can be run
-# from different working directories.
+# ---------------------------------------------------------------------
+# 1. FILE PATHS AND CONFIGURATION
+# ---------------------------------------------------------------------
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_FILE = SCRIPT_DIR / "geaa_synthetic_teacher_digital_competence.csv"
 OUTPUT_DIR = SCRIPT_DIR / "outputs"
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 COMPETENCE = "teacher_digital_competence_score"
 ACHIEVEMENT = "current_class_mean_achievement_score"
 BASELINE = "baseline_class_mean_score"
 STATUS = "data_status"
 
+EXPECTED_COLUMNS = [
+    "school_id",
+    "subcounty_label",
+    "teacher_id",
+    "teacher_years_experience",
+    COMPETENCE,
+    "digital_training_past_2_years",
+    "school_resource_access_index",
+    "internet_reliability_rating_1_5",
+    "device_access_rating_1_5",
+    "class_size",
+    BASELINE,
+    ACHIEVEMENT,
+    STATUS,
+]
 
-def main():
-    print("=" * 70)
-    print("GEAA: SYNTHETIC EDUCATION RESEARCH DEMONSTRATION")
-    print("Teacher digital competence and class mean achievement")
-    print("=" * 70)
-    print("\nWARNING: All records are synthetic, not real research data.")
+NUMERIC_COLUMNS = [
+    "teacher_years_experience",
+    COMPETENCE,
+    "digital_training_past_2_years",
+    "school_resource_access_index",
+    "internet_reliability_rating_1_5",
+    "device_access_rating_1_5",
+    "class_size",
+    BASELINE,
+    ACHIEVEMENT,
+]
 
-    if not DATA_FILE.exists():
-        raise FileNotFoundError(
-            f"Dataset not found: {DATA_FILE}\n"
-            "Keep the CSV in the same folder as this Python script."
-        )
 
+# ---------------------------------------------------------------------
+# 2. DATA VALIDATION
+# ---------------------------------------------------------------------
 
-    df = pd.read_csv(DATA_FILE)
+def validate_dataset(df):
+    """Validate dataset structure, values, identifiers and provenance."""
 
-    EXPECTED_COLUMNS = [
-        "school_id",
-        "subcounty_label",
-        "teacher_id",
-        "teacher_years_experience",
-        "teacher_digital_competence_score",
-        "digital_training_past_2_years",
-        "school_resource_access_index",
-        "internet_reliability_rating_1_5",
-        "device_access_rating_1_5",
-        "class_size",
-        "baseline_class_mean_score",
-        "current_class_mean_achievement_score",
-        "data_status",
-    ]
+    if df.empty:
+        raise ValueError("The dataset is empty.")
 
-    NUMERIC_COLUMNS = [
-        "teacher_years_experience",
-        "teacher_digital_competence_score",
-        "digital_training_past_2_years",
-        "school_resource_access_index",
-        "internet_reliability_rating_1_5",
-        "device_access_rating_1_5",
-        "class_size",
-        "baseline_class_mean_score",
-        "current_class_mean_achievement_score",
-    ]
-
-    print("\n1. DATASET OVERVIEW")
-    print(f"Rows: {df.shape[0]}")
-    print(f"Columns: {df.shape[1]}")
-    print(f"Duplicate rows: {df.duplicated().sum()}")
-    print("\nColumn names:")
-    print(df.columns.tolist())
-
-    # Check the expected dataset structure.
     missing_columns = [
         column for column in EXPECTED_COLUMNS
         if column not in df.columns
@@ -86,334 +78,119 @@ def main():
         if column not in EXPECTED_COLUMNS
     ]
 
-
     if missing_columns or unexpected_columns:
         raise ValueError(
-            f"Schema check failed. Missing columns: {missing_columns}; "
+            "Schema check failed. "
+            f"Missing columns: {missing_columns}; "
             f"unexpected columns: {unexpected_columns}"
         )
-
-    if df.empty:
-        raise ValueError("Data quality check failed: the dataset is empty.")
 
     if len(df) != 120:
         raise ValueError(
             f"Expected 120 synthetic records, but found {len(df)}."
         )
 
-    # Check for missing values before analysis.
     if df.isna().any().any():
         missing_counts = df.isna().sum()
+        details = missing_counts[missing_counts > 0].to_string()
         raise ValueError(
-            "Data quality check failed: missing values found.\n"
-            + missing_counts[missing_counts > 0].to_string()
+            "Missing values were found:\n" + details
         )
 
-    # Confirm that required numerical variables contain valid numbers.
+    if df.duplicated().any():
+        raise ValueError(
+            f"Found {df.duplicated().sum()} duplicate rows."
+        )
+
+    # Convert numeric variables and reject non-numeric or infinite values.
     for column in NUMERIC_COLUMNS:
         converted = pd.to_numeric(df[column], errors="coerce")
 
         if converted.isna().any():
             raise ValueError(
-                f"Data quality check failed: "
-                f"'{column}' contains non-numeric values."
+                f"'{column}' contains non-numeric or missing values."
+            )
+
+        if not converted.map(math.isfinite).all():
+            raise ValueError(
+                f"'{column}' contains infinite values."
             )
 
         df[column] = converted
 
-    # Check variable ranges and coding rules.
-    if not df[COMPETENCE].between(0, 100).all():
-        raise ValueError(
-            "Data quality check failed: digital competence "
-            "scores must be between 0 and 100."
-        )
+    # Validate score ranges and other coding rules.
+    bounded_variables = {
+        COMPETENCE: (0, 100),
+        BASELINE: (0, 100),
+        ACHIEVEMENT: (0, 100),
+        "internet_reliability_rating_1_5": (1, 5),
+        "device_access_rating_1_5": (1, 5),
+    }
 
-    for column in [
-        "internet_reliability_rating_1_5",
-        "device_access_rating_1_5",
-    ]:
-        if not df[column].between(1, 5).all():
+    for column, (minimum, maximum) in bounded_variables.items():
+        if not df[column].between(minimum, maximum).all():
             raise ValueError(
-                f"Data quality check failed: '{column}' "
-                "must be between 1 and 5."
+                f"'{column}' must be between {minimum} and {maximum}."
             )
 
     if not df["digital_training_past_2_years"].isin([0, 1]).all():
         raise ValueError(
-            "Data quality check failed: digital training "
-            "indicator must contain only 0 or 1."
+            "Digital training indicator must contain only 0 or 1."
         )
 
     if (df["teacher_years_experience"] < 0).any():
-        raise ValueError(
-            "Data quality check failed: teaching experience "
-            "cannot be negative."
-        )
+        raise ValueError("Teaching experience cannot be negative.")
 
     if (df["class_size"] <= 0).any():
-        raise ValueError(
-            "Data quality check failed: class size must be positive."
-        )
+        raise ValueError("Class size must be positive.")
 
     if (df["school_resource_access_index"] < 0).any():
-        raise ValueError(
-            "Data quality check failed: resource access index "
-            "cannot be negative."
-        )
+        raise ValueError("Resource access index cannot be negative.")
 
-    if not df["baseline_class_mean_score"].between(0, 100).all():
-        raise ValueError(
-            "Data quality check failed: baseline class mean scores "
-            "must be between 0 and 100."
-        )
+    for column in ["school_id", "teacher_id", "subcounty_label", STATUS]:
+        if df[column].astype(str).str.strip().eq("").any():
+            raise ValueError(
+                f"'{column}' contains blank identifiers or labels."
+            )
 
-    if not df[ACHIEVEMENT].between(0, 100).all():
-        raise ValueError(
-            "Data quality check failed: current class mean achievement "
-            "scores must be between 0 and 100."
-        )
-
-    # Check identifiers and expected school structure.
     if df["teacher_id"].duplicated().any():
-        raise ValueError(
-            "Data quality check failed: duplicate teacher IDs found."
-        )
-
-    if df["school_id"].isna().any() or df["teacher_id"].isna().any():
-        raise ValueError(
-            "Data quality check failed: missing school or teacher IDs."
-        )
+        raise ValueError("Teacher IDs must be unique.")
 
     if df["school_id"].nunique() != 20:
-        raise ValueError(
-            "Data quality check failed: expected 20 synthetic schools."
-        )
+        raise ValueError("Expected exactly 20 synthetic schools.")
 
     records_per_school = df.groupby("school_id").size()
 
     if not records_per_school.eq(6).all():
         raise ValueError(
-            "Data quality check failed: each synthetic school "
-            "must have exactly 6 records."
+            "Each synthetic school must have exactly 6 records."
         )
 
-    # Protect the provenance of the demonstration dataset.
     if not df[STATUS].eq("SYNTHETIC_NOT_REAL").all():
         raise ValueError(
-            "Data integrity check failed: every row must be labelled "
-            "SYNTHETIC_NOT_REAL."
+            "Every record must be labelled SYNTHETIC_NOT_REAL."
         )
 
-
-    print("\n2. DATA QUALITY")
-    print("Missing values: none")
-    print("All expected columns are present; no unexpected columns.")
-    print("Numeric variables and specified ranges: passed")
-    print("Teacher IDs are unique: passed")
-    print("School structure: 20 schools, 6 records per school")
-    print("All rows correctly labelled synthetic: passed")
-    print("Data-quality checks passed.")
+    return df
 
 
-    print("\n2. DATA QUALITY")
-    print("Missing values by column:")
-    print(df.isna().sum().to_string())
-    print(
-        "\nAll rows correctly labelled synthetic:",
-        df[STATUS].eq("SYNTHETIC_NOT_REAL").all(),
-    )
-    print("Unique school IDs:", df["school_id"].nunique())
+# ---------------------------------------------------------------------
+# 3. REPORT AND OUTPUT HELPERS
+# ---------------------------------------------------------------------
 
-    numeric_columns = [
-        column
-        for column in [COMPETENCE, ACHIEVEMENT, BASELINE]
-        if pd.api.types.is_numeric_dtype(df[column])
-    ]
+def save_report(df, descriptive_summary, correlation, valid_records):
+    """Create a Markdown report from the current analysis results."""
 
-    print("\n3. DESCRIPTIVE STATISTICS")
-    print(df[numeric_columns].describe().round(2).to_string())
-
-    print("\n4. EXPLORATORY ASSOCIATION")
-    valid = df[[COMPETENCE, ACHIEVEMENT]].dropna()
-
-    if len(valid) >= 2:
-        correlation = valid[COMPETENCE].corr(valid[ACHIEVEMENT])
-        print(f"Pearson correlation (r): {correlation:.3f}")
-        print(f"Records included: {len(valid)}")
-    else:
-        print("Insufficient complete records to calculate correlation.")
-
-    print("\n5. SCHOOL-LEVEL RECORD COUNTS")
-    print(df.groupby("school_id").size().describe().round(2).to_string())
-
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
-    # All figures use synthetic data and must not be interpreted as real findings.
-    
-    # 1. Teacher digital competence versus current class mean achievement
-    plt.figure(figsize=(8, 5))
-    plt.scatter(
-        df["teacher_digital_competence_score"],
-        df["current_class_mean_achievement_score"],
-        alpha=0.75
-    )
-    plt.xlabel("Teacher digital competence score")
-    plt.ylabel("Current class mean achievement score")
-    plt.title(
-        "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
-        "Digital Competence and Class Mean Achievement"
-    )
-    plt.tight_layout()
-    plt.savefig(
-        OUTPUT_DIR / "teacher_competence_vs_achievement.png",
-        dpi=150
-    )
-    plt.close()
-    
-    # 2. Compare the distributions of baseline and current class mean scores
-    plt.figure(figsize=(8, 5))
-    plt.hist(
-        df["baseline_class_mean_score"],
-        bins=12,
-        alpha=0.6,
-        label="Baseline class mean score"
-    )
-    plt.hist(
-        df["current_class_mean_achievement_score"],
-        bins=12,
-        alpha=0.6,
-        label="Current class mean achievement score"
-    )
-    plt.xlabel("Class mean score")
-    plt.ylabel("Number of records")
-    plt.title(
-        "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
-        "Baseline and Current Score Distributions"
-    )
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(
-        OUTPUT_DIR / "baseline_current_score_distributions.png",
-        dpi=150
-    )
-    plt.close()
-    
-    # 3. Distribution of teacher digital competence scores
-    plt.figure(figsize=(8, 5))
-    plt.hist(
-        df["teacher_digital_competence_score"],
-        bins=12,
-        edgecolor="black"
-    )
-    plt.xlabel("Teacher digital competence score")
-    plt.ylabel("Number of records")
-    plt.title(
-        "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
-        "Distribution of Teacher Digital Competence Scores"
-    )
-    plt.tight_layout()
-    plt.savefig(
-        OUTPUT_DIR / "teacher_digital_competence_distribution.png",
-        dpi=150
-    )
-    plt.close()
-    
-    print("\nSynthetic visualisations saved to:", OUTPUT_DIR)
-    print("- teacher_competence_vs_achievement.png")
-    print("- baseline_current_score_distributions.png")
-    print("- teacher_digital_competence_distribution.png")
-
-    df[numeric_columns].describe().round(2).to_csv(
-        OUTPUT_DIR / "descriptive_statistics.csv"
-    )
-
-    if len(valid) >= 2:
-        pd.DataFrame(
-            {
-                "measure": ["Pearson correlation"],
-                "variable_1": [COMPETENCE],
-                "variable_2": [ACHIEVEMENT],
-                "correlation": [correlation],
-                "complete_records": [len(valid)],
-                "data_status": ["SYNTHETIC_NOT_REAL"],
-            }
-        ).to_csv(OUTPUT_DIR / "exploratory_correlation.csv", index=False)
-
-    print(f"\nSummary files saved in: {OUTPUT_DIR}")
-
-    print("\nINTERPRETATION AND LIMITATIONS")
-    print("-" * 60)
-    print("1. DATA PROVENANCE")
-    print(
-        "   All records are synthetic and were created for "
-        "demonstration purposes."
-    )
-    print(
-        "   They are not observations from actual teachers, "
-        "learners, or schools."
-    )
-
-    print("\n2. INTERPRETING THE RESULTS")
-    print(
-        "   Descriptive statistics summarise the generated "
-        "dataset only."
-    )
-    print(
-        "   The Pearson correlation describes a linear association "
-        "within these synthetic records."
-    )
-    print(
-        "   Any observed association reflects the data-generation "
-        "process and must not be presented as an empirical finding."
-    )
-
-    print("\n3. METHODOLOGICAL LIMITATIONS")
-    print(
-        "   Correlation does not establish causation."
-    )
-    print(
-        "   Records are grouped within schools, so observations "
-        "may not be statistically independent."
-    )
-    print(
-        "   The unadjusted correlation does not control for "
-        "potential confounding variables or school-level clustering."
-    )
-
-    print("\n4. IMPLICATIONS FOR REAL EDUCATION RESEARCH")
-    print(
-        "   A real study would require authentic data, ethical "
-        "approval where applicable, valid measures, and a justified "
-        "sampling and analysis strategy."
-    )
-    print(
-        "   Statistical results should be interpreted in light of "
-        "the research design and data limitations."
-    )
-
-    print("\n" + "-" * 60)
-    print("END OF SYNTHETIC RESEARCH DEMONSTRATION")
-
-    # Generate a reproducible Markdown research report.
-    report_file = OUTPUT_DIR / "synthetic_research_report.md"
-
-    report_correlation = (
-        valid[COMPETENCE].corr(valid[ACHIEVEMENT])
-        if len(valid) >= 2
-        else None
-    )
-
-    if report_correlation is None:
+    if correlation is None:
         correlation_text = (
-            "Not calculated: insufficient complete records."
+            "Not calculated because fewer than two complete records "
+            "were available."
         )
     else:
         correlation_text = (
-            f"Pearson correlation (r) = {report_correlation:.3f}, "
-            f"based on {len(valid)} complete records."
+            f"Pearson correlation (r) = {correlation:.3f}, "
+            f"based on {valid_records} complete records."
         )
-
-    descriptive_summary = df[numeric_columns].describe().round(2).to_string()
 
     report = f"""# GEAA Education Research Demonstration
 
@@ -421,20 +198,21 @@ def main():
 Teacher digital competence and class mean achievement.
 
 ## 1. Purpose
-This demonstration illustrates a basic education research workflow:
-dataset validation, descriptive statistics, exploratory correlation,
-visualisation, and cautious interpretation.
+This demonstration illustrates a reproducible education data-analysis
+workflow, including validation, descriptive statistics, exploratory
+correlation, visualisation and cautious interpretation.
 
 ## 2. Data provenance
+
 **IMPORTANT: This is synthetic demonstration data, not empirical evidence.**
 
 - Records analysed: {len(df)}
-- Variables in dataset: {df.shape[1]}
-- Synthetic schools represented: {df["school_id"].nunique()}
+- Variables: {df.shape[1]}
+- Synthetic schools: {df["school_id"].nunique()}
 - Duplicate rows: {df.duplicated().sum()}
 - Data status: SYNTHETIC_NOT_REAL
 
-No actual teachers, learners, or schools were sampled for this dataset.
+No actual teachers, learners or schools were sampled for this dataset.
 Results must not be presented as findings about real schools.
 
 ## 3. Descriptive statistics
@@ -454,21 +232,21 @@ Variables compared:
 {correlation_text}
 
 This is an unadjusted exploratory Pearson correlation. It describes
-linear association in the synthetic records and does not establish
+linear association in the synthetic records. It does not establish
 causation or represent an empirical relationship.
 
 ## 5. Methodological limitations
 
 - The dataset is synthetic and cannot provide evidence about actual
-  teachers, learners, or schools.
+  teachers, learners or schools.
 - Any patterns reflect the data-generation process.
 - Correlation does not establish causation.
-- Records are grouped within schools; observations may not be
+- Records are grouped within schools, so observations may not be
   statistically independent.
 - The correlation does not adjust for potential confounding variables
   or school-level clustering.
-- The descriptive statistics and correlation are not evidence of
-  intervention effectiveness or policy impact.
+- These analyses do not establish intervention effectiveness or policy
+  impact.
 
 ## 6. Requirements for a real study
 
@@ -476,13 +254,22 @@ A real investigation would require authentic data, appropriate ethical
 review and permissions, valid measures, a justified sampling strategy,
 and an analysis plan suited to the research question and clustered data.
 
-## 7. Reproducibility
+## 7. Generated outputs
+
+- `descriptive_statistics.csv`
+- `exploratory_correlation.csv`
+- `teacher_competence_vs_achievement.png`
+- `baseline_current_score_distributions.png`
+- `teacher_digital_competence_distribution.png`
+- `synthetic_research_report.md`
+
+## 8. Reproducibility
 
 This report is generated by `analyse_synthetic_data.py` from the
 synthetic CSV dataset. Numerical results are calculated when the script
-runs; they are not manually entered research findings.
+runs and are not manually entered research findings.
 
-## 8. Conclusion
+## 9. Conclusion
 
 This demonstration shows a basic, reproducible education data-analysis
 workflow. It does not establish whether teacher digital competence
@@ -490,12 +277,191 @@ predicts or causes improved learner achievement in real educational
 settings.
 """
 
+    report_file = OUTPUT_DIR / "synthetic_research_report.md"
     report_file.write_text(report, encoding="utf-8")
+    return report_file
 
-    print(f"\nResearch report saved to: {report_file}")
 
+# ---------------------------------------------------------------------
+# 4. MAIN ANALYSIS
+# ---------------------------------------------------------------------
+
+def main():
+    print("=" * 70)
+    print("GEAA: SYNTHETIC EDUCATION RESEARCH DEMONSTRATION")
+    print("Teacher digital competence and class mean achievement")
+    print("=" * 70)
+    print("WARNING: All records are synthetic, not real research data.")
+
+    if not DATA_FILE.exists():
+        raise FileNotFoundError(
+            f"Dataset not found: {DATA_FILE}\n"
+            "Keep the CSV in the same folder as this Python script."
+        )
+
+    df = pd.read_csv(DATA_FILE)
+    df = validate_dataset(df)
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Dataset overview and consolidated quality report.
+    print("\n1. DATASET OVERVIEW")
+    print(f"Rows: {df.shape[0]}")
+    print(f"Columns: {df.shape[1]}")
+    print(f"Duplicate rows: {df.duplicated().sum()}")
+    print(f"Schools: {df['school_id'].nunique()}")
+    print(f"Unique teacher IDs: {df['teacher_id'].nunique()}")
+
+    print("\n2. DATA QUALITY")
+    print("Schema and column names: passed")
+    print("Missing values: none")
+    print("Duplicate rows: none")
+    print("Numeric and finite-value checks: passed")
+    print("Specified ranges and coding rules: passed")
+    print("Teacher IDs: unique")
+    print("School structure: 20 schools, 6 records per school")
+    print("Synthetic provenance labels: passed")
+
+    # Descriptive statistics.
+    numeric_columns = [COMPETENCE, ACHIEVEMENT, BASELINE]
+    descriptive = df[numeric_columns].describe().round(2)
+
+    print("\n3. DESCRIPTIVE STATISTICS")
+    print(descriptive.to_string())
+
+    descriptive.to_csv(OUTPUT_DIR / "descriptive_statistics.csv")
+
+    # Exploratory Pearson correlation.
+    valid = df[[COMPETENCE, ACHIEVEMENT]].dropna()
+    correlation = None
+
+    print("\n4. EXPLORATORY ASSOCIATION")
+
+    if len(valid) >= 2:
+        correlation = valid[COMPETENCE].corr(valid[ACHIEVEMENT])
+        print(f"Pearson correlation (r): {correlation:.3f}")
+        print(f"Complete records included: {len(valid)}")
+
+        correlation_output = pd.DataFrame({
+            "measure": ["Pearson correlation"],
+            "variable_1": [COMPETENCE],
+            "variable_2": [ACHIEVEMENT],
+            "correlation": [correlation],
+            "complete_records": [len(valid)],
+            "data_status": ["SYNTHETIC_NOT_REAL"],
+        })
+
+        correlation_output.to_csv(
+            OUTPUT_DIR / "exploratory_correlation.csv",
+            index=False,
+        )
+    else:
+        print("Insufficient complete records for correlation.")
+        pd.DataFrame(columns=[
+            "measure", "variable_1", "variable_2",
+            "correlation", "complete_records", "data_status",
+        ]).to_csv(
+            OUTPUT_DIR / "exploratory_correlation.csv",
+            index=False,
+        )
+
+    print("\n5. SCHOOL-LEVEL RECORD COUNTS")
+    print(df.groupby("school_id").size().describe().round(2).to_string())
+
+    # Figure 1: Competence versus achievement.
+    plt.figure(figsize=(8, 5))
+    plt.scatter(df[COMPETENCE], df[ACHIEVEMENT], alpha=0.75)
+    plt.xlabel("Teacher digital competence score")
+    plt.ylabel("Current class mean achievement score")
+    plt.title(
+        "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
+        "Digital Competence and Class Mean Achievement"
+    )
+    plt.tight_layout()
+    plt.savefig(
+        OUTPUT_DIR / "teacher_competence_vs_achievement.png",
+        dpi=150,
+    )
+    plt.close()
+
+    # Figure 2: Baseline and current score distributions.
+    plt.figure(figsize=(8, 5))
+    plt.hist(
+        df[BASELINE],
+        bins=12,
+        alpha=0.6,
+        label="Baseline class mean score",
+    )
+    plt.hist(
+        df[ACHIEVEMENT],
+        bins=12,
+        alpha=0.6,
+        label="Current class mean achievement score",
+    )
+    plt.xlabel("Class mean score")
+    plt.ylabel("Number of records")
+    plt.title(
+        "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
+        "Baseline and Current Score Distributions"
+    )
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(
+        OUTPUT_DIR / "baseline_current_score_distributions.png",
+        dpi=150,
+    )
+    plt.close()
+
+    # Figure 3: Distribution of competence scores.
+    plt.figure(figsize=(8, 5))
+    plt.hist(df[COMPETENCE], bins=12, edgecolor="black")
+    plt.xlabel("Teacher digital competence score")
+    plt.ylabel("Number of records")
+    plt.title(
+        "SYNTHETIC DATA — NOT REAL SCHOOL EVIDENCE\n"
+        "Distribution of Teacher Digital Competence Scores"
+    )
+    plt.tight_layout()
+    plt.savefig(
+        OUTPUT_DIR / "teacher_digital_competence_distribution.png",
+        dpi=150,
+    )
+    plt.close()
+
+    descriptive_summary = descriptive.to_string()
+
+    report_file = save_report(
+        df,
+        descriptive_summary,
+        correlation,
+        len(valid),
+    )
+
+    print("\n6. OUTPUTS")
+    for filename in [
+        "descriptive_statistics.csv",
+        "exploratory_correlation.csv",
+        "teacher_competence_vs_achievement.png",
+        "baseline_current_score_distributions.png",
+        "teacher_digital_competence_distribution.png",
+        report_file.name,
+    ]:
+        print(f"Created: {OUTPUT_DIR / filename}")
+
+    print("\nINTERPRETATION AND LIMITATIONS")
+    print("- All records are synthetic, not observations from real schools.")
+    print("- Descriptive statistics summarise the generated dataset only.")
+    print("- Pearson correlation is exploratory and unadjusted.")
+    print("- Correlation does not establish causation.")
+    print("- Records are clustered within schools.")
+    print("- No causal, intervention-effectiveness or policy-impact claims "
+          "can be made from this demonstration.")
+
+    print("\nAnalysis completed successfully.")
 
 
 if __name__ == "__main__":
-    main()
-
+    try:
+        main()
+    except Exception as error:
+        raise SystemExit(f"ANALYSIS FAILED: {error}") from error
