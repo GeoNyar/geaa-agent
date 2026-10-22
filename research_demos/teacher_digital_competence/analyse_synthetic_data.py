@@ -276,7 +276,8 @@ def save_report(
     else:
         correlation_text = (
             f"Pearson correlation (r) = {correlation:.3f}, "
-            f"based on {len(df[[COMPETENCE, ACHIEVEMENT].dropna())} "
+            f"based on {len(df[[COMPETENCE, ACHIEVEMENT]].dropna())} "
+            "complete records."
             "complete records."
         )
 
