@@ -278,7 +278,6 @@ def save_report(
             f"Pearson correlation (r) = {correlation:.3f}, "
             f"based on {len(df[[COMPETENCE, ACHIEVEMENT]].dropna())} "
             "complete records."
-            "complete records."
         )
 
     if icc_result is None:
