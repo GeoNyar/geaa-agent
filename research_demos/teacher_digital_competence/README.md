@@ -53,12 +53,13 @@ teacher_digital_competence/
 └── outputs/
     ├── descriptive_statistics.csv
     ├── exploratory_correlation.csv
+    ├── synthetic_research_report.md
     ├── teacher_competence_vs_achievement.png
     ├── baseline_current_score_distributions.png
     └── teacher_digital_competence_distribution.png
 ```
-Note: The outputs/ directory contains generated analysis results. GitHub Actions produces these files during execution and packages them as a downloadable artifact. The output files are not necessarily committed to the repository.
-The `outputs/` directory is generated when the analysis script runs. The CSV outputs and PNG charts are also packaged as downloadable artifacts by the GitHub Actions workflow.
+
+**Note:** The `outputs/` directory and its files are generated when the analysis script runs. The GitHub Actions workflow packages the generated CSV, PNG and Markdown files into a downloadable artifact named `synthetic-education-research-results`. These generated files are not necessarily committed to the repository.
 
 ## 5. Analytical Workflow
 
@@ -76,10 +77,12 @@ The correlation is an exploratory, unadjusted analysis. It does not account for 
 
 ## 6. Research Outputs
 
+The analysis script generates six output files.
+
 ### Statistical outputs
 
-- `descriptive_statistics.csv` — descriptive statistics for the selected numerical variables.
-- `exploratory_correlation.csv` — the exploratory Pearson correlation, the variables compared, the number of complete records and the synthetic-data status.
+- `descriptive_statistics.csv` — descriptive statistics for selected numerical variables.
+- `exploratory_correlation.csv` — exploratory Pearson correlation, variables compared, number of complete records and synthetic-data status.
 
 ### Visual outputs
 
@@ -87,7 +90,11 @@ The correlation is an exploratory, unadjusted analysis. It does not account for 
 - `baseline_current_score_distributions.png` — comparison of baseline and current class mean score distributions.
 - `teacher_digital_competence_distribution.png` — distribution of teacher digital competence scores.
 
-Every visualisation is labelled to indicate that the data are synthetic. The baseline/current comparison describes distributions; it does not establish an actual change in achievement over time.
+### Research report
+
+- `synthetic_research_report.md` — automatically generated Markdown report containing the dataset overview, descriptive statistics, exploratory correlation, methodological limitations and requirements for a real study.
+
+All outputs describe synthetic data only. The baseline/current score comparison does not establish actual change over time, and the correlation does not demonstrate causation. The files are available in the downloadable GitHub Actions artifact after a successful workflow run.
 
 ## 7. Reproducibility
 
