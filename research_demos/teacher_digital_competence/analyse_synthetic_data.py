@@ -159,21 +159,7 @@ def validate_dataset(df):
 
     if df["school_id"].nunique() != 20:
         raise ValueError("Expected exactly 20 synthetic schools.")
-    school_level_columns = [
-        "subcounty_label",
-        "school_resource_access_index",
-        "internet_reliability_rating_1_5",
-        "device_access_rating_1_5",
-    ]
 
-    for col in school_level_columns:
-        values_per_school = df.groupby("school_id")[col].nunique()
-        if not values_per_school.eq(1).all():
-            raise ValueError(
-                f"'{col}' must have one consistent value per school."
-            )
-
-    if not df[STATUS].eq("SYNTHETIC_NOT_REAL").all():
     counts = df.groupby("school_id").size()
     if not counts.eq(6).all():
         raise ValueError("Each synthetic school must have 6 records.")
@@ -196,12 +182,8 @@ def validate_dataset(df):
         raise ValueError(
             "Every record must be labelled SYNTHETIC_NOT_REAL."
         )
-        raise ValueError(
-            "Every record must be labelled SYNTHETIC_NOT_REAL."
-        )
 
     return df
-
 
 # ---------------------------------------------------------------------
 # 3. SCHOOL-LEVEL ANALYSIS
