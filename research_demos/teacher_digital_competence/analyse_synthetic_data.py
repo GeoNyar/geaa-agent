@@ -129,6 +129,18 @@ def validate_dataset(df):
     if not df["digital_training_past_2_years"].isin([0, 1]).all():
         raise ValueError("Digital training must be coded as 0 or 1.")
 
+    integer_columns = [
+        "teacher_years_experience",
+        "digital_training_past_2_years",
+        "class_size",
+    ]
+
+    for col in integer_columns:
+        if not df[col].mod(1).eq(0).all():
+            raise ValueError(
+                f"'{col}' must contain whole-number values."
+            )
+
     if (df["teacher_years_experience"] < 0).any():
         raise ValueError("Teaching experience cannot be negative.")
 
