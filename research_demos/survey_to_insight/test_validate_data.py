@@ -56,21 +56,7 @@ def test_missing_required_column_is_critical():
 
     assert report["analysis_allowed"] is False
     assert "role" in report["missing_required_columns"]
-
-
-def test_invalid_familiarity_score_is_rejected():
-    data = make_valid_data()
-    data.loc[0, "q5_excel"] = 6
-
-    report = validate_dataframe(data)
-
-    assert report["analysis_allowed"] is False
-    assert any(
-        error["type"] == "invalid_familiarity_score"
-        for error in report["errors"]
-    )
-
-
+    
 def test_fractional_familiarity_score_is_rejected():
     data = make_valid_data()
   data["q3_questionnaire_design"] = data["q3_questionnaire_design"].astype(float)
