@@ -357,11 +357,16 @@ These statistics describe only the synthetic dataset.
         axis=1,
     )
 ).to_string(index=False)}
-Differences are calculated as current score minus baseline score.
-These are descriptive comparisons within a synthetic dataset, not
-evidence of real longitudinal change or intervention effectiveness.
-The dataset's structure does not, by itself, establish that the
-baseline and current scores are paired measurements of the same class.
+
+The mean difference is calculated as the overall mean current score
+minus the overall mean baseline score. It describes the difference
+between two column means in this synthetic dataset.
+
+The dataset does not establish that baseline and current scores are
+paired measurements of the same classes at defined time points.
+Therefore, this comparison does not measure record-level change,
+longitudinal change or intervention effectiveness.
+
 ## 3. Exploratory association
 
 Variables:
@@ -470,31 +475,26 @@ def main():
     # Descriptive baseline-to-current score comparison.
     # These are synthetic record-level differences, not evidence
     # of real longitudinal change or intervention effectiveness.
-    score_difference = df[ACHIEVEMENT] - df[BASELINE]
 
-    increase_count = int((score_difference > 0).sum())
-    decrease_count = int((score_difference < 0).sum())
-    unchanged_count = int((score_difference == 0).sum())
-    total_comparisons = len(score_difference)
+    # Descriptive comparison of overall baseline and current means.
+    # The dataset does not establish paired measurements of the
+    # same classes, so record-level change counts are not calculated.
+    mean_baseline = df[BASELINE].mean()
+    mean_current = df[ACHIEVEMENT].mean()
+    mean_difference = mean_current - mean_baseline
 
     change_summary = pd.DataFrame({
         "measure": [
             "Mean baseline score",
             "Mean current score",
             "Mean difference (current minus baseline)",
-            "Records with increase",
-            "Records with decrease",
-            "Records with no difference",
         ],
         "value": [
-            df[BASELINE].mean(),
-            df[ACHIEVEMENT].mean(),
-            score_difference.mean(),
-            increase_count,
-            decrease_count,
-            unchanged_count,
+            mean_baseline,
+            mean_current,
+            mean_difference,
         ],
-        "data_status": ["SYNTHETIC_NOT_REAL"] * 6,
+        "data_status": ["SYNTHETIC_NOT_REAL"] * 3,
     })
 
     change_summary.to_csv(
@@ -502,22 +502,15 @@ def main():
         index=False,
     )
 
-    print("\n2A. SYNTHETIC BASELINE-TO-CURRENT COMPARISON")
-    print(f"Mean baseline score: {df[BASELINE].mean():.2f}")
-    print(f"Mean current score: {df[ACHIEVEMENT].mean():.2f}")
-    print(f"Mean difference: {score_difference.mean():.2f}")
+    print("\n2A. SYNTHETIC BASELINE-TO-CURRENT MEAN COMPARISON")
+    print(f"Mean baseline score: {mean_baseline:.2f}")
+    print(f"Mean current score: {mean_current:.2f}")
+    print(f"Mean difference: {mean_difference:.2f}")
     print(
-        f"Records with increase: {increase_count} "
-        f"({increase_count / total_comparisons * 100:.1f}%)"
+        "Interpretation: descriptive difference between column means; "
+        "not evidence of longitudinal change."
     )
-    print(
-        f"Records with decrease: {decrease_count} "
-        f"({decrease_count / total_comparisons * 100:.1f}%)"
-    )
-    print(
-        f"Records with no difference: {unchanged_count} "
-        f"({unchanged_count / total_comparisons * 100:.1f}%)"
-    )
+
 
     # Overall exploratory correlation.
     valid = df[[COMPETENCE, ACHIEVEMENT]].dropna()
