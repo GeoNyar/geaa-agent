@@ -45,6 +45,7 @@ For variable definitions and additional methodological notes, see [`geaa_synthet
 ## 4. Project Structure
 
 ```text
+
 teacher_digital_competence/
 ├── README.md
 ├── geaa_synthetic_dataset_codebook.md
@@ -53,10 +54,15 @@ teacher_digital_competence/
 └── outputs/
     ├── descriptive_statistics.csv
     ├── exploratory_correlation.csv
-    ├── synthetic_research_report.md
+    ├── school_level_summary.csv
+    ├── school_level_variation.csv
+    ├── baseline_current_comparison.csv
     ├── teacher_competence_vs_achievement.png
     ├── baseline_current_score_distributions.png
-    └── teacher_digital_competence_distribution.png
+    ├── teacher_digital_competence_distribution.png
+    ├── school_level_achievement_means.png
+    └── synthetic_research_report.md
+
 ```
 
 **Note:** The `outputs/` directory and its files are generated when the analysis script runs. The GitHub Actions workflow packages the generated CSV, PNG and Markdown files into a downloadable artifact named `synthetic-education-research-results`. These generated files are not necessarily committed to the repository.
@@ -71,13 +77,16 @@ The Python script, `analyse_synthetic_data.py`, performs the following tasks:
 4. Summarises selected numerical variables using descriptive statistics.
 5. Calculates an exploratory Pearson correlation between teacher digital competence and current class mean achievement, using records with complete values for those variables.
 6. Generates three descriptive visualisations.
-7. Saves the statistical outputs and prints methodological limitations.
+7. Saves descriptive statistics, the baseline-to-current score comparison,
+   exploratory correlation results, school-level summaries, school-level
+   variation estimates, visualisations and a Markdown research report.
+
 
 The correlation is an exploratory, unadjusted analysis. It does not account for the grouping of records within schools and should not be interpreted as evidence of a causal relationship.
 
 ## 6. Research Outputs
 
-The analysis script generates nine output files.
+The analysis script generates ten output files.
 
 ### Statistical outputs
 
@@ -85,6 +94,8 @@ The analysis script generates nine output files.
 - `exploratory_correlation.csv` — exploratory Pearson correlation results, including the variables compared, number of complete records and synthetic-data status.
 - `school_level_summary.csv` — summary measures for each fictional school.
 - `school_level_variation.csv` — estimates of variation between and within fictional schools, supporting an exploratory examination of school-level clustering.
+
+- `baseline_current_comparison.csv` — descriptive comparison of baseline and current scores, including the mean difference and counts of records with increases, decreases or no difference.
 
 ### Visual outputs
 
@@ -95,7 +106,7 @@ The analysis script generates nine output files.
 
 ### Research report
 
-- `synthetic_research_report.md` — automatically generated Markdown report containing the dataset overview, descriptive statistics, exploratory correlation, methodological limitations and requirements for a real study.
+- `synthetic_research_report.md` — automatically generated Markdown report containing the dataset overview, descriptive statistics, baseline-to-current comparison, exploratory correlation, school-level variation, methodological limitations and requirements for a real study.
 
 All outputs describe synthetic data only. The baseline/current score comparison does not establish actual change over time, and the correlation does not demonstrate causation. School-level summaries and variation estimates are also illustrative and cannot establish real differences between schools. The files are available in the downloadable GitHub Actions artifact after a successful workflow run.
 ## 7. Reproducibility
@@ -114,8 +125,6 @@ The script generates the output files in the demonstration's `outputs/` director
 The GitHub Actions workflow is located at:
 
 `.github/workflows/synthetic-research-demo.yml`
-
-It runs the analysis when relevant files in this demonstration or the workflow itself change. It also supports manual execution through GitHub Actions and uploads the generated CSV, PNG and Markdown report files as the downloadable artifact `synthetic-education-research-results`.
 
 It runs the analysis when relevant files in this demonstration or the workflow itself change. It also supports manual execution through GitHub Actions and uploads the generated CSV, PNG and Markdown report files as the downloadable artifact `synthetic-education-research-results`.
 
