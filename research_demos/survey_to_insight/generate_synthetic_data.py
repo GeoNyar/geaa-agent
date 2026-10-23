@@ -33,26 +33,28 @@ EXPERIENCE = [
     "Not applicable",
 ]
 
+
 DEVELOPMENT_NEEDS = [
     "Questionnaire design",
-    "Data quality assurance and validation",
-    "Excel",
+    "Data cleaning and quality assurance",
+    "Excel and spreadsheet analysis",
     "Descriptive statistics",
-    "Cross-tabulations",
+    "Cross-tabulations and interpretation",
     "Data visualisation and dashboards",
-    "Analytical reporting and presentations",
+    "Report and presentation writing",
     "Other",
     "Prefer not to say",
 ]
 
+
 TASK_OPTIONS = [
     "Designed a questionnaire",
     "Collected survey data",
-    "Cleaned or validated data",
+    "Cleaned or validated a dataset",
     "Analysed quantitative data",
     "Produced charts or visualisations",
-    "Wrote an analytical report",
-    "Created a dashboard",
+    "Prepared a research or evaluation report",
+    "Used an interactive dashboard",
     "None of the above",
     "Prefer not to say",
 ]
