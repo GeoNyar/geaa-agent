@@ -73,8 +73,9 @@ def test_invalid_familiarity_score_is_rejected():
 
 def test_fractional_familiarity_score_is_rejected():
     data = make_valid_data()
-    data.loc[0, "q3_questionnaire_design"] = 2.5
+  data["q3_questionnaire_design"] = data["q3_questionnaire_design"].astype(float)
 
+data.loc[0, "q3_questionnaire_design"] = 2.5
     report = validate_dataframe(data)
 
     assert report["analysis_allowed"] is False
