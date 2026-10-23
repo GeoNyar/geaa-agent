@@ -24,6 +24,11 @@ jobs:
       - name: Install analysis dependencies
         run: python -m pip install pandas matplotlib
 
+      - name: Generate and validate separate synthetic dataset
+        run: |
+          python research_demos/teacher_digital_competence/generate_synthetic_dataset.py
+          python -c "import pandas as pd; p='research_demos/teacher_digital_competence/geaa_synthetic_teacher_digital_competence_regenerated.csv'; d=pd.read_csv(p); assert len(d)==120; assert d.shape[1]==13; assert d['school_id'].nunique()==20; assert d['data_status'].eq('SYNTHETIC_NOT_REAL').all(); print('Generator validation passed: 120 synthetic records, 13 variables, 20 fictional schools.')"
+
       - name: Run synthetic research analysis
         run: python research_demos/teacher_digital_competence/analyse_synthetic_data.py
 
