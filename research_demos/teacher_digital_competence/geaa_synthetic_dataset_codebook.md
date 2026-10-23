@@ -65,7 +65,7 @@ What association exists between teacher digital competence scores and current cl
 4. Produce descriptive statistics for the main variables.
 5. Visualise digital competence scores against current class mean achievement.
 6. Calculate an appropriate correlation coefficient.
-7. Fit an exploratory regression model, clearly documenting its assumptions and limitations.
+7. Consider regression modelling as a possible future extension. Before implementation, specify the research question, justify the model, assess relevant assumptions, account for the clustering of records within schools where appropriate, and document the limitations. The current analysis script does not fit a regression model.
 8. Consider the clustering of records within schools when selecting statistical methods.
 9. Report findings as properties of the synthetic dataset only.
 
