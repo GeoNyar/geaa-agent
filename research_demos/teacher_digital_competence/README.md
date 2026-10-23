@@ -109,6 +109,7 @@ The analysis script generates ten output files.
 - `synthetic_research_report.md` — automatically generated Markdown report containing the dataset overview, descriptive statistics, baseline-to-current comparison, exploratory correlation, school-level variation, methodological limitations and requirements for a real study.
 
 All outputs describe synthetic data only. The baseline/current score comparison does not establish actual change over time, and the correlation does not demonstrate causation. School-level summaries and variation estimates are also illustrative and cannot establish real differences between schools. The files are available in the downloadable GitHub Actions artifact after a successful workflow run.
+
 ## 7. Reproducibility
 
 The project uses Python, pandas and Matplotlib.
@@ -131,6 +132,19 @@ It runs the analysis when relevant files in this demonstration or the workflow i
 To download the results, open the repository's **Actions** tab, select a successful run of the synthetic research demonstration workflow, scroll to the **Artifacts** section, and download `synthetic-education-research-results`. Extract the downloaded archive to access the generated files.
 
 The repository has a separate workflow for retrieval tests. The synthetic research demonstration is intended to remain separate from the existing GEAA application and its retrieval-testing workflow.
+
+### Synthetic dataset generation and provenance
+
+The demonstration includes two separate Python scripts:
+
+- `generate_synthetic_dataset.py` creates a new synthetic dataset using a fixed random seed and writes it to `geaa_synthetic_teacher_digital_competence_regenerated.csv`. This separate filename protects the original analysis dataset.
+- `analyse_synthetic_data.py` reads and validates `geaa_synthetic_teacher_digital_competence.csv`, performs the analysis, and generates the documented output files.
+
+The GitHub Actions workflow tests the newly generated dataset and runs the existing analysis pipeline.
+
+**Provenance limitation:** The generator in the repository is a newly documented implementation, not the original script used to create the existing CSV. Its output is not claimed to reproduce the original dataset exactly.
+
+All generated records are labelled `SYNTHETIC_NOT_REAL`. These data demonstrate an analytical workflow and must not be presented as empirical evidence about actual teachers, learners or schools.
 
 ## 8. Methodological Limitations and Research Integrity
 
