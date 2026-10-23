@@ -347,8 +347,16 @@ be presented as findings about real schools.
 These statistics describe only the synthetic dataset.
 ### Baseline-to-current descriptive comparison
 
-{change_summary.to_string(index=False)}
-
+{change_summary.assign(
+    value=change_summary.apply(
+        lambda row: (
+            f"{row['value']:.2f}"
+            if "Mean" in row["measure"]
+            else f"{int(row['value'])}"
+        ),
+        axis=1,
+    )
+).to_string(index=False)}
 Differences are calculated as current score minus baseline score.
 These are descriptive comparisons within a synthetic dataset, not
 evidence of real longitudinal change or intervention effectiveness.
