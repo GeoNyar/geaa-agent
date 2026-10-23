@@ -5,7 +5,59 @@
 GEAA is a personal project exploring how artificial intelligence, knowledge retrieval and data analysis can support teaching, educational research, educational leadership and evidence-informed decision-making.
 
 The project is being developed from the perspective of an educator with experience in Biology and Chemistry teaching, scientific research, and educational leadership and management. Its longer-term purpose is to support practical educational work while encouraging transparent, evidence-aware and responsible use of AI.
+## Research Portfolio Highlights
 
+For research-assistant, education research and monitoring-and-evaluation roles, the strongest evidence in this repository is summarised below.
+
+### Featured research demonstration
+
+**Teacher Digital Competence and Class Achievement: Synthetic Research Demonstration**
+
+Location: `research_demos/teacher_digital_competence/`
+
+This demonstration shows a complete, reproducible education research workflow using clearly labelled synthetic data.
+
+It includes:
+
+- a documented research question and analytical objectives;
+- a structured synthetic dataset with a codebook and provenance documentation;
+- automated data validation (schema, missing values, duplicates, ranges and integrity checks);
+- descriptive statistics and exploratory correlation analysis;
+- school-level summaries and exploratory intraclass correlation (ICC) estimation;
+- automated generation of CSV outputs, visualisations and a Markdown report;
+- GitHub Actions workflows for automated testing and reproducibility.
+
+**Research integrity safeguards**
+
+- Every record is labelled `SYNTHETIC_NOT_REAL`.
+- The documentation explicitly distinguishes descriptive analysis from causal inference.
+- The baseline/current comparison is reported as a descriptive difference between column means, not as evidence of longitudinal change.
+- The repository documents the provenance limitations of the original demonstration dataset.
+
+### Research skills demonstrated
+
+- Research workflow documentation
+- Data validation and quality assurance
+- Python-based data analysis
+- Descriptive statistics
+- Exploratory correlation analysis
+- School-level variance exploration (ICC)
+- Data visualisation
+- Reproducible research workflows using GitHub Actions
+- Responsible reporting of methodological limitations
+
+### Evidence available in this repository
+
+| Evidence | Location |
+|----------|----------|
+| Research demonstration | `research_demos/teacher_digital_competence/` |
+| Analysis script | `analyse_synthetic_data.py` |
+| Synthetic dataset generator | `generate_synthetic_dataset.py` |
+| Dataset codebook | `geaa_synthetic_dataset_codebook.md` |
+| Automated research report | `outputs/synthetic_research_report.md` |
+| GitHub Actions workflow | `.github/workflows/synthetic-research-demo.yml` |
+
+This demonstration is a portfolio project illustrating reproducible research practice and responsible analytical reporting. It is not an empirical study of real schools.
 ## Project objectives
 
 - Explore AI-assisted support for education and research tasks.
