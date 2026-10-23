@@ -94,7 +94,7 @@ The analysis script generates ten files in the `outputs/` directory:
 - `exploratory_correlation.csv` — exploratory Pearson correlation results.
 - `school_level_summary.csv` — descriptive summaries for each fictional school.
 - `school_level_variation.csv` — exploratory estimates of between-school and within-school variation and the intraclass correlation coefficient (ICC).
-- `baseline_current_comparison.csv` — mean baseline and current scores, their mean difference, and counts of records with increases, decreases or no difference.
+- `baseline_current_comparison.csv` — overall mean baseline score, overall mean current score, and their descriptive mean difference (current minus baseline). It does not report record-level increases, decreases or unchanged scores because paired measurements of the same classes at defined time points have not been established.
 
 **Visual outputs**
 - `teacher_competence_vs_achievement.png` — scatter plot of digital competence and current achievement.
