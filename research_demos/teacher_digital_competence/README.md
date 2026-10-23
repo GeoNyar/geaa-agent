@@ -117,6 +117,10 @@ The GitHub Actions workflow is located at:
 
 It runs the analysis when relevant files in this demonstration or the workflow itself change. It also supports manual execution through GitHub Actions and uploads the generated CSV, PNG and Markdown report files as the downloadable artifact `synthetic-education-research-results`.
 
+It runs the analysis when relevant files in this demonstration or the workflow itself change. It also supports manual execution through GitHub Actions and uploads the generated CSV, PNG and Markdown report files as the downloadable artifact `synthetic-education-research-results`.
+
+To download the results, open the repository's **Actions** tab, select a successful run of the synthetic research demonstration workflow, scroll to the **Artifacts** section, and download `synthetic-education-research-results`. Extract the downloaded archive to access the generated files.
+
 The repository has a separate workflow for retrieval tests. The synthetic research demonstration is intended to remain separate from the existing GEAA application and its retrieval-testing workflow.
 
 ## 8. Methodological Limitations and Research Integrity
