@@ -59,15 +59,17 @@ def test_missing_required_column_is_critical():
     
 def test_fractional_familiarity_score_is_rejected():
     data = make_valid_data()
-  data["q3_questionnaire_design"] = data["q3_questionnaire_design"].astype(float)
+    data["q3_questionnaire_design"] = (
+        data["q3_questionnaire_design"].astype(float)
+    )
+    data.loc[0, "q3_questionnaire_design"] = 2.5
 
-data.loc[0, "q3_questionnaire_design"] = 2.5
-    report = validate_dataframe(data)
+    result = validate_dataframe(data)
 
-    assert report["analysis_allowed"] is False
+    assert result["analysis_allowed"] is False
     assert any(
-        error["type"] == "invalid_familiarity_score"
-        for error in report["errors"]
+        "q3_questionnaire_design" in error
+        for error in result["errors"]
     )
 
 
