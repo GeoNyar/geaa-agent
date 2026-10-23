@@ -109,6 +109,19 @@ The baseline-to-current comparison is descriptive. The dataset documentation doe
 
 The files are packaged into the `synthetic-education-research-results` artifact by the GitHub Actions workflow after a successful run. Generated outputs are not necessarily committed to the repository.
 
+### Synthetic dataset generation and provenance
+
+The repository contains two separate Python scripts:
+
+- `generate_synthetic_dataset.py` is a newly documented generator that uses random seed `20261023` and writes a separate dataset named `geaa_synthetic_teacher_digital_competence_regenerated.csv`.
+- `analyse_synthetic_data.py` validates and analyses the existing `geaa_synthetic_teacher_digital_competence.csv` dataset and generates the ten analysis outputs documented above.
+
+The new generator is not the original script used to create the existing CSV. The original dataset was generated earlier, downloaded and subsequently uploaded to the repository. The original generation procedure has not been preserved in the repository, and the new generator is not claimed to reproduce the original dataset exactly.
+
+The GitHub Actions workflow tests the new generator's output and runs the existing analysis pipeline. The separate output filename protects the original dataset from being overwritten by the generator.
+
+All generated records must remain labelled `SYNTHETIC_NOT_REAL`. The data are for learning, software testing, research-methods demonstrations and portfolio development; they must not be presented as empirical findings about actual teachers, learners or schools.
+
 ## 9. Intended portfolio contribution
 
 This demonstration supports development of skills in education research design, data management, exploratory data analysis, statistical reasoning, visualisation, reproducibility and responsible interpretation. It does not claim that an empirical study has been conducted.
