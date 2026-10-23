@@ -4,7 +4,7 @@
 
 GEAA is a personal project exploring how artificial intelligence, knowledge retrieval and data analysis can support teaching, educational research, educational leadership and evidence-informed decision-making.
 
-The project is being developed from the perspective of an educator with experience in Biology and Chemistry teaching, scientific research, and educational leadership and management. Its longer-term purpose is to support practical educational work while encouraging transparent, evidence-aware and responsible use of AI.
+The project is being developed from the perspective of an educator with solid experience in teaching, scientific research, and educational leadership and management. Its longer-term purpose is to support practical educational work while encouraging transparent, evidence-aware and responsible use of AI.
 ## Research Portfolio Highlights
 
 For research-assistant, education research and monitoring-and-evaluation roles, the strongest evidence in this repository is summarised below.
