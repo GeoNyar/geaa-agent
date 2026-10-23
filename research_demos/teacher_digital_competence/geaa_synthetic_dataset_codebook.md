@@ -30,19 +30,21 @@ The achievement measure is a class mean score, not an individual student's score
 
 | Variable | Description |
 |---|---|
-| `school_id` | Fictional school identifier |
-| `subcounty_label` | Illustrative subcounty label; not a verified sampling location |
-| `teacher_id` | Fictional teacher identifier |
-| `teacher_years_experience` | Synthetic years of teaching experience |
-| `teacher_digital_competence_score` | Synthetic digital competence score on a 0–100 scale |
-| `digital_training_past_2_years` | Indicator of synthetic participation in digital training during the previous two years |
-| `school_resource_access_index` | Synthetic index of school access to relevant digital resources |
-| `internet_reliability_rating_1_5` | Synthetic internet reliability rating from 1 to 5 |
-| `device_access_rating_1_5` | Synthetic device access rating from 1 to 5 |
-| `class_size` | Synthetic number of learners in the class |
-| `baseline_class_mean_score` | Synthetic baseline class mean achievement score |
-| `current_class_mean_achievement_score` | Synthetic current class mean achievement score |
-| `data_status` | Data provenance marker; all records are labelled `SYNTHETIC_NOT_REAL` |
+| `school_id` | Fictional school identifier; each school has six synthetic records. |
+| `subcounty_label` | Illustrative subcounty label; not a verified sampling location. Held constant within each synthetic school. |
+| `teacher_id` | Fictional teacher identifier; unique to each record. |
+| `teacher_years_experience` | Synthetic years of teaching experience. |
+| `teacher_digital_competence_score` | Synthetic digital competence score on a 0–100 scale. |
+| `digital_training_past_2_years` | Indicator of synthetic participation in digital training during the previous two years. |
+| `school_resource_access_index` | Synthetic index of school access to relevant digital resources; held constant within each synthetic school. |
+| `internet_reliability_rating_1_5` | Synthetic internet reliability rating from 1 to 5; held constant within each synthetic school. |
+| `device_access_rating_1_5` | Synthetic device access rating from 1 to 5; held constant within each synthetic school. |
+| `class_size` | Synthetic number of learners in the class; may vary between records within a school. |
+| `baseline_class_mean_score` | Synthetic baseline class mean achievement score. |
+| `current_class_mean_achievement_score` | Synthetic current class mean achievement score. |
+| `data_status` | Data provenance marker; all records are labelled `SYNTHETIC_NOT_REAL`. |
+
+**Data structure note:** Each record represents a fictional teacher/class observation, with six records per synthetic school. The subcounty label and three school-level resource indicators are constant within each school. Other variables may vary between records. These design choices are illustrative and do not describe verified Kenyan schools or teachers.
 
 ## 5. Illustrative research question
 
