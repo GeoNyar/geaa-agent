@@ -58,6 +58,29 @@ It includes:
 | GitHub Actions workflow | `.github/workflows/synthetic-research-demo.yml` |
 
 This demonstration is a portfolio project illustrating reproducible research practice and responsible analytical reporting. It is not an empirical study of real schools.
+## Skills Evidence Matrix
+
+The matrix below maps research-assistant competencies to evidence in this repository. It distinguishes demonstrated technical work from capabilities that require further development or evidence from other research experience.
+
+| Research-assistant competency | Evidence location | What it demonstrates |
+|---|---|---|
+| Research data management | `research_demos/teacher_digital_competence/geaa_synthetic_teacher_digital_competence.csv` and `geaa_synthetic_dataset_codebook.md` | Structured dataset documentation, variable definitions and synthetic-data labelling |
+| Data validation and quality assurance | `research_demos/teacher_digital_competence/analyse_synthetic_data.py` | Programmatic data inspection and validation within the demonstration workflow |
+| Quantitative data analysis | `research_demos/teacher_digital_competence/analyse_synthetic_data.py` | Descriptive statistics, exploratory association analysis and school-level summaries |
+| Statistical interpretation | Generated `synthetic_research_report.md` | Interpretation of descriptive results and discussion of methodological limitations |
+| Data visualisation and reporting | Generated PNG figures and Markdown report | Automated production of analytical outputs and a structured report |
+| Reproducible research workflows | `.github/workflows/synthetic-research-demo.yml` | Automated execution and validation of the synthetic-data analysis workflow |
+| Research documentation | `README.md` and `geaa_synthetic_dataset_codebook.md` | Documentation of workflow, data provenance, outputs and limitations |
+| Knowledge retrieval and testing | `test_retrieval.py` and `knowledge/` | Development and testing of an AI-assisted knowledge-retrieval component |
+| Literature searching and evidence synthesis | Further portfolio work planned | A documented search strategy, source verification, evidence extraction and synthesis are still needed |
+| Monitoring, evaluation and learning (MEL) | Further portfolio work planned | Indicator development, data-quality checks, disaggregation and programme reporting are still to be demonstrated |
+| Research ethics and data protection | `geaa_instructions.txt` and the responsible-use section of this README | Documented safeguards; practical application with authorised research data requires separate evidence |
+
+### How to interpret this matrix
+
+This matrix identifies evidence available in the GEAA portfolio; it is not a claim of mastery of every research-assistant competency. The featured teacher digital competence project uses synthetic data and demonstrates aspects of research workflow development, exploratory analysis, reproducibility and responsible reporting. It does not establish empirical findings about actual schools or teachers.
+
+The portfolio complements, rather than replaces, evidence from academic qualifications, publications, research projects and professional experience. Competence should be assessed against the specific requirements of each research-assistant role.
 ## Project objectives
 
 - Explore AI-assisted support for education and research tasks.
