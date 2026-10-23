@@ -691,6 +691,7 @@ def main():
     print("\n6. GENERATED OUTPUTS")
     for filename in [
         "descriptive_statistics.csv",
+        "baseline_current_comparison.csv",
         "exploratory_correlation.csv",
         "teacher_competence_vs_achievement.png",
         "baseline_current_score_distributions.png",
