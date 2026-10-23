@@ -93,9 +93,9 @@ The analysis script generates ten output files.
 - `descriptive_statistics.csv` — descriptive statistics for selected numerical variables.
 - `exploratory_correlation.csv` — exploratory Pearson correlation results, including the variables compared, number of complete records and synthetic-data status.
 - `school_level_summary.csv` — summary measures for each fictional school.
-- `school_level_variation.csv` — estimates of variation between and within fictional schools, supporting an exploratory examination of school-level clustering.
+- `school_level_variation.csv` — estimates of variation between and within fictional schools, supporting an exploratory examination of school-level clustering.=
 
-- `baseline_current_comparison.csv` — descriptive comparison of baseline and current scores, including the mean difference and counts of records with increases, decreases or no difference.
+- `baseline_current_comparison.csv` — overall mean baseline score, overall mean current score, and their descriptive mean difference (current minus baseline). The comparison does not establish longitudinal change or intervention effectiveness.
 
 ### Visual outputs
 
