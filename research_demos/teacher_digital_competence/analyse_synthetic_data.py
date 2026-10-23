@@ -450,6 +450,58 @@ def main():
 
     descriptive.to_csv(OUTPUT_DIR / "descriptive_statistics.csv")
 
+    # Descriptive baseline-to-current score comparison.
+    # These are synthetic record-level differences, not evidence
+    # of real longitudinal change or intervention effectiveness.
+    score_difference = df[ACHIEVEMENT] - df[BASELINE]
+
+    increase_count = int((score_difference > 0).sum())
+    decrease_count = int((score_difference < 0).sum())
+    unchanged_count = int((score_difference == 0).sum())
+    total_comparisons = len(score_difference)
+
+    change_summary = pd.DataFrame({
+        "measure": [
+            "Mean baseline score",
+            "Mean current score",
+            "Mean difference (current minus baseline)",
+            "Records with increase",
+            "Records with decrease",
+            "Records with no difference",
+        ],
+        "value": [
+            df[BASELINE].mean(),
+            df[ACHIEVEMENT].mean(),
+            score_difference.mean(),
+            increase_count,
+            decrease_count,
+            unchanged_count,
+        ],
+        "data_status": ["SYNTHETIC_NOT_REAL"] * 6,
+    })
+
+    change_summary.to_csv(
+        OUTPUT_DIR / "baseline_current_comparison.csv",
+        index=False,
+    )
+
+    print("\n2A. SYNTHETIC BASELINE-TO-CURRENT COMPARISON")
+    print(f"Mean baseline score: {df[BASELINE].mean():.2f}")
+    print(f"Mean current score: {df[ACHIEVEMENT].mean():.2f}")
+    print(f"Mean difference: {score_difference.mean():.2f}")
+    print(
+        f"Records with increase: {increase_count} "
+        f"({increase_count / total_comparisons * 100:.1f}%)"
+    )
+    print(
+        f"Records with decrease: {decrease_count} "
+        f"({decrease_count / total_comparisons * 100:.1f}%)"
+    )
+    print(
+        f"Records with no difference: {unchanged_count} "
+        f"({unchanged_count / total_comparisons * 100:.1f}%)"
+    )
+
     # Overall exploratory correlation.
     valid = df[[COMPETENCE, ACHIEVEMENT]].dropna()
     correlation = None
