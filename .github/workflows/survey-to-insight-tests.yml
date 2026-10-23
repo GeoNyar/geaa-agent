@@ -35,4 +35,4 @@ jobs:
 
       - name: Run survey validation tests
         working-directory: research_demos/survey_to_insight
-        run: python -m pytest -v test_validate_data.py
+        run: python -m pytest -v
