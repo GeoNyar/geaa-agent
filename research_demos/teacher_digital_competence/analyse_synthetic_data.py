@@ -290,6 +290,7 @@ def calculate_one_way_icc(df, outcome):
 def save_report(
     df,
     descriptive,
+    change_summary,
     correlation,
     school_summary,
     icc_result,
@@ -344,7 +345,15 @@ be presented as findings about real schools.
 {descriptive.to_string()}
 
 These statistics describe only the synthetic dataset.
+### Baseline-to-current descriptive comparison
 
+{change_summary.to_string(index=False)}
+
+Differences are calculated as current score minus baseline score.
+These are descriptive comparisons within a synthetic dataset, not
+evidence of real longitudinal change or intervention effectiveness.
+The dataset's structure does not, by itself, establish that the
+baseline and current scores are paired measurements of the same class.
 ## 3. Exploratory association
 
 Variables:
@@ -665,6 +674,7 @@ def main():
     report_path = save_report(
         df=df,
         descriptive=descriptive,
+        change_summary=change_summary,
         correlation=correlation,
         school_summary=school_summary,
         icc_result=icc_result,
