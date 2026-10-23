@@ -54,7 +54,7 @@ What association exists between teacher digital competence scores and current cl
 
 1. Describe the distribution of teacher digital competence and class mean achievement scores.
 2. Examine the association between digital competence and current class mean achievement.
-3. Demonstrate how baseline achievement, school resources, training and class size could be considered in an exploratory statistical model.
+3. Demonstrate how baseline achievement, school resources, training and class size may be considered in a future exploratory statistical model. Regression modelling is a potential extension and is not implemented in the current analysis script.
 4. Demonstrate data validation, reproducible analysis and responsible reporting.
 
 ## 6. Suggested analytical workflow
