@@ -1,5 +1,5 @@
 
-name: Survey-to-Insight Validation Tests
+name: Survey-to-Insight Validation and Data Generation
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  validate-survey-data:
+  validate-and-generate:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,11 +28,37 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install testing dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pandas pytest
+          python -m pip install pandas numpy pytest
 
-      - name: Run survey validation tests
+      - name: Run automated tests
         working-directory: research_demos/survey_to_insight
         run: python -m pytest -v
+
+      - name: Generate synthetic survey responses
+        working-directory: research_demos/survey_to_insight
+        run: |
+          python generate_synthetic_data.py \
+            --n 100 \
+            --seed 20261023 \
+            --output synthetic_responses.csv
+
+      - name: Validate generated dataset
+        working-directory: research_demos/survey_to_insight
+        run: |
+          python validate_data.py \
+            synthetic_responses.csv \
+            --report validation_report.json
+
+      - name: Upload synthetic data and validation report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: survey-to-insight-synthetic-data
+          path: |
+            research_demos/survey_to_insight/synthetic_responses.csv
+            research_demos/survey_to_insight/validation_report.json
+          if-no-files-found: error
+          retention-days: 30
