@@ -391,15 +391,22 @@ try:
 
 except FileNotFoundError:
     KNOWLEDGE_DOCUMENTS = []
-with st.expander("🔍 Knowledge Parser Test"):
-    for document in KNOWLEDGE_DOCUMENTS:
-        st.write(f"**Document:** {document['filename']}")
-        st.write(f"**Type:** {document['document_type']}")
-        st.write(f"**Number of sections:** {len(document['sections'])}")
+debug_mode = st.sidebar.checkbox(
+    "Enable developer diagnostics",
+    value=False,
+    key="geaa_debug_mode",
+)
 
-        for index, section in enumerate(document["sections"], start=1):
-            st.write(f"Section {index}: {section['heading']}")
-            st.caption(section["content"][:300])
+if debug_mode:
+    with st.expander("🔍 Knowledge Parser Test"):
+        for document in KNOWLEDGE_DOCUMENTS:
+            st.write(f"**Document:** {document['filename']}")
+            st.write(f"**Type:** {document['document_type']}")
+            st.write(f"**Number of sections:** {len(document['sections'])}")
+
+            for index, section in enumerate(document["sections"], start=1):
+                st.write(f"Section {index}: {section['heading']}")
+                st.caption(section["content"][:300])
 
 
 def retrieve_knowledge(task, documents, max_sections=5):
@@ -1997,14 +2004,28 @@ if uploaded_file is not None:
             st.code(str(e))# Run task
 run_task_clicked = st.button("🚀 Run Task")
 
-# Keep Research Data results visible across Streamlit reruns caused by widgets.
-if run_task_clicked:
-    st.session_state["research_data_run_requested"] = (mode == "Research Data")
+# Tie Research Data results to the exact inputs submitted by the user.
+research_data_run_signature = (
+    mode,
+    getattr(uploaded_file, "name", None),
+    getattr(uploaded_file, "size", None),
+    task,
+)
 
-if run_task_clicked or (
+if run_task_clicked:
+    st.session_state["research_data_run_signature"] = (
+        research_data_run_signature
+        if mode == "Research Data"
+        else None
+    )
+
+research_data_results_active = (
     mode == "Research Data"
-    and st.session_state.get("research_data_run_requested", False)
-):
+    and st.session_state.get("research_data_run_signature")
+    == research_data_run_signature
+)
+
+if run_task_clicked or research_data_results_active:
 
     if mode == "Research Data":
         st.markdown("### Research Data — Local Analysis")
@@ -2642,10 +2663,19 @@ if run_task_clicked or (
             with st.spinner("GEAA is working through the task..."):
 
                 try:
-                    # Prepare uploaded data for Gemini
+                    # Prepare uploaded data for Gemini.
+                    # Unlike Research Data mode, this general workflow can send
+                    # uploaded dataset rows to Gemini, so disclose that clearly.
                     data_context = ""
 
                     if uploaded_data is not None:
+                        st.warning(
+                            "Data-handling notice: this mode may send the contents "
+                            "of the uploaded dataset to Gemini. Do not upload "
+                            "identifiable or confidential participant data unless "
+                            "the applicable privacy requirements and service "
+                            "arrangements permit it."
+                        )
 
                         data_context = (
                             "UPLOADED DATASET:\n"
@@ -2693,7 +2723,6 @@ if run_task_clicked or (
                     )
 
                     st.markdown("### GEAA's Response")
-                    st.latex(r"E_{a,\text{catalysed}} < E_{a,\text{uncatalysed}}")
                     st.markdown(response.text, unsafe_allow_html=False)
 
                     st.download_button(
@@ -2705,7 +2734,14 @@ if run_task_clicked or (
                     )
 
                 except Exception as e:
-                    st.error("GEAA could not complete the request.")
+                    if client is None:
+                        st.error(
+                            "GEAA cannot generate this response because the Gemini "
+                            "API key is missing or unavailable. Check the app's "
+                            "Secrets settings and confirm GEMINI_API_KEY is set."
+                        )
+                    else:
+                        st.error("GEAA could not complete the request.")
 
                     with st.expander("Technical details"):
                         st.code(str(e))
@@ -2715,6 +2751,8 @@ if run_task_clicked or (
 
 st.divider()
 
+APP_BUILD = "research-data-interpretation-2"
+
 st.caption(
-    "GEAA v1.2 — George's Education & Analytics Agent"
+    f"GEAA v1.2 — George's Education & Analytics Agent · build: {APP_BUILD}"
 )
