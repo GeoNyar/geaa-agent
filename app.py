@@ -2753,7 +2753,7 @@ if run_task_clicked or research_data_results_active:
 
 st.divider()
 
-APP_BUILD = "research-data-interpretation-2"
+APP_BUILD = "research-data-interpretation-3"
 
 st.caption(
     f"GEAA v1.2 — George's Education & Analytics Agent · build: {APP_BUILD}"
