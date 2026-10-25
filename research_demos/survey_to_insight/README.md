@@ -151,6 +151,21 @@ The next stages will be considered separately and marked as implemented only aft
 | Real-data readiness review | Assess data protection, governance, validation and research requirements before any empirical use |
 
 Future enhancements will preserve the existing GEAA application and its other demonstrations.
+### Separate Pathway for Future Real Survey Data
+
+The existing synthetic-data workflow will remain the default demonstration and testing pathway. A future real-data pathway will be developed separately and will not replace or silently modify the existing synthetic-data generator.
+
+The proposed real-data pathway will include:
+
+1. **Authorised data acquisition:** Import a CSV or Excel export from an approved survey collection process. No real responses will be collected through this demonstration until the relevant permissions, ethical considerations and data-protection arrangements have been reviewed.
+2. **Explicit source identification:** Identify the dataset as real, synthetic or otherwise appropriately classified. Record its source and processing history without including unnecessary personal information.
+3. **Privacy and data-minimisation review:** Check whether identifying or sensitive information is present and establish appropriate access, storage, retention and deletion arrangements before processing.
+4. **Schema and quality validation:** Check required columns, response categories, missing values, duplicate records, multiple-response formatting and valid rating ranges. Report issues rather than silently correcting responses.
+5. **Controlled analysis:** Permit descriptive analysis only after the dataset passes the applicable validation requirements. Keep the real-data and synthetic-data outputs distinguishable.
+6. **Output labelling and provenance:** Record the dataset classification, input filename, processing date, validation outcome and analysis limitations in the output manifest and report.
+7. **Separate automated tests:** Test the real-data import and validation pathway using fabricated test cases rather than exposing actual participant information in repository files, test fixtures or public workflow logs.
+
+This pathway is planned and is not yet implemented. Until it has been developed and tested, the existing workflow should be used only for its clearly labelled synthetic-data demonstration.
 
 ## 10. Professional Relevance
 
