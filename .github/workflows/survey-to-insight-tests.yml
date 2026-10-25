@@ -32,6 +32,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install pandas numpy matplotlib pytest
+
       - name: Run automated tests
         working-directory: research_demos/survey_to_insight
         run: python -m pytest -v
@@ -51,13 +52,21 @@ jobs:
             synthetic_responses.csv \
             --report validation_report.json
 
-      - name: Upload synthetic data and validation report
+      - name: Analyse validated survey data
+        working-directory: research_demos/survey_to_insight
+        run: |
+          python analyse_survey.py \
+            --input synthetic_responses.csv \
+            --output-dir analysis_outputs
+
+      - name: Upload survey analysis artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: survey-to-insight-synthetic-data
+          name: survey-to-insight-analysis
           path: |
             research_demos/survey_to_insight/synthetic_responses.csv
             research_demos/survey_to_insight/validation_report.json
+            research_demos/survey_to_insight/analysis_outputs/
           if-no-files-found: error
           retention-days: 30
