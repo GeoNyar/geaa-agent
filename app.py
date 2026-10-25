@@ -2202,8 +2202,8 @@ if st.button("🚀 Run Task"):
                 ])
 
                 st.markdown("#### 6. Task-focused interpretation")
-                st.markdown("\\n".join(task_analysis_lines))
-                task_analysis_text = "\\n".join(task_analysis_lines) + "\\n"
+                st.markdown("\n".join(task_analysis_lines))
+                task_analysis_text = "\n".join(task_analysis_lines) + "\n"
                 st.download_button(
                     "Download task-focused interpretation (Markdown)",
                     data=task_analysis_text.encode("utf-8"),
