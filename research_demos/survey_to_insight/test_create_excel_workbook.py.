@@ -1,0 +1,109 @@
+
+"""Tests for the consolidated Survey-to-Insight Excel workbook."""
+
+import json
+from pathlib import Path
+
+import pandas as pd
+import pytest
+from openpyxl import load_workbook
+
+from analyse_survey import analyse_survey
+from create_excel_workbook import create_workbook
+from generate_synthetic_data import generate_data
+
+
+def prepare_analysis(tmp_path: Path) -> Path:
+    """Generate and analyse a temporary synthetic dataset."""
+    input_csv = tmp_path / "responses.csv"
+    analysis_dir = tmp_path / "analysis_outputs"
+
+    generate_data(n=20, seed=123).to_csv(input_csv, index=False)
+    analyse_survey(input_csv, analysis_dir)
+
+    return analysis_dir
+
+
+def test_creates_workbook_with_expected_sheets(tmp_path: Path):
+    analysis_dir = prepare_analysis(tmp_path)
+    output_file = tmp_path / "survey_to_insight_workbook.xlsx"
+
+    result = create_workbook(analysis_dir, output_file)
+
+    assert result.exists()
+    assert result.stat().st_size > 0
+
+    workbook = load_workbook(result, read_only=True)
+    expected_sheets = {
+        "Read Me",
+        "Sample Profile",
+        "Skill Statistics",
+        "Skills by Role",
+        "Role Counts",
+        "Task Frequencies",
+        "Response Completeness",
+        "Validation",
+    }
+    assert expected_sheets.issubset(set(workbook.sheetnames))
+
+    overview = pd.read_excel(result, sheet_name="Read Me")
+    status = overview.loc[
+        overview["Item"] == "Dataset status", "Details"
+    ].iloc[0]
+    assert "SYNTHETIC" in status
+
+    workbook.close()
+
+
+def test_workbook_refuses_unlabelled_dataset(tmp_path: Path):
+    analysis_dir = prepare_analysis(tmp_path)
+    manifest_path = analysis_dir / "analysis_manifest.json"
+
+    manifest = json.loads(
+        manifest_path.read_text(encoding="utf-8")
+    )
+    manifest["dataset_type"] = "REAL"
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2),
+        encoding="utf-8",
+    )
+
+    output_file = tmp_path / "should_not_be_created.xlsx"
+
+    with pytest.raises(ValueError, match="synthetic"):
+        create_workbook(analysis_dir, output_file)
+
+    assert not output_file.exists()
+
+
+def test_workbook_refuses_failed_validation(tmp_path: Path):
+    analysis_dir = prepare_analysis(tmp_path)
+    validation_path = analysis_dir / "validation_report.json"
+
+    validation = json.loads(
+        validation_path.read_text(encoding="utf-8")
+    )
+    validation["analysis_allowed"] = False
+    validation_path.write_text(
+        json.dumps(validation, indent=2),
+        encoding="utf-8",
+    )
+
+    output_file = tmp_path / "should_not_be_created.xlsx"
+
+    with pytest.raises(ValueError, match="does not permit analysis"):
+        create_workbook(analysis_dir, output_file)
+
+    assert not output_file.exists()
+
+
+def test_missing_required_table_is_reported(tmp_path: Path):
+    analysis_dir = prepare_analysis(tmp_path)
+    (analysis_dir / "q10_task_frequencies.csv").unlink()
+
+    output_file = tmp_path / "incomplete.xlsx"
+
+    with pytest.raises(FileNotFoundError, match="q10_task_frequencies"):
+        create_workbook(analysis_dir, output_file)
+
+    assert not output_file.exists()
