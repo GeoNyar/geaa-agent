@@ -66,6 +66,13 @@ jobs:
             --analysis-dir analysis_outputs \
             --output analysis_outputs/survey_to_insight_workbook.xlsx
 
+      - name: Create Word research report
+        working-directory: research_demos/survey_to_insight
+        run: |
+          python create_research_report.py \
+            --analysis-dir analysis_outputs \
+            --output analysis_outputs/survey_to_insight_research_report.docx
+
       - name: Upload survey analysis artifacts
         if: success()
         uses: actions/upload-artifact@v4
