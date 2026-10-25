@@ -103,7 +103,7 @@ How familiar are you with presenting data findings in a clear written report for
 
 ## Section C: Previous experience and development needs
 
-### Q10. Which of the following activities have you personally undertaken?
+### Q10. Which of the following activities have you personally undertaken during the past 12 months?
 
 *Select all that apply. Select “None of the above” or “Prefer not to say” alone.*
 
