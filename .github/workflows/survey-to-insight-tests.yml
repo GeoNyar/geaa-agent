@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pandas numpy matplotlib pytest
+          python -m pip install pandas numpy matplotlib pytest openpyxl
 
       - name: Run automated tests
         working-directory: research_demos/survey_to_insight
@@ -58,6 +58,13 @@ jobs:
           python analyse_survey.py \
             --input synthetic_responses.csv \
             --output-dir analysis_outputs
+
+      - name: Create consolidated Excel workbook
+        working-directory: research_demos/survey_to_insight
+        run: |
+          python create_excel_workbook.py \
+            --analysis-dir analysis_outputs \
+            --output analysis_outputs/survey_to_insight_workbook.xlsx
 
       - name: Upload survey analysis artifacts
         if: success()
