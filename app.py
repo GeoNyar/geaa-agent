@@ -2104,6 +2104,114 @@ if st.button("🚀 Run Task"):
                         key="research_data_correlation_download"
                     )
 
+                # Task-focused interpretation from calculations actually performed in Python.
+                task_analysis_lines = [
+                    "## Task-focused exploratory interpretation",
+                    "",
+                    f"**Task entered:** {task if task.strip() else 'No specific task entered.'}",
+                    "",
+                    "**Evidence status:** Results below are calculated from the uploaded file and describe this dataset only.",
+                    "",
+                    "### Descriptive patterns",
+                ]
+                summary_specs = [
+                    ("teacher_digital_competence_score", "Teacher digital competence"),
+                    ("school_resource_access_index", "School resource access index"),
+                    ("current_class_mean_achievement_score", "Current class mean achievement"),
+                ]
+                for col, label in summary_specs:
+                    if col in data.columns:
+                        vals = pd.to_numeric(data[col], errors="coerce").dropna()
+                        if not vals.empty:
+                            task_analysis_lines.append(
+                                f"- {label}: n={len(vals)}, mean={vals.mean():.2f}, median={vals.median():.2f}, "
+                                f"range={vals.min():.2f}–{vals.max():.2f}."
+                            )
+                training_col = "digital_training_past_2_years"
+                if training_col in data.columns:
+                    vals = pd.to_numeric(data[training_col], errors="coerce").dropna()
+                    if not vals.empty and vals.isin([0, 1]).all():
+                        task_analysis_lines.append(
+                            f"- Digital training in the past two years: {vals.mean()*100:.1f}% coded 1 and "
+                            f"{(1-vals.mean())*100:.1f}% coded 0; verify that the codebook defines 1=yes and 0=no."
+                        )
+
+                task_analysis_lines.extend(["", "### Teacher digital competence and current achievement"])
+                competence_col = "teacher_digital_competence_score"
+                achievement_col = "current_class_mean_achievement_score"
+                if competence_col in data.columns and achievement_col in data.columns:
+                    paired = data[[competence_col, achievement_col]].apply(pd.to_numeric, errors="coerce").dropna()
+                    if len(paired) >= 2 and paired[competence_col].nunique() > 1 and paired[achievement_col].nunique() > 1:
+                        r_value = paired[competence_col].corr(paired[achievement_col], method="pearson")
+                        task_analysis_lines.append(
+                            f"- Pearson correlation: r={r_value:.3f}, based on {len(paired)} complete paired records."
+                        )
+                        if pd.notna(r_value):
+                            if r_value >= 0.70:
+                                direction = "strong positive"
+                            elif r_value >= 0.30:
+                                direction = "moderate positive"
+                            elif r_value > 0:
+                                direction = "weak positive"
+                            elif r_value <= -0.70:
+                                direction = "strong negative"
+                            elif r_value <= -0.30:
+                                direction = "moderate negative"
+                            elif r_value < 0:
+                                direction = "weak negative"
+                            else:
+                                direction = "approximately no linear"
+                            task_analysis_lines.append(
+                                f"- The observed linear association is {direction}. Correlation does not establish causation."
+                            )
+                    else:
+                        task_analysis_lines.append("- Correlation was not calculated: insufficient paired variation.")
+                else:
+                    task_analysis_lines.append("- Required competence/achievement columns were not both found.")
+
+                task_analysis_lines.extend(["", "### Baseline and current achievement comparison"])
+                baseline_col = "baseline_class_mean_score"
+                if baseline_col in data.columns and achievement_col in data.columns:
+                    paired_scores = data[[baseline_col, achievement_col]].apply(pd.to_numeric, errors="coerce").dropna()
+                    if not paired_scores.empty:
+                        differences = paired_scores[achievement_col] - paired_scores[baseline_col]
+                        task_analysis_lines.extend([
+                            f"- Baseline mean={paired_scores[baseline_col].mean():.2f}; current mean={paired_scores[achievement_col].mean():.2f}.",
+                            f"- Mean paired difference (current minus baseline)={differences.mean():.2f} points across {len(paired_scores)} complete records.",
+                            f"- Individual paired differences ranged from {differences.min():.2f} to {differences.max():.2f} points.",
+                            "- This comparison is descriptive. Verify that scales, classes and measurement intervals are comparable before interpreting the difference."
+                        ])
+                else:
+                    task_analysis_lines.append("- Required baseline/current score columns were not both found.")
+
+                task_analysis_lines.extend([
+                    "",
+                    "### Data-quality and methodological limitations",
+                    f"- {row_count} rows and {column_count} columns; {duplicate_rows} exact duplicate rows; {missing_cells} missing cells.",
+                    "- No missing cells or duplicate rows does not guarantee that values are valid, accurate or representative.",
+                    "- Confirm variable definitions, score scales, coding and the data-generation process.",
+                    "- Pearson correlation describes linear association; no inferential significance test or causal analysis was performed.",
+                    "- If teachers are grouped within schools, observations may be clustered and later analyses should account for school-level structure.",
+                    "",
+                    "### Three cautious follow-up research questions",
+                    "1. How strongly is teacher digital competence associated with current class mean achievement, and does this pattern vary by school?",
+                    "2. How are digital training participation and school resource access associated with teacher digital competence?",
+                    "3. What explains variation in baseline-to-current achievement differences across classes or schools, after score comparability is verified?",
+                    "",
+                    "**Synthetic-data caution:** If this is the synthetic demonstration dataset, all numerical results are synthetic and must not be presented as findings about real teachers or schools."
+                ])
+
+                st.markdown("#### 6. Task-focused interpretation")
+                st.markdown("\\n".join(task_analysis_lines))
+                task_analysis_text = "\\n".join(task_analysis_lines) + "\\n"
+                st.download_button(
+                    "Download task-focused interpretation (Markdown)",
+                    data=task_analysis_text.encode("utf-8"),
+                    file_name="geaa_task_focused_interpretation.md",
+                    mime="text/markdown",
+                    key="research_data_task_interpretation_download"
+                )
+
                 report_lines = [
                     "# GEAA Research Data — Exploratory Report",
                     "",
@@ -2126,8 +2234,9 @@ if st.button("🚀 Run Task"):
                     "- Descriptive statistics and correlations do not establish causation.",
                     "- Choose inferential tests only after specifying the research question, unit of analysis, sampling design and assumptions.",
                 ]
+                report_lines.extend(["", *task_analysis_lines])
                 report_text = "\n".join(report_lines) + "\n"
-                st.markdown("#### 6. Download report and data-quality profile")
+                st.markdown("#### 7. Download report and data-quality profile")
                 st.download_button(
                     "Download exploratory report (Markdown)",
                     data=report_text.encode("utf-8"),
