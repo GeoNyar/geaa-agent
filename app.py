@@ -78,11 +78,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# Connect to Gemini
-client = genai.Client(
-    api_key=st.secrets["GEMINI_API_KEY"]
-)
-
+# Connect to Gemini when an API key is available.
+# Research Data mode should remain usable without Gemini.
+try:
+    gemini_api_key = st.secrets.get("GEMINI_API_KEY", "")
+    client = (
+        genai.Client(api_key=gemini_api_key)
+        if gemini_api_key
+        else None
+    )
+except Exception:
+    client = None
 # Load GEAA instructions
 try:
     with open("geaa_instructions.txt", "r", encoding="utf-8") as file:
