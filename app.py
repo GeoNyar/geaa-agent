@@ -2680,9 +2680,9 @@ if run_task_clicked or research_data_results_active:
 
     3. Keep short inline expressions together. Put longer equations on separate lines only when necessary.
 
-    4. If mathematical rendering is unreliable, prefer readable plain-text notation. Write `Ea (catalysed) < Ea (uncatalysed)` and `ΔH (catalysed) = ΔH (uncatalysed)`. Never leave duplicated, fragmented, or malformed mathematical notation.
+    4. If mathematical rendering is unreliable, prefer readable plain-text notation. Keep expressions complete and correctly formatted; never leave duplicated, fragmented, or malformed mathematical notation.
 
-    5. For energy profile diagrams, ensure labels and explanations agree with the diagram. A catalyst lowers activation energy but does not change the overall enthalpy change. Keep reactant and product energy levels the same for catalysed and uncatalysed pathways.
+    5. Apply chemistry-specific guidance only when the user's task is about chemistry, chemical reactions, catalysts, or energy-profile diagrams. For those tasks, ensure diagram labels and explanations agree: a catalyst lowers activation energy but does not change the overall enthalpy change, and reactant and product energy levels remain the same for catalysed and uncatalysed pathways. Do not introduce chemistry equations, examples, or energy-profile guidance into unrelated tasks.
 
     6. Do not place the entire response inside a code block or use a fenced math block. Preserve Markdown headings, bullet points, and source-attribution labels.
 
