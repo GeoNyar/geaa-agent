@@ -2174,7 +2174,7 @@ if run_task_clicked or research_data_results_active:
                     if len(paired) >= 2 and paired[competence_col].nunique() > 1 and paired[achievement_col].nunique() > 1:
                         r_value = paired[competence_col].corr(paired[achievement_col], method="pearson")
                         task_analysis_lines.append(
-                            f"- Pearson correlation: r={r_value:.3f}, based on {len(paired)} complete paired records."
+                            f"- Pearson correlation: r={r_value:.3f}, based on {len(paired)} complete records with values for both variables."
                         )
                         if pd.notna(r_value):
                             if r_value >= 0.70:
@@ -2204,12 +2204,14 @@ if run_task_clicked or research_data_results_active:
                 if baseline_col in data.columns and achievement_col in data.columns:
                     paired_scores = data[[baseline_col, achievement_col]].apply(pd.to_numeric, errors="coerce").dropna()
                     if not paired_scores.empty:
-                        differences = paired_scores[achievement_col] - paired_scores[baseline_col]
+                        mean_baseline = paired_scores[baseline_col].mean()
+                        mean_current = paired_scores[achievement_col].mean()
+                        mean_difference = mean_current - mean_baseline
                         task_analysis_lines.extend([
-                            f"- Baseline mean={paired_scores[baseline_col].mean():.2f}; current mean={paired_scores[achievement_col].mean():.2f}.",
-                            f"- Mean paired difference (current minus baseline)={differences.mean():.2f} points across {len(paired_scores)} complete records.",
-                            f"- Individual paired differences ranged from {differences.min():.2f} to {differences.max():.2f} points.",
-                            "- This comparison is descriptive. Verify that scales, classes and measurement intervals are comparable before interpreting the difference."
+                            f"- Baseline column mean={mean_baseline:.2f}; current column mean={mean_current:.2f}.",
+                            f"- Difference between column means (current minus baseline)={mean_difference:.2f} points, calculated from {len(paired_scores)} records with both values present.",
+                            "- The dataset documentation does not establish that these are paired measurements of the same classes at defined time points. This is a comparison of two column means, not a record-level change estimate, longitudinal change estimate or evidence of intervention effectiveness.",
+                            "- Verify that score scales and measurement conditions are comparable before interpreting the difference."
                         ])
                 else:
                     task_analysis_lines.append("- Required baseline/current score columns were not both found.")
@@ -2228,7 +2230,7 @@ if run_task_clicked or research_data_results_active:
                     "2. How are digital training participation and school resource access associated with teacher digital competence?",
                     "3. What explains variation in baseline-to-current achievement differences across classes or schools, after score comparability is verified?",
                     "",
-                    "**Synthetic-data caution:** If this is the synthetic demonstration dataset, all numerical results are synthetic and must not be presented as findings about real teachers or schools."
+                    "**Synthetic-data caution:** If every value in the `data_status` column is `SYNTHETIC_NOT_REAL`, this is entirely synthetic demonstration data. All numerical results are illustrative and must not be presented as findings about real teachers, learners or schools. Otherwise, verify the dataset provenance before assigning a synthetic-data label."
                 ])
 
                 st.markdown("#### 6. Task-focused interpretation")
