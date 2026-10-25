@@ -4,7 +4,7 @@
 
 Survey-to-Insight is a research data-management and reporting demonstration within George's Education & Analytics Agent (GEAA) repository. It demonstrates how a structured survey dataset can be generated, validated, analysed and transformed into reproducible outputs for research review and decision support.
 
-The current implementation uses clearly labelled synthetic data to demonstrate the analytical workflow. The generated records do not represent actual respondents, educators, schools or institutions. Consequently, the outputs are examples of the workflow's technical capabilities, not empirical research findings.
+The current implementation uses clearly labelled synthetic data to demonstrate the analytical workflow. The generated records do not represent actual respondents, educators, schools or institutions. Consequently, the outputs demonstrate the workflow's technical capabilities rather than present empirical research findings.
 
 The project is designed to support the development of practical skills in education research, data quality assurance, descriptive analysis, visualisation and evidence-based reporting.
 
@@ -72,7 +72,7 @@ The successful workflow produces a downloadable artifact named `survey-to-insigh
 | `survey_to_insight_workbook.xlsx` | Consolidated Excel workbook with eight worksheets | Implemented |
 | `survey_to_insight_research_report.docx` | Structured Word report with embedded charts | Implemented |
 
-The workflow also retains the analysis outputs in the `analysis_outputs/` directory during execution. Generated files are packaged as a GitHub Actions artifact rather than being committed as if they were actual survey findings.
+The workflow also retains analysis outputs in the `analysis_outputs/` directory during execution. Generated files are packaged as a GitHub Actions artifact rather than committed as if they were actual survey findings.
 
 ## 6. Automated Testing and Quality Assurance
 
@@ -103,7 +103,15 @@ The following limitations are important:
 - **Automated validation:** Passing validation checks confirms compliance with specified rules, not the overall suitability of data for every research purpose.
 - **Report interpretation:** Narrative reporting and recommendations must be interpreted in light of the synthetic dataset and the demonstration's purpose.
 
-Any future study using actual participants would require appropriate research design, ethical safeguards, consent where applicable, secure data handling and compliance with relevant data-protection requirements.
+### Synthetic Open-Text Responses
+
+The demonstration generator creates predefined example statements for Q12, the optional open-ended question about challenges in working with research or data. These are simulated text values, not quotations or accounts from actual participants.
+
+The current analysis assesses response completeness only; it does not conduct qualitative coding, thematic analysis or systematic interpretation of open-text responses. Any apparent patterns in generated comments must not be presented as evidence of real participants' experiences, views or needs.
+
+When authorised real responses become available, qualitative analysis should be conducted separately using an appropriate and documented analytical approach. Any future analysis should distinguish actual participant responses from synthetic examples, protect confidentiality and explain how interpretations were developed.
+
+Any future study involving actual participants would require appropriate research design, ethical safeguards, consent where applicable, secure data handling and compliance with relevant data-protection requirements.
 
 ## 8. Reproducibility
 
