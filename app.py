@@ -1995,7 +1995,16 @@ if uploaded_file is not None:
 
         with st.expander("Technical details"):
             st.code(str(e))# Run task
-if st.button("🚀 Run Task"):
+run_task_clicked = st.button("🚀 Run Task")
+
+# Keep Research Data results visible across Streamlit reruns caused by widgets.
+if run_task_clicked:
+    st.session_state["research_data_run_requested"] = (mode == "Research Data")
+
+if run_task_clicked or (
+    mode == "Research Data"
+    and st.session_state.get("research_data_run_requested", False)
+):
 
     if mode == "Research Data":
         st.markdown("### Research Data — Local Analysis")
