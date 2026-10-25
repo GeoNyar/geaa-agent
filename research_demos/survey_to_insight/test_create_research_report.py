@@ -55,7 +55,10 @@ def test_report_contains_expected_sections_and_disclosure(tmp_path: Path):
         )
 
     assert "20 synthetic records" in text
-    assert "not evidence about actual educators" in text.lower()
+    assert (
+        "not collected from actual educators or institutions"
+        in text.lower()
+    )
 
 
 def test_report_includes_both_charts(tmp_path: Path):
