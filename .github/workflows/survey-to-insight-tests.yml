@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pandas numpy matplotlib pytest openpyxl
+          python -m pip install pandas numpy matplotlib pytest openpyxl python-docx
 
       - name: Run automated tests
         working-directory: research_demos/survey_to_insight
