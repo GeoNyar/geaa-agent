@@ -2134,6 +2134,43 @@ if run_task_clicked or research_data_results_active:
                         key="research_data_correlation_download"
                     )
 
+                # Inspect synthetic-data labels in the uploaded file without treating labels as independent provenance verification.
+                data_status_col = "data_status"
+                synthetic_label = "SYNTHETIC_NOT_REAL"
+                synthetic_status_summary = None
+                if data_status_col in data.columns:
+                    status_values = data[data_status_col].astype("string").str.strip().str.upper()
+                    nonblank_status = status_values.dropna()
+                    if len(nonblank_status) == 0:
+                        synthetic_status_summary = (
+                            "- Synthetic-data status: a `data_status` column is present, but it contains no usable labels. "
+                            "Dataset provenance has not been verified."
+                        )
+                    else:
+                        synthetic_count = int((nonblank_status == synthetic_label).sum())
+                        labelled_count = int(len(nonblank_status))
+                        if synthetic_count == row_count and labelled_count == row_count:
+                            synthetic_status_summary = (
+                                f"- Synthetic-data status: all {row_count} records are labelled `{synthetic_label}`. "
+                                "This verifies the labels in the uploaded file, not the independent provenance of the data."
+                            )
+                        elif synthetic_count > 0:
+                            synthetic_status_summary = (
+                                f"- Synthetic-data status: {synthetic_count} of {labelled_count} nonblank `data_status` values "
+                                f"are labelled `{synthetic_label}`; labels are mixed or incomplete. Review provenance before interpreting results."
+                            )
+                        else:
+                            observed_labels = ", ".join(sorted(set(nonblank_status.astype(str).tolist()))[:10])
+                            synthetic_status_summary = (
+                                f"- Synthetic-data status: no `{synthetic_label}` labels were found in the {labelled_count} "
+                                f"nonblank `data_status` values (observed labels: {observed_labels}). Do not assume the dataset is real; verify provenance."
+                            )
+                else:
+                    synthetic_status_summary = (
+                        "- Synthetic-data status: no `data_status` column was found. Dataset provenance has not been verified; "
+                        "do not assign a synthetic or real status based on this check alone."
+                    )
+
                 # Task-focused interpretation from calculations actually performed in Python.
                 task_analysis_lines = [
                     "## Task-focused exploratory interpretation",
@@ -2230,7 +2267,8 @@ if run_task_clicked or research_data_results_active:
                     "2. How are digital training participation and school resource access associated with teacher digital competence?",
                     "3. What explains variation in baseline-to-current achievement differences across classes or schools, after score comparability is verified?",
                     "",
-                    "**Synthetic-data caution:** If every value in the `data_status` column is `SYNTHETIC_NOT_REAL`, this is entirely synthetic demonstration data. All numerical results are illustrative and must not be presented as findings about real teachers, learners or schools. Otherwise, verify the dataset provenance before assigning a synthetic-data label."
+                    synthetic_status_summary,
+                    "**Interpretation safeguard:** A `data_status` label is a declaration within the file, not independent proof of data provenance. When the file is confirmed to be synthetic demonstration data, all numerical results are illustrative and must not be presented as findings about real teachers, learners or schools."
                 ])
 
                 st.markdown("#### 6. Task-focused interpretation")
