@@ -78,11 +78,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# Connect to Gemini
-client = genai.Client(
-    api_key=st.secrets["GEMINI_API_KEY"]
-)
-
+# Connect to Gemini when an API key is available.
+# Research Data mode should remain usable without Gemini.
+try:
+    gemini_api_key = st.secrets.get("GEMINI_API_KEY", "")
+    client = (
+        genai.Client(api_key=gemini_api_key)
+        if gemini_api_key
+        else None
+    )
+except Exception:
+    client = None
 # Load GEAA instructions
 try:
     with open("geaa_instructions.txt", "r", encoding="utf-8") as file:
@@ -385,15 +391,22 @@ try:
 
 except FileNotFoundError:
     KNOWLEDGE_DOCUMENTS = []
-with st.expander("🔍 Knowledge Parser Test"):
-    for document in KNOWLEDGE_DOCUMENTS:
-        st.write(f"**Document:** {document['filename']}")
-        st.write(f"**Type:** {document['document_type']}")
-        st.write(f"**Number of sections:** {len(document['sections'])}")
+debug_mode = st.sidebar.checkbox(
+    "Enable developer diagnostics",
+    value=False,
+    key="geaa_debug_mode",
+)
 
-        for index, section in enumerate(document["sections"], start=1):
-            st.write(f"Section {index}: {section['heading']}")
-            st.caption(section["content"][:300])
+if debug_mode:
+    with st.expander("🔍 Knowledge Parser Test"):
+        for document in KNOWLEDGE_DOCUMENTS:
+            st.write(f"**Document:** {document['filename']}")
+            st.write(f"**Type:** {document['document_type']}")
+            st.write(f"**Number of sections:** {len(document['sections'])}")
+
+            for index, section in enumerate(document["sections"], start=1):
+                st.write(f"Section {index}: {section['heading']}")
+                st.caption(section["content"][:300])
 
 
 def retrieve_knowledge(task, documents, max_sections=5):
@@ -791,7 +804,7 @@ def retrieve_knowledge(task, documents, max_sections=5):
         "in",
         "on",
         "at",
-        "by"
+        "by",
 
         # Additional low-information terms seen in retrieval output
         "not",
@@ -1579,6 +1592,7 @@ mode = st.selectbox(
         "Analytics",
         "Education Leadership",
         "TVET",
+        "Research Data",
         "General"
     ]
 )
@@ -1676,6 +1690,15 @@ Follow this sequence when appropriate:
 10. Present the result in a format suitable for TVET use.
 """,
 
+    "Research Data": """
+RESEARCH DATA WORKFLOW
+
+Analyse the supplied dataset locally in Python. Do not transmit participant-level
+rows to the language model. Describe data quality, measurement limitations,
+descriptive findings and suitable exploratory analyses without making causal
+claims from observational data.
+""",
+
     "General": """
 GENERAL WORKFLOW
 
@@ -1730,9 +1753,9 @@ research_question_requested = any(
 st.markdown("### 📊 Optional Data File")
 
 uploaded_file = st.file_uploader(
-    "Upload a CSV file for GEAA to inspect",
-    type=["csv"],
-    help="Upload a CSV dataset when your task requires data analysis."
+    "Upload a data file for GEAA to inspect",
+    type=["csv", "xlsx", "xls"],
+    help="CSV and Excel files are supported. Research Data mode analyses records locally in Python."
 )
 
 # Run task
@@ -1742,7 +1765,10 @@ uploaded_data = None
 if uploaded_file is not None:
 
     try:
-        uploaded_data = pd.read_csv(uploaded_file)
+        if uploaded_file.name.lower().endswith((".xlsx", ".xls")):
+            uploaded_data = pd.read_excel(uploaded_file)
+        else:
+            uploaded_data = pd.read_csv(uploaded_file)
 
         st.markdown("### 📋 Uploaded Data")
 
@@ -1971,459 +1997,802 @@ if uploaded_file is not None:
     except Exception as e:
 
         st.error(
-            "GEAA could not read the uploaded CSV file."
+            "GEAA could not read the uploaded file. Check that it is a valid CSV or Excel file."
         )
 
         with st.expander("Technical details"):
             st.code(str(e))# Run task
-if st.button("🚀 Run Task"):
+run_task_clicked = st.button("🚀 Run Task")
 
-    if uploaded_data is not None:
-        retrieved_knowledge = ""
-        retrieval_details = []
-    else:
-        retrieved_knowledge, retrieval_details = retrieve_knowledge(
-            task,
-            KNOWLEDGE_DOCUMENTS
+# Tie Research Data results to the exact inputs submitted by the user.
+research_data_run_signature = (
+    mode,
+    getattr(uploaded_file, "name", None),
+    getattr(uploaded_file, "size", None),
+    task,
+)
+
+if run_task_clicked:
+    st.session_state["research_data_run_signature"] = (
+        research_data_run_signature
+        if mode == "Research Data"
+        else None
+    )
+
+research_data_results_active = (
+    mode == "Research Data"
+    and st.session_state.get("research_data_run_signature")
+    == research_data_run_signature
+)
+
+if run_task_clicked or research_data_results_active:
+
+    if mode == "Research Data":
+        st.markdown("### Research Data — Local Analysis")
+        st.info(
+            "Privacy safeguard: this mode analyses the uploaded dataset with Python. "
+            "It does not send raw dataset rows to Gemini."
         )
 
-    # Determine the provenance of the knowledge available to GEAA.
-    if retrieved_knowledge.strip():
-        knowledge_status = (
-            "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-            "The response may use the retrieved knowledge as "
-            "user-provided evidence."
-        )
-    else:
-        knowledge_status = (
-            "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
-            "The response must rely on the user's task, "
-            "general AI knowledge, reasoning, and clearly "
-            "labelled proposals or inferences."
-        )
-
-    with st.expander("🔎 Retrieved Knowledge"):
-        if retrieval_details:
-
-            for item in retrieval_details:
-
-                display_section = item.get(
-                    "heading",
-                    "Section heading not captured"
-                )
-
-                st.write(
-                    f"📄 {item['filename']} | "
-                    f"Section: {display_section} | "
-                    f"Keyword match score: {item['score']}"
-                )
-
-                reasons = item.get(
-                    "retrieval_reasons",
-                    []
-                )
-
-                if reasons:
-
-                    st.markdown(
-                        "**Why this section was retrieved:**"
-                    )
-
-                    for reason in reasons:
-                        st.write(
-                            f"• {reason}"
-                        )
-
+        if uploaded_data is None:
+            st.warning("Upload a readable CSV or Excel dataset before running the analysis.")
         else:
-            st.write(
-                "No relevant knowledge was retrieved."
-            )
-    st.write("### 📚 Retrieved Text Passed to GEAA")
-
-    if retrieved_knowledge.strip():
-        st.text(retrieved_knowledge)
-    else:
-        st.write("No retrieved knowledge was passed to GEAA.")
-
-
-    if task.strip():
-        full_instructions = (
-            GEAA_INSTRUCTIONS
-            + "\n\nSELECTED MODE:\n"
-            + mode
-            + "\n\nMODE WORKFLOW:\n"
-            + workflows[mode]
-            + r"""
-
-EVIDENCE AND PROVENANCE RULES
-
-GEAA must clearly distinguish between information obtained
-from the user's knowledge base, general AI knowledge, and
-new reasoning or proposals.
-
-1. KNOWLEDGE-BASE EVIDENCE
-Use this label when a statement is directly supported by
-RETRIEVED GEAA KNOWLEDGE supplied in the prompt.
-
-Do not claim that a statement comes from the GEAA knowledge
-base unless relevant retrieved knowledge was actually supplied.
-
-2. GENERAL AI KNOWLEDGE
-When no relevant GEAA knowledge has been retrieved, answer
-using general knowledge and reasoning available to the model.
-
-Do not present general AI knowledge as if it came from the
-user's knowledge base.
-
-3. USER-PROVIDED INFORMATION
-Clearly identify information that comes directly from the
-USER TASK or UPLOADED DATA.
-
-4. PROPOSED / INFERRED CONTENT
-Clearly label interpretations, suggestions, operational
-definitions, methodological recommendations, assumptions,
-examples, or other content that is not directly established
-by the user's task, uploaded data, or retrieved knowledge.
-
-Use labels such as:
-- QUESTION-PROVIDED
-- UPLOADED-DATA
-- KNOWLEDGE-BASE
-- GENERAL KNOWLEDGE
-- PROPOSED
-- INFERRED
-- NEEDS VERIFICATION
-
-5. NO FABRICATION OF KNOWLEDGE-BASE SUPPORT
-If GEAA KNOWLEDGE STATUS says that no relevant knowledge was
-retrieved, do not cite, imply, or suggest that the user's
-knowledge base supports the answer.
-
-6. AVOID FALSE CERTAINTY
-When evidence is unavailable, distinguish established facts
-from reasonable interpretation and proposed methodology.
-
-7. RESEARCH TASKS
-For research questions, distinguish:
-- what the research question explicitly provides;
-- what can reasonably be inferred from the wording;
-- what is being proposed for a possible study design;
-- what requires verification from literature, policy documents,
-  or empirical data.
-
-Do not fabricate citations, studies, statistics, instruments,
-policy requirements, or findings.
-
-8. RESEARCH DESIGN AND STATISTICAL REASONING
-
-For research tasks, apply the following methodological checks
-when relevant to the user's question.
-
-A. UNIT OF ANALYSIS AND LEVELS OF MEASUREMENT
-Identify the proposed unit of analysis, such as teachers,
-students, classes, or schools. Distinguish the unit at which
-each variable is measured. If the unit of analysis is unclear,
-state this and explain why it matters.
-
-B. LINKAGE BETWEEN VARIABLES
-When explanatory variables and outcomes are measured at
-different levels, identify how the observations would be linked.
-For example, teacher-level digital competence and student-level
-achievement require a defensible way to associate students with
-the teachers whose instruction they receive. Do not assume that
-such linkage or data is available.
-
-C. NESTED AND CLUSTERED DATA
-Consider whether observations may be nested within classes,
-teachers, or schools. Explain that observations within the same
-group may not be statistically independent. Treat multilevel
-analysis as a possible option when justified by the sampling
-design, data structure, number of groups, and available sample
-size. Do not recommend it automatically.
-
-D. ALIGNMENT OF RESEARCH QUESTION AND METHOD
-Recommend a statistical or qualitative method only after
-considering the research question, study design, measurement
-level, sampling strategy, and available data. Correlation or
-regression may be appropriate for some associational questions;
-multilevel methods may be appropriate for suitably structured
-nested data. Explain relevant assumptions and limitations.
-
-E. ASSOCIATION AND CAUSATION
-Do not interpret an observed association as proof of causation.
-Identify plausible confounding factors where relevant, but do
-not assume that adjusting for selected variables eliminates
-all confounding or establishes causal effects.
-
-F. EVIDENCE AND UNCERTAINTY
-Label methodological recommendations as PROPOSED, general
-methodological principles as GENERAL KNOWLEDGE when they are
-not supported by retrieved knowledge, and unresolved design
-details as NEEDS VERIFICATION. Do not invent sample sizes,
-data linkage arrangements, validated instruments, model results,
-or evidence that a proposed method is feasible.
-
-G. SOURCE-LABEL ACCURACY
-
-Apply source labels according to the actual origin of each claim.
-
-1. Use UPLOADED-DATA only when the user has actually
-provided a dataset or other relevant uploaded evidence.
-Do not use this label for hypothetical data, missing data,
-or proposed data-collection arrangements.
-
-2. Distinguish the setting from the target population.
-If the question names public secondary schools in Kilifi
-County, identify that as the QUESTION-PROVIDED setting.
-Do not automatically treat all teachers or students in
-that setting as the confirmed target population, sampling
-frame, or study participants.
-
-3. Distinguish explicitly stated information from inference.
-Use QUESTION-PROVIDED for information directly stated
-in the research question. Use INFERRED for reasonable
-interpretations not explicitly stated. Use PROPOSED for
-recommended designs, procedures, variables, or analyses.
-Use NEEDS VERIFICATION for unresolved information.
-
-4. Do not combine source labels merely to make an answer
-appear better supported. If a statement contains both
-provided information and a proposed recommendation,
-separate the statement into clearly labelled parts.
-
-5. For teacher-level and student-level variables, identify
-the proposed unit of analysis and explain how records
-would be linked. Label the linkage procedure PROPOSED
-and NEEDS VERIFICATION unless the user has supplied
-evidence establishing that the linkage exists.
-
-6. Never describe a proposed sampling frame, instrument,
-dataset, school record, or data-linkage arrangement as
-already available unless the user has confirmed its
-availability.
-
-7. Before finalizing a research response, check that every
-source label accurately reflects the evidence available
-in the current task, uploaded files, and retrieved
-knowledge. Do not imply that retrieval proves a claim
-when the retrieved material only provides general guidance.
-
-8. When a research question explicitly names variables,
-label those variables QUESTION-PROVIDED. Use KNOWLEDGE-BASE
-only for definitions, classifications, or methodological
-principles actually supported by the retrieved text.
-
-9. Distinguish a general measurement principle from a
-specific measurement decision. A requirement to define
-and justify a measure may be KNOWLEDGE-BASE, while the
-choice of an instrument, examination score, or assessment
-procedure is PROPOSED and may require verification.
-
-10. Distinguish measurement level, unit of analysis, and
-data structure. Do not present several possible units of
-analysis as if they were a single established decision.
-Explain which choices remain unresolved and why.
-
-11. Recommend a statistical model only conditionally.
-Explain the design and data requirements that would make
-the model suitable. Do not assume that multilevel modelling
-is necessary merely because students attend different
-schools or share teachers.
-
-H. SOURCE PROVENANCE AND CONTEXTUAL CALIBRATION
-
-1. Distinguish the origin of each substantive claim:
-   - QUESTION-PROVIDED: Explicitly supplied in the user's current task.
-   - KNOWLEDGE-BASE: Supported by the retrieved GEAA knowledge presented to the model.
-   - GENERAL KNOWLEDGE: Established general disciplinary or methodological knowledge not specifically supported by the retrieved material.
-   - PROPOSED: A suggested measurement, method, variable, explanation, or next step that has not been established as a fact about the user's study.
-   - INFERRED: A reasonable interpretation that follows from the question but was not explicitly supplied.
-   - NEEDS VERIFICATION: Information that must be confirmed before it can be treated as established.
-
-2. Do not confuse a concept with its measurement. When a user supplies a variable, label the variable QUESTION-PROVIDED. Label suggested instruments, indicators, operational definitions, and data-collection methods PROPOSED. Label the validity, reliability, availability, or suitability of a specific instrument NEEDS VERIFICATION unless supporting evidence is available.
-
-3. Do not present inferred context as verified local evidence. Potential effects, contextual conditions, administrative practices, population characteristics, and geographical explanations must not be described as established facts about a named county, school, institution, or population unless the supplied or retrieved evidence supports them. Present plausible but unverified explanations as PROPOSED and identify what requires verification.
-
-4. Calibrate methodological recommendations to the available design information. Do not assume that teacher and student records can be linked, that a sampling frame exists, or that observations are clustered in a particular way. Explain the relevant condition and label the recommendation PROPOSED or NEEDS VERIFICATION where appropriate. Recommend multilevel modelling only when the sampling structure, number of groups, and available data make it potentially appropriate.
-
-5. Distinguish retrieved support from supplementary explanation. When retrieved knowledge supports a claim, use KNOWLEDGE-BASE. When adding a scientifically or methodologically sound explanation that is not stated in the retrieved text, use GENERAL KNOWLEDGE. Do not label an entire mixed statement KNOWLEDGE-BASE if only part of it is supported by the retrieved material.
-
-6. Use source labels only where they clarify the evidence status. Avoid contradictory or redundant combinations of labels. Briefly explain uncertainty when material, and do not invent citations, research findings, local facts, data availability, or instrument validation.
-
-12. GENERAL KNOWLEDGE AND EXTERNAL EVIDENCE
-
-When no relevant knowledge has been retrieved, distinguish
-general methodological reasoning from verified research
-evidence.
-
-Do not claim to have consulted research literature,
-official reports, regulations, or administrative records
-unless those sources were actually supplied or consulted.
-
-Label plausible but unverified local, institutional, or
-context-specific claims NEEDS VERIFICATION.
-
-Do not invent citations, study findings, statistics,
-administrative boundaries, policy requirements, or local
-conditions.
-
-For research questions about factors associated with an
-outcome, distinguish the outcome inferred from the question
-from proposed explanatory variables and proposed measures.
-
-Define the outcome operationally before recommending
-data collection. Where relevant, identify distinctions
-that could affect measurement, such as authorised versus
-unauthorised absence or absence from school versus absence
-from assigned teaching duties.
-
-13. FORMATTING AND EVIDENCE CALIBRATION
-
-Use clean Markdown formatting. Do not emit literal HTML
-tags such as <br>, escaped HTML tags, or raw formatting
-instructions in the final answer. Use Markdown paragraphs,
-lists, and tables where appropriate.
-
-State general methodological principles accurately and
-conditionally. Do not imply that a method is universally
-required or commonly used unless that claim is supported.
-Distinguish statistical principles from claims about the
-frequency or effectiveness of particular methods.
-
-When references have not been consulted, do not imply that
-the answer is a literature review. Identify claims that
-need verification through relevant research or official
-sources.
-
-9. EXPLICIT SOURCE LABELING
-Every substantive claim that is not directly provided by the
-USER TASK, UPLOADED DATA, or RETRIEVED GEAA KNOWLEDGE must be
-clearly labelled.
-
-If a statement comes from the model's general knowledge rather
-than the GEAA knowledge base, label it GENERAL KNOWLEDGE.
-
-Do not introduce external frameworks, policies, programmes,
-definitions, regulations, instruments, or named organizations
-without identifying them as GENERAL KNOWLEDGE and, where
-appropriate, NEEDS VERIFICATION.
-
-For research tasks, maintain a clear distinction between:
-- QUESTION-PROVIDED
-- UPLOADED-DATA
-- KNOWLEDGE-BASE
-- GENERAL KNOWLEDGE
-- INFERRED
-- PROPOSED
-- NEEDS VERIFICATION
-
-14. MATHEMATICAL NOTATION AND SOURCE ATTRIBUTION REFINEMENTS
-
-
-A. MATHEMATICAL NOTATION
-
-1. Keep mathematical expressions complete, readable, and correctly formatted. Do not split symbols, subscripts, or equations across lines unnecessarily.
-
-2. In Streamlit Markdown responses, use supported inline mathematical notation consistently. Examples: $E_a$, $\Delta H$, $\Delta G$, and Pearson's $r$.
-
-3. Keep short inline expressions together. Put longer equations on separate lines only when necessary.
-
-4. If mathematical rendering is unreliable, prefer readable plain-text notation. Write `Ea (catalysed) < Ea (uncatalysed)` and `ΔH (catalysed) = ΔH (uncatalysed)`. Never leave duplicated, fragmented, or malformed mathematical notation.
-
-5. For energy profile diagrams, ensure labels and explanations agree with the diagram. A catalyst lowers activation energy but does not change the overall enthalpy change. Keep reactant and product energy levels the same for catalysed and uncatalysed pathways.
-
-6. Do not place the entire response inside a code block or use a fenced math block. Preserve Markdown headings, bullet points, and source-attribution labels.
-
-B. SOURCE ATTRIBUTION REFINEMENTS
-
-1. Use KNOWLEDGE-BASE only when the retrieved text supplied to the model supports the claim.
-
-2. Use GENERAL KNOWLEDGE for established disciplinary principles that are not explicitly supported by the retrieved text.
-
-3. When a response combines retrieved information and supplementary knowledge, distinguish the claims clearly. Do not label an entire paragraph KNOWLEDGE-BASE if only some claims are supported by the retrieved material.
-
-4. A claim being scientifically correct does not mean it appears in the retrieved knowledge base. Do not invent citations or attribute unsupported claims to a retrieved document.
-
-5. Keep source labels accurate without making the answer unnecessarily repetitive. Preserve the scientific meaning of the retrieved material.
-"""
-        )
-
-        with st.spinner("GEAA is working through the task..."):
-
             try:
-                # Prepare uploaded data for Gemini
-                data_context = ""
+                data = uploaded_data.copy()
+                row_count, column_count = data.shape
+                numeric_columns = [
+                    col for col in data.columns
+                    if pd.api.types.is_numeric_dtype(data[col])
+                ]
+                categorical_columns = [
+                    col for col in data.columns
+                    if col not in numeric_columns
+                ]
 
-                if uploaded_data is not None:
+                quality = pd.DataFrame({
+                    "Variable": data.columns.astype(str),
+                    "Data type": [str(data[col].dtype) for col in data.columns],
+                    "Missing values": [int(data[col].isna().sum()) for col in data.columns],
+                    "Missing (%)": [
+                        round(float(data[col].isna().mean() * 100), 2)
+                        for col in data.columns
+                    ],
+                    "Unique values": [int(data[col].nunique(dropna=True)) for col in data.columns],
+                })
+                duplicate_rows = int(data.duplicated().sum())
+                missing_cells = int(data.isna().sum().sum())
 
-                    data_context = (
-                        "UPLOADED DATASET:\n"
-                        + f"File: {uploaded_file.name}\n"
-                        + f"Rows: {uploaded_data.shape[0]}\n"
-                        + f"Columns: {uploaded_data.shape[1]}\n\n"
-                        + "DATA:\n"
-                        + uploaded_data.to_string(index=False)
-                        + "\n\nDATA QUALITY:\n"
-                        + f"Duplicate rows: {uploaded_data.duplicated().sum()}\n"
-                        + f"Missing cells: {uploaded_data.isna().sum().sum()}\n"
-                    )
-                response = client.models.generate_content(
-                    model="gemini-3.5-flash-lite",
-                    contents=(
-                        "USER TASK:\n"
-                        + task
-                        + "\n\nGEAA KNOWLEDGE STATUS:\n"
-                        + knowledge_status
-                        + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
-                        + (
-                            retrieved_knowledge
-                            if retrieved_knowledge.strip()
-                            else "[NO RELEVANT GEAA KNOWLEDGE RETRIEVED]"
-                        )
-                        + "\n\nUPLOADED DATA CONTEXT:\n"
-                        + data_context
-                        + "\n\nAPPLICATION VISUALIZATION STATUS:\n"
-                        + (
-                            "A native interactive visualization has already "
-                            "been generated in the application interface. "
-                            "Do not create a second text-based, ASCII or "
-                            "Markdown chart. Interpret the existing "
-                            "visualization and the underlying data instead."
-                            if visualization_requested
-                            else
-                            "No native visualization has been generated. "
-                            "Do not create a visualization unless the user "
-                            "specifically requests one."
-                        )
-                    ),
-                    config=types.GenerateContentConfig(
-                        system_instruction=full_instructions
-                    )
+                st.markdown("#### 1. Dataset overview")
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Rows", row_count)
+                c2.metric("Columns", column_count)
+                c3.metric("Duplicate rows", duplicate_rows)
+                c4.metric("Missing cells", missing_cells)
+                st.caption(
+                    f"File: {uploaded_file.name}. This is a descriptive, exploratory workflow; "
+                    "results depend on the quality, definitions and representativeness of the supplied data."
                 )
 
-                st.markdown("### GEAA's Response")
-                st.latex(r"E_{a,\text{catalysed}} < E_{a,\text{uncatalysed}}")
-                st.markdown(response.text, unsafe_allow_html=False)
+                st.markdown("#### 2. Data-quality profile")
+                st.dataframe(quality, use_container_width=True)
+                st.markdown("#### 3. Preview")
+                st.dataframe(data.head(10), use_container_width=True)
 
+                st.markdown("#### 4. Descriptive statistics")
+                if numeric_columns:
+                    descriptive = data[numeric_columns].describe().T.reset_index()
+                    descriptive = descriptive.rename(columns={"index": "Variable"})
+                    st.dataframe(descriptive, use_container_width=True)
+                    st.download_button(
+                        "Download descriptive statistics (CSV)",
+                        data=descriptive.to_csv(index=False).encode("utf-8"),
+                        file_name="geaa_descriptive_statistics.csv",
+                        mime="text/csv",
+                        key="research_data_descriptive_download"
+                    )
+                else:
+                    descriptive = pd.DataFrame()
+                    st.write("No numeric columns were detected for numeric descriptive statistics.")
+
+                if categorical_columns:
+                    selected_category = st.selectbox(
+                        "Choose a categorical variable for frequency analysis",
+                        options=categorical_columns,
+                        key="research_data_category"
+                    )
+                    frequencies = (
+                        data[selected_category]
+                        .fillna("[Missing]")
+                        .astype(str)
+                        .value_counts(dropna=False)
+                        .rename_axis("Category")
+                        .reset_index(name="Frequency")
+                    )
+                    st.dataframe(frequencies, use_container_width=True)
+                    st.bar_chart(frequencies.set_index("Category"))
+                    st.download_button(
+                        "Download category frequencies (CSV)",
+                        data=frequencies.to_csv(index=False).encode("utf-8"),
+                        file_name="geaa_category_frequencies.csv",
+                        mime="text/csv",
+                        key="research_data_frequency_download"
+                    )
+
+                if len(numeric_columns) >= 2:
+                    st.markdown("#### 5. Exploratory correlations")
+                    st.caption(
+                        "Pearson correlations describe linear association between numeric variables. "
+                        "They do not establish causation and may be misleading where assumptions are unsuitable."
+                    )
+                    correlation = data[numeric_columns].corr(method="pearson")
+                    st.dataframe(correlation.round(3), use_container_width=True)
+                    st.download_button(
+                        "Download correlation matrix (CSV)",
+                        data=correlation.to_csv().encode("utf-8"),
+                        file_name="geaa_exploratory_correlations.csv",
+                        mime="text/csv",
+                        key="research_data_correlation_download"
+                    )
+
+                # Inspect synthetic-data labels in the uploaded file without treating labels as independent provenance verification.
+                data_status_col = "data_status"
+                synthetic_label = "SYNTHETIC_NOT_REAL"
+                synthetic_status_summary = None
+                if data_status_col in data.columns:
+                    status_values = data[data_status_col].astype("string").str.strip().str.upper()
+                    nonblank_status = status_values.dropna()
+                    if len(nonblank_status) == 0:
+                        synthetic_status_summary = (
+                            "- Synthetic-data status: a `data_status` column is present, but it contains no usable labels. "
+                            "Dataset provenance has not been verified."
+                        )
+                    else:
+                        synthetic_count = int((nonblank_status == synthetic_label).sum())
+                        labelled_count = int(len(nonblank_status))
+                        if synthetic_count == row_count and labelled_count == row_count:
+                            synthetic_status_summary = (
+                                f"- Synthetic-data status: all {row_count} records are labelled `{synthetic_label}`. "
+                                "This verifies the labels in the uploaded file, not the independent provenance of the data."
+                            )
+                        elif synthetic_count > 0:
+                            synthetic_status_summary = (
+                                f"- Synthetic-data status: {synthetic_count} of {labelled_count} nonblank `data_status` values "
+                                f"are labelled `{synthetic_label}`; labels are mixed or incomplete. Review provenance before interpreting results."
+                            )
+                        else:
+                            observed_labels = ", ".join(sorted(set(nonblank_status.astype(str).tolist()))[:10])
+                            synthetic_status_summary = (
+                                f"- Synthetic-data status: no `{synthetic_label}` labels were found in the {labelled_count} "
+                                f"nonblank `data_status` values (observed labels: {observed_labels}). Do not assume the dataset is real; verify provenance."
+                            )
+                else:
+                    synthetic_status_summary = (
+                        "- Synthetic-data status: no `data_status` column was found. Dataset provenance has not been verified; "
+                        "do not assign a synthetic or real status based on this check alone."
+                    )
+
+                # Task-focused interpretation from calculations actually performed in Python.
+                task_analysis_lines = [
+                    "## Task-focused exploratory interpretation",
+                    "",
+                    f"**Task entered:** {task if task.strip() else 'No specific task entered.'}",
+                    "",
+                    "**Evidence status:** Results below are calculated from the uploaded file and describe this dataset only.",
+                    "",
+                    "### Descriptive patterns",
+                ]
+                summary_specs = [
+                    ("teacher_digital_competence_score", "Teacher digital competence"),
+                    ("school_resource_access_index", "School resource access index"),
+                    ("current_class_mean_achievement_score", "Current class mean achievement"),
+                ]
+                for col, label in summary_specs:
+                    if col in data.columns:
+                        vals = pd.to_numeric(data[col], errors="coerce").dropna()
+                        if not vals.empty:
+                            task_analysis_lines.append(
+                                f"- {label}: n={len(vals)}, mean={vals.mean():.2f}, median={vals.median():.2f}, "
+                                f"range={vals.min():.2f}–{vals.max():.2f}."
+                            )
+                training_col = "digital_training_past_2_years"
+                if training_col in data.columns:
+                    vals = pd.to_numeric(data[training_col], errors="coerce").dropna()
+                    if not vals.empty and vals.isin([0, 1]).all():
+                        task_analysis_lines.append(
+                            f"- Digital training in the past two years: {vals.mean()*100:.1f}% coded 1 and "
+                            f"{(1-vals.mean())*100:.1f}% coded 0; verify that the codebook defines 1=yes and 0=no."
+                        )
+
+                task_analysis_lines.extend(["", "### Teacher digital competence and current achievement"])
+                competence_col = "teacher_digital_competence_score"
+                achievement_col = "current_class_mean_achievement_score"
+                if competence_col in data.columns and achievement_col in data.columns:
+                    paired = data[[competence_col, achievement_col]].apply(pd.to_numeric, errors="coerce").dropna()
+                    if len(paired) >= 2 and paired[competence_col].nunique() > 1 and paired[achievement_col].nunique() > 1:
+                        r_value = paired[competence_col].corr(paired[achievement_col], method="pearson")
+                        task_analysis_lines.append(
+                            f"- Pearson correlation: r={r_value:.3f}, based on {len(paired)} complete records with values for both variables."
+                        )
+                        if pd.notna(r_value):
+                            if r_value >= 0.70:
+                                direction = "strong positive"
+                            elif r_value >= 0.30:
+                                direction = "moderate positive"
+                            elif r_value > 0:
+                                direction = "weak positive"
+                            elif r_value <= -0.70:
+                                direction = "strong negative"
+                            elif r_value <= -0.30:
+                                direction = "moderate negative"
+                            elif r_value < 0:
+                                direction = "weak negative"
+                            else:
+                                direction = "approximately no linear"
+                            task_analysis_lines.append(
+                                f"- The observed linear association is {direction}. Correlation does not establish causation."
+                            )
+                    else:
+                        task_analysis_lines.append("- Correlation was not calculated: insufficient paired variation.")
+                else:
+                    task_analysis_lines.append("- Required competence/achievement columns were not both found.")
+
+                task_analysis_lines.extend(["", "### Baseline and current achievement comparison"])
+                baseline_col = "baseline_class_mean_score"
+                if baseline_col in data.columns and achievement_col in data.columns:
+                    paired_scores = data[[baseline_col, achievement_col]].apply(pd.to_numeric, errors="coerce").dropna()
+                    if not paired_scores.empty:
+                        mean_baseline = paired_scores[baseline_col].mean()
+                        mean_current = paired_scores[achievement_col].mean()
+                        mean_difference = mean_current - mean_baseline
+                        task_analysis_lines.extend([
+                            f"- Baseline column mean={mean_baseline:.2f}; current column mean={mean_current:.2f}.",
+                            f"- Difference between column means (current minus baseline)={mean_difference:.2f} points, calculated from {len(paired_scores)} records with both values present.",
+                            "- The dataset documentation does not establish that these are paired measurements of the same classes at defined time points. This is a comparison of two column means, not a record-level change estimate, longitudinal change estimate or evidence of intervention effectiveness.",
+                            "- Verify that score scales and measurement conditions are comparable before interpreting the difference."
+                        ])
+                else:
+                    task_analysis_lines.append("- Required baseline/current score columns were not both found.")
+
+                task_analysis_lines.extend([
+                    "",
+                    "### Data-quality and methodological limitations",
+                    f"- {row_count} rows and {column_count} columns; {duplicate_rows} exact duplicate rows; {missing_cells} missing cells.",
+                    "- No missing cells or duplicate rows does not guarantee that values are valid, accurate or representative.",
+                    "- Confirm variable definitions, score scales, coding and the data-generation process.",
+                    "- Pearson correlation describes linear association; no inferential significance test or causal analysis was performed.",
+                    "- If teachers are grouped within schools, observations may be clustered and later analyses should account for school-level structure.",
+                    "",
+                    "### Three cautious follow-up research questions",
+                    "1. How strongly is teacher digital competence associated with current class mean achievement, and does this pattern vary by school?",
+                    "2. How are digital training participation and school resource access associated with teacher digital competence?",
+                    "3. What explains variation in baseline-to-current achievement differences across classes or schools, after score comparability is verified?",
+                    "",
+                    synthetic_status_summary,
+                    "**Interpretation safeguard:** A `data_status` label is a declaration within the file, not independent proof of data provenance. When the file is confirmed to be synthetic demonstration data, all numerical results are illustrative and must not be presented as findings about real teachers, learners or schools."
+                ])
+
+                st.markdown("#### 6. Task-focused interpretation")
+                st.markdown("\n".join(task_analysis_lines))
+                task_analysis_text = "\n".join(task_analysis_lines) + "\n"
                 st.download_button(
-                    label="📥 Download editable PowerPoint",
-                    data=create_geaa_presentation(response.text),
-                    file_name="GEAA_presentation.pptx",
-                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                    key="download_geaa_presentation"
+                    "Download task-focused interpretation (Markdown)",
+                    data=task_analysis_text.encode("utf-8"),
+                    file_name="geaa_task_focused_interpretation.md",
+                    mime="text/markdown",
+                    key="research_data_task_interpretation_download"
                 )
+
+                report_lines = [
+                    "# GEAA Research Data — Exploratory Report",
+                    "",
+                    f"- **Source file:** {uploaded_file.name}",
+                    f"- **Rows:** {row_count}",
+                    f"- **Columns:** {column_count}",
+                    f"- **Duplicate rows:** {duplicate_rows}",
+                    f"- **Missing cells:** {missing_cells}",
+                    f"- **Numeric variables detected:** {len(numeric_columns)}",
+                    f"- **Non-numeric variables detected:** {len(categorical_columns)}",
+                    "",
+                    "## Data-quality notes",
+                    "- Review variable names, units, coding, ranges and missingness before substantive interpretation.",
+                    "- Duplicate rows are flagged for review, not automatically deleted.",
+                    "- Missing values are reported but not imputed.",
+                    "- Numeric columns are identified from their imported data types; categorical codes may need recoding.",
+                    "",
+                    "## Interpretation limits",
+                    "- This report describes the uploaded file only; representativeness and data provenance are not verified.",
+                    "- Descriptive statistics and correlations do not establish causation.",
+                    "- Choose inferential tests only after specifying the research question, unit of analysis, sampling design and assumptions.",
+                ]
+                report_lines.extend(["", *task_analysis_lines])
+                report_text = "\n".join(report_lines) + "\n"
+                st.markdown("#### 7. Download report and data-quality profile")
+                st.download_button(
+                    "Download exploratory report (Markdown)",
+                    data=report_text.encode("utf-8"),
+                    file_name="geaa_research_data_report.md",
+                    mime="text/markdown",
+                    key="research_data_report_download"
+                )
+                st.download_button(
+                    "Download data-quality profile (CSV)",
+                    data=quality.to_csv(index=False).encode("utf-8"),
+                    file_name="geaa_data_quality_profile.csv",
+                    mime="text/csv",
+                    key="research_data_quality_download"
+                )
+                st.success("Local exploratory analysis completed. Review the data and methodological limitations before drawing conclusions.")
 
             except Exception as e:
-                st.error("GEAA could not complete the request.")
-
+                st.error("Research Data analysis could not be completed.")
                 with st.expander("Technical details"):
                     st.code(str(e))
 
     else:
-        st.warning("Please enter a task first.")
+
+        if uploaded_data is not None:
+            retrieved_knowledge = ""
+            retrieval_details = []
+        else:
+            retrieved_knowledge, retrieval_details = retrieve_knowledge(
+                task,
+                KNOWLEDGE_DOCUMENTS
+            )
+
+        # Determine the provenance of the knowledge available to GEAA.
+        if retrieved_knowledge.strip():
+            knowledge_status = (
+                "RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+                "The response may use the retrieved knowledge as "
+                "user-provided evidence."
+            )
+        else:
+            knowledge_status = (
+                "NO RELEVANT GEAA KNOWLEDGE RETRIEVED. "
+                "The response must rely on the user's task, "
+                "general AI knowledge, reasoning, and clearly "
+                "labelled proposals or inferences."
+            )
+
+        with st.expander("🔎 Retrieved Knowledge"):
+            if retrieval_details:
+
+                for item in retrieval_details:
+
+                    display_section = item.get(
+                        "heading",
+                        "Section heading not captured"
+                    )
+
+                    st.write(
+                        f"📄 {item['filename']} | "
+                        f"Section: {display_section} | "
+                        f"Keyword match score: {item['score']}"
+                    )
+
+                    reasons = item.get(
+                        "retrieval_reasons",
+                        []
+                    )
+
+                    if reasons:
+
+                        st.markdown(
+                            "**Why this section was retrieved:**"
+                        )
+
+                        for reason in reasons:
+                            st.write(
+                                f"• {reason}"
+                            )
+
+            else:
+                st.write(
+                    "No relevant knowledge was retrieved."
+                )
+        st.write("### 📚 Retrieved Text Passed to GEAA")
+
+        if retrieved_knowledge.strip():
+            st.text(retrieved_knowledge)
+        else:
+            st.write("No retrieved knowledge was passed to GEAA.")
+
+
+        if task.strip():
+            full_instructions = (
+                GEAA_INSTRUCTIONS
+                + "\n\nSELECTED MODE:\n"
+                + mode
+                + "\n\nMODE WORKFLOW:\n"
+                + workflows[mode]
+                + r"""
+
+    EVIDENCE AND PROVENANCE RULES
+
+    GEAA must clearly distinguish between information obtained
+    from the user's knowledge base, general AI knowledge, and
+    new reasoning or proposals.
+
+    1. KNOWLEDGE-BASE EVIDENCE
+    Use this label when a statement is directly supported by
+    RETRIEVED GEAA KNOWLEDGE supplied in the prompt.
+
+    Do not claim that a statement comes from the GEAA knowledge
+    base unless relevant retrieved knowledge was actually supplied.
+
+    2. GENERAL AI KNOWLEDGE
+    When no relevant GEAA knowledge has been retrieved, answer
+    using general knowledge and reasoning available to the model.
+
+    Do not present general AI knowledge as if it came from the
+    user's knowledge base.
+
+    3. USER-PROVIDED INFORMATION
+    Clearly identify information that comes directly from the
+    USER TASK or UPLOADED DATA.
+
+    4. PROPOSED / INFERRED CONTENT
+    Clearly label interpretations, suggestions, operational
+    definitions, methodological recommendations, assumptions,
+    examples, or other content that is not directly established
+    by the user's task, uploaded data, or retrieved knowledge.
+
+    Use labels such as:
+    - QUESTION-PROVIDED
+    - UPLOADED-DATA
+    - KNOWLEDGE-BASE
+    - GENERAL KNOWLEDGE
+    - PROPOSED
+    - INFERRED
+    - NEEDS VERIFICATION
+
+    5. NO FABRICATION OF KNOWLEDGE-BASE SUPPORT
+    If GEAA KNOWLEDGE STATUS says that no relevant knowledge was
+    retrieved, do not cite, imply, or suggest that the user's
+    knowledge base supports the answer.
+
+    6. AVOID FALSE CERTAINTY
+    When evidence is unavailable, distinguish established facts
+    from reasonable interpretation and proposed methodology.
+
+    7. RESEARCH TASKS
+    For research questions, distinguish:
+    - what the research question explicitly provides;
+    - what can reasonably be inferred from the wording;
+    - what is being proposed for a possible study design;
+    - what requires verification from literature, policy documents,
+      or empirical data.
+
+    Do not fabricate citations, studies, statistics, instruments,
+    policy requirements, or findings.
+
+    8. RESEARCH DESIGN AND STATISTICAL REASONING
+
+    For research tasks, apply the following methodological checks
+    when relevant to the user's question.
+
+    A. UNIT OF ANALYSIS AND LEVELS OF MEASUREMENT
+    Identify the proposed unit of analysis, such as teachers,
+    students, classes, or schools. Distinguish the unit at which
+    each variable is measured. If the unit of analysis is unclear,
+    state this and explain why it matters.
+
+    B. LINKAGE BETWEEN VARIABLES
+    When explanatory variables and outcomes are measured at
+    different levels, identify how the observations would be linked.
+    For example, teacher-level digital competence and student-level
+    achievement require a defensible way to associate students with
+    the teachers whose instruction they receive. Do not assume that
+    such linkage or data is available.
+
+    C. NESTED AND CLUSTERED DATA
+    Consider whether observations may be nested within classes,
+    teachers, or schools. Explain that observations within the same
+    group may not be statistically independent. Treat multilevel
+    analysis as a possible option when justified by the sampling
+    design, data structure, number of groups, and available sample
+    size. Do not recommend it automatically.
+
+    D. ALIGNMENT OF RESEARCH QUESTION AND METHOD
+    Recommend a statistical or qualitative method only after
+    considering the research question, study design, measurement
+    level, sampling strategy, and available data. Correlation or
+    regression may be appropriate for some associational questions;
+    multilevel methods may be appropriate for suitably structured
+    nested data. Explain relevant assumptions and limitations.
+
+    E. ASSOCIATION AND CAUSATION
+    Do not interpret an observed association as proof of causation.
+    Identify plausible confounding factors where relevant, but do
+    not assume that adjusting for selected variables eliminates
+    all confounding or establishes causal effects.
+
+    F. EVIDENCE AND UNCERTAINTY
+    Label methodological recommendations as PROPOSED, general
+    methodological principles as GENERAL KNOWLEDGE when they are
+    not supported by retrieved knowledge, and unresolved design
+    details as NEEDS VERIFICATION. Do not invent sample sizes,
+    data linkage arrangements, validated instruments, model results,
+    or evidence that a proposed method is feasible.
+
+    G. SOURCE-LABEL ACCURACY
+
+    Apply source labels according to the actual origin of each claim.
+
+    1. Use UPLOADED-DATA only when the user has actually
+    provided a dataset or other relevant uploaded evidence.
+    Do not use this label for hypothetical data, missing data,
+    or proposed data-collection arrangements.
+
+    2. Distinguish the setting from the target population.
+    If the question names public secondary schools in Kilifi
+    County, identify that as the QUESTION-PROVIDED setting.
+    Do not automatically treat all teachers or students in
+    that setting as the confirmed target population, sampling
+    frame, or study participants.
+
+    3. Distinguish explicitly stated information from inference.
+    Use QUESTION-PROVIDED for information directly stated
+    in the research question. Use INFERRED for reasonable
+    interpretations not explicitly stated. Use PROPOSED for
+    recommended designs, procedures, variables, or analyses.
+    Use NEEDS VERIFICATION for unresolved information.
+
+    4. Do not combine source labels merely to make an answer
+    appear better supported. If a statement contains both
+    provided information and a proposed recommendation,
+    separate the statement into clearly labelled parts.
+
+    5. For teacher-level and student-level variables, identify
+    the proposed unit of analysis and explain how records
+    would be linked. Label the linkage procedure PROPOSED
+    and NEEDS VERIFICATION unless the user has supplied
+    evidence establishing that the linkage exists.
+
+    6. Never describe a proposed sampling frame, instrument,
+    dataset, school record, or data-linkage arrangement as
+    already available unless the user has confirmed its
+    availability.
+
+    7. Before finalizing a research response, check that every
+    source label accurately reflects the evidence available
+    in the current task, uploaded files, and retrieved
+    knowledge. Do not imply that retrieval proves a claim
+    when the retrieved material only provides general guidance.
+
+    8. When a research question explicitly names variables,
+    label those variables QUESTION-PROVIDED. Use KNOWLEDGE-BASE
+    only for definitions, classifications, or methodological
+    principles actually supported by the retrieved text.
+
+    9. Distinguish a general measurement principle from a
+    specific measurement decision. A requirement to define
+    and justify a measure may be KNOWLEDGE-BASE, while the
+    choice of an instrument, examination score, or assessment
+    procedure is PROPOSED and may require verification.
+
+    10. Distinguish measurement level, unit of analysis, and
+    data structure. Do not present several possible units of
+    analysis as if they were a single established decision.
+    Explain which choices remain unresolved and why.
+
+    11. Recommend a statistical model only conditionally.
+    Explain the design and data requirements that would make
+    the model suitable. Do not assume that multilevel modelling
+    is necessary merely because students attend different
+    schools or share teachers.
+
+    H. SOURCE PROVENANCE AND CONTEXTUAL CALIBRATION
+
+    1. Distinguish the origin of each substantive claim:
+       - QUESTION-PROVIDED: Explicitly supplied in the user's current task.
+       - KNOWLEDGE-BASE: Supported by the retrieved GEAA knowledge presented to the model.
+       - GENERAL KNOWLEDGE: Established general disciplinary or methodological knowledge not specifically supported by the retrieved material.
+       - PROPOSED: A suggested measurement, method, variable, explanation, or next step that has not been established as a fact about the user's study.
+       - INFERRED: A reasonable interpretation that follows from the question but was not explicitly supplied.
+       - NEEDS VERIFICATION: Information that must be confirmed before it can be treated as established.
+
+    2. Do not confuse a concept with its measurement. When a user supplies a variable, label the variable QUESTION-PROVIDED. Label suggested instruments, indicators, operational definitions, and data-collection methods PROPOSED. Label the validity, reliability, availability, or suitability of a specific instrument NEEDS VERIFICATION unless supporting evidence is available.
+
+    3. Do not present inferred context as verified local evidence. Potential effects, contextual conditions, administrative practices, population characteristics, and geographical explanations must not be described as established facts about a named county, school, institution, or population unless the supplied or retrieved evidence supports them. Present plausible but unverified explanations as PROPOSED and identify what requires verification.
+
+    4. Calibrate methodological recommendations to the available design information. Do not assume that teacher and student records can be linked, that a sampling frame exists, or that observations are clustered in a particular way. Explain the relevant condition and label the recommendation PROPOSED or NEEDS VERIFICATION where appropriate. Recommend multilevel modelling only when the sampling structure, number of groups, and available data make it potentially appropriate.
+
+    5. Distinguish retrieved support from supplementary explanation. When retrieved knowledge supports a claim, use KNOWLEDGE-BASE. When adding a scientifically or methodologically sound explanation that is not stated in the retrieved text, use GENERAL KNOWLEDGE. Do not label an entire mixed statement KNOWLEDGE-BASE if only part of it is supported by the retrieved material.
+
+    6. Use source labels only where they clarify the evidence status. Avoid contradictory or redundant combinations of labels. Briefly explain uncertainty when material, and do not invent citations, research findings, local facts, data availability, or instrument validation.
+
+    12. GENERAL KNOWLEDGE AND EXTERNAL EVIDENCE
+
+    When no relevant knowledge has been retrieved, distinguish
+    general methodological reasoning from verified research
+    evidence.
+
+    Do not claim to have consulted research literature,
+    official reports, regulations, or administrative records
+    unless those sources were actually supplied or consulted.
+
+    Label plausible but unverified local, institutional, or
+    context-specific claims NEEDS VERIFICATION.
+
+    Do not invent citations, study findings, statistics,
+    administrative boundaries, policy requirements, or local
+    conditions.
+
+    For research questions about factors associated with an
+    outcome, distinguish the outcome inferred from the question
+    from proposed explanatory variables and proposed measures.
+
+    Define the outcome operationally before recommending
+    data collection. Where relevant, identify distinctions
+    that could affect measurement, such as authorised versus
+    unauthorised absence or absence from school versus absence
+    from assigned teaching duties.
+
+    13. FORMATTING AND EVIDENCE CALIBRATION
+
+    Use clean Markdown formatting. Do not emit literal HTML
+    tags such as <br>, escaped HTML tags, or raw formatting
+    instructions in the final answer. Use Markdown paragraphs,
+    lists, and tables where appropriate.
+
+    State general methodological principles accurately and
+    conditionally. Do not imply that a method is universally
+    required or commonly used unless that claim is supported.
+    Distinguish statistical principles from claims about the
+    frequency or effectiveness of particular methods.
+
+    When references have not been consulted, do not imply that
+    the answer is a literature review. Identify claims that
+    need verification through relevant research or official
+    sources.
+
+    9. EXPLICIT SOURCE LABELING
+    Every substantive claim that is not directly provided by the
+    USER TASK, UPLOADED DATA, or RETRIEVED GEAA KNOWLEDGE must be
+    clearly labelled.
+
+    If a statement comes from the model's general knowledge rather
+    than the GEAA knowledge base, label it GENERAL KNOWLEDGE.
+
+    Do not introduce external frameworks, policies, programmes,
+    definitions, regulations, instruments, or named organizations
+    without identifying them as GENERAL KNOWLEDGE and, where
+    appropriate, NEEDS VERIFICATION.
+
+    For research tasks, maintain a clear distinction between:
+    - QUESTION-PROVIDED
+    - UPLOADED-DATA
+    - KNOWLEDGE-BASE
+    - GENERAL KNOWLEDGE
+    - INFERRED
+    - PROPOSED
+    - NEEDS VERIFICATION
+
+    14. MATHEMATICAL NOTATION AND SOURCE ATTRIBUTION REFINEMENTS
+
+
+    A. MATHEMATICAL NOTATION
+
+    1. Keep mathematical expressions complete, readable, and correctly formatted. Do not split symbols, subscripts, or equations across lines unnecessarily.
+
+    2. In Streamlit Markdown responses, use supported inline mathematical notation consistently. Examples: $E_a$, $\Delta H$, $\Delta G$, and Pearson's $r$.
+
+    3. Keep short inline expressions together. Put longer equations on separate lines only when necessary.
+
+    4. If mathematical rendering is unreliable, prefer readable plain-text notation. Keep expressions complete and correctly formatted; never leave duplicated, fragmented, or malformed mathematical notation.
+
+    5. Apply chemistry-specific guidance only when the user's task is about chemistry, chemical reactions, catalysts, or energy-profile diagrams. For those tasks, ensure diagram labels and explanations agree: a catalyst lowers activation energy but does not change the overall enthalpy change, and reactant and product energy levels remain the same for catalysed and uncatalysed pathways. Do not introduce chemistry equations, examples, or energy-profile guidance into unrelated tasks.
+
+    6. Do not place the entire response inside a code block or use a fenced math block. Preserve Markdown headings, bullet points, and source-attribution labels.
+
+    B. SOURCE ATTRIBUTION REFINEMENTS
+
+    1. Use KNOWLEDGE-BASE only when the retrieved text supplied to the model supports the claim.
+
+    2. Use GENERAL KNOWLEDGE for established disciplinary principles that are not explicitly supported by the retrieved text.
+
+    3. When a response combines retrieved information and supplementary knowledge, distinguish the claims clearly. Do not label an entire paragraph KNOWLEDGE-BASE if only some claims are supported by the retrieved material.
+
+    4. A claim being scientifically correct does not mean it appears in the retrieved knowledge base. Do not invent citations or attribute unsupported claims to a retrieved document.
+
+    5. Keep source labels accurate without making the answer unnecessarily repetitive. Preserve the scientific meaning of the retrieved material.
+    """
+            )
+
+            with st.spinner("GEAA is working through the task..."):
+
+                try:
+                    # Prepare uploaded data for Gemini.
+                    # Unlike Research Data mode, this general workflow can send
+                    # uploaded dataset rows to Gemini, so disclose that clearly.
+                    data_context = ""
+
+                    if uploaded_data is not None:
+                        st.warning(
+                            "Data-handling notice: this mode may send the contents "
+                            "of the uploaded dataset to Gemini. Do not upload "
+                            "identifiable or confidential participant data unless "
+                            "the applicable privacy requirements and service "
+                            "arrangements permit it."
+                        )
+
+                        data_context = (
+                            "UPLOADED DATASET:\n"
+                            + f"File: {uploaded_file.name}\n"
+                            + f"Rows: {uploaded_data.shape[0]}\n"
+                            + f"Columns: {uploaded_data.shape[1]}\n\n"
+                            + "DATA:\n"
+                            + uploaded_data.to_string(index=False)
+                            + "\n\nDATA QUALITY:\n"
+                            + f"Duplicate rows: {uploaded_data.duplicated().sum()}\n"
+                            + f"Missing cells: {uploaded_data.isna().sum().sum()}\n"
+                        )
+                    response = client.models.generate_content(
+                        model="gemini-3.5-flash-lite",
+                        contents=(
+                            "USER TASK:\n"
+                            + task
+                            + "\n\nGEAA KNOWLEDGE STATUS:\n"
+                            + knowledge_status
+                            + "\n\nRETRIEVED GEAA KNOWLEDGE:\n"
+                            + (
+                                retrieved_knowledge
+                                if retrieved_knowledge.strip()
+                                else "[NO RELEVANT GEAA KNOWLEDGE RETRIEVED]"
+                            )
+                            + "\n\nUPLOADED DATA CONTEXT:\n"
+                            + data_context
+                            + "\n\nAPPLICATION VISUALIZATION STATUS:\n"
+                            + (
+                                "A native interactive visualization has already "
+                                "been generated in the application interface. "
+                                "Do not create a second text-based, ASCII or "
+                                "Markdown chart. Interpret the existing "
+                                "visualization and the underlying data instead."
+                                if visualization_requested
+                                else
+                                "No native visualization has been generated. "
+                                "Do not create a visualization unless the user "
+                                "specifically requests one."
+                            )
+                        ),
+                        config=types.GenerateContentConfig(
+                            system_instruction=full_instructions
+                        )
+                    )
+
+                    st.markdown("### GEAA's Response")
+                    st.markdown(response.text, unsafe_allow_html=False)
+
+                    st.download_button(
+                        label="📥 Download editable PowerPoint",
+                        data=create_geaa_presentation(response.text),
+                        file_name="GEAA_presentation.pptx",
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        key="download_geaa_presentation"
+                    )
+
+                except Exception as e:
+                    if client is None:
+                        st.error(
+                            "GEAA cannot generate this response because the Gemini "
+                            "API key is missing or unavailable. Check the app's "
+                            "Secrets settings and confirm GEMINI_API_KEY is set."
+                        )
+                    else:
+                        st.error("GEAA could not complete the request.")
+
+                    with st.expander("Technical details"):
+                        st.code(str(e))
+
+        else:
+            st.warning("Please enter a task first.")
 
 st.divider()
 
+APP_BUILD = "research-data-interpretation-4"
+
 st.caption(
-    "GEAA v1.2 — George's Education & Analytics Agent"
+    f"GEAA v1.2 — George's Education & Analytics Agent · build: {APP_BUILD}"
 )
