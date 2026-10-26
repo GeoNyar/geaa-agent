@@ -2095,9 +2095,16 @@ if run_task_clicked or research_data_results_active:
                     st.write("No numeric columns were detected for numeric descriptive statistics.")
 
                 if categorical_columns:
+                    preferred_category = "digital_training_past_2_years"
+                    default_category_index = (
+                        categorical_columns.index(preferred_category)
+                        if preferred_category in categorical_columns
+                        else 0
+                    )
                     selected_category = st.selectbox(
                         "Choose a categorical variable for frequency analysis",
                         options=categorical_columns,
+                        index=default_category_index,
                         key="research_data_category"
                     )
                     frequencies = (
@@ -2108,6 +2115,9 @@ if run_task_clicked or research_data_results_active:
                         .rename_axis("Category")
                         .reset_index(name="Frequency")
                     )
+                    frequencies["Percentage"] = (
+                        frequencies["Frequency"] / max(row_count, 1) * 100
+                    ).round(1)
                     st.dataframe(frequencies, use_container_width=True)
                     st.bar_chart(frequencies.set_index("Category"))
                     st.download_button(
@@ -2265,7 +2275,7 @@ if run_task_clicked or research_data_results_active:
                     "### Three cautious follow-up research questions",
                     "1. How strongly is teacher digital competence associated with current class mean achievement, and does this pattern vary by school?",
                     "2. How are digital training participation and school resource access associated with teacher digital competence?",
-                    "3. What explains variation in baseline-to-current achievement differences across classes or schools, after score comparability is verified?",
+                    "3. If baseline and current scores are confirmed to be comparable measurements for the same intended units, how do the differences vary across classes or schools, and what contextual factors may be associated with that variation?",
                     "",
                     synthetic_status_summary,
                     "**Interpretation safeguard:** A `data_status` label is a declaration within the file, not independent proof of data provenance. When the file is confirmed to be synthetic demonstration data, all numerical results are illustrative and must not be presented as findings about real teachers, learners or schools."
@@ -2282,8 +2292,41 @@ if run_task_clicked or research_data_results_active:
                     key="research_data_task_interpretation_download"
                 )
 
+                synthetic_report_warning = (
+                    "**SYNTHETIC DEMONSTRATION DATA — NOT EMPIRICAL RESEARCH EVIDENCE.** "
+                    "All numerical results are illustrative and must not be interpreted as findings "
+                    "about real teachers, learners or schools."
+                )
+                if (
+                    data_status_col in data.columns
+                    and synthetic_status_summary is not None
+                    and row_count > 0
+                ):
+                    status_values = data[data_status_col].astype("string").str.strip().str.upper()
+                    nonblank_status = status_values.dropna()
+                    if (
+                        len(nonblank_status) == row_count
+                        and int((nonblank_status == synthetic_label).sum()) == row_count
+                    ):
+                        synthetic_report_warning += (
+                            " The uploaded file labels every record SYNTHETIC_NOT_REAL; "
+                            "this label is not independent verification of provenance."
+                        )
+                    else:
+                        synthetic_report_warning = (
+                            "**DATA PROVENANCE NOT VERIFIED.** Do not assume this dataset is real or synthetic "
+                            "based on a status-label check alone. Verify provenance before interpreting results."
+                        )
+                else:
+                    synthetic_report_warning = (
+                        "**DATA PROVENANCE NOT VERIFIED.** No complete SYNTHETIC_NOT_REAL label check was "
+                        "available. Verify provenance before interpreting results."
+                    )
+
                 report_lines = [
                     "# GEAA Research Data — Exploratory Report",
+                    "",
+                    synthetic_report_warning,
                     "",
                     f"- **Source file:** {uploaded_file.name}",
                     f"- **Rows:** {row_count}",
@@ -2304,6 +2347,42 @@ if run_task_clicked or research_data_results_active:
                     "- Descriptive statistics and correlations do not establish causation.",
                     "- Choose inferential tests only after specifying the research question, unit of analysis, sampling design and assumptions.",
                 ]
+                report_lines.extend(["", "## Categorical frequency summary"])
+                if categorical_columns:
+                    report_lines.extend([
+                        f"Selected variable: **{selected_category}**",
+                        "",
+                        "| Category | Frequency | Percentage |",
+                        "|---|---:|---:|"
+                    ])
+                    for _, frequency_row in frequencies.iterrows():
+                        report_lines.append(
+                            f"| {str(frequency_row['Category']).replace('|', '\\|')} "
+                            f"| {int(frequency_row['Frequency'])} "
+                            f"| {float(frequency_row['Percentage']):.1f}% |"
+                        )
+                else:
+                    report_lines.append("No non-numeric categorical variables were detected.")
+
+                if len(numeric_columns) >= 2:
+                    report_lines.extend([
+                        "",
+                        "## Exploratory Pearson correlation matrix",
+                        "",
+                        "These correlations describe linear associations and do not establish causation.",
+                        "",
+                        "| Variable | " + " | ".join(str(col) for col in correlation.columns) + " |",
+                        "|---|" + "---:|" * len(correlation.columns)
+                    ])
+                    for variable, corr_row in correlation.round(3).iterrows():
+                        report_lines.append(
+                            "| " + str(variable) + " | "
+                            + " | ".join(
+                                "" if pd.isna(value) else f"{value:.3f}"
+                                for value in corr_row
+                            ) + " |"
+                        )
+
                 report_lines.extend(["", *task_analysis_lines])
                 report_text = "\n".join(report_lines) + "\n"
                 st.markdown("#### 7. Download report and data-quality profile")
