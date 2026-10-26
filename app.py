@@ -2356,8 +2356,9 @@ if run_task_clicked or research_data_results_active:
                         "|---|---:|---:|"
                     ])
                     for _, frequency_row in frequencies.iterrows():
+                        category_label = str(frequency_row["Category"]).replace("|", "\\|")
                         report_lines.append(
-                            f"| {str(frequency_row['Category']).replace('|', '\\|')} "
+                            f"| {category_label} "
                             f"| {int(frequency_row['Frequency'])} "
                             f"| {float(frequency_row['Percentage']):.1f}% |"
                         )
