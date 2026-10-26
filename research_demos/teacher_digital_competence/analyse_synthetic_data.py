@@ -364,7 +364,7 @@ or that the variables are valid measures of real-world phenomena.
 No actual teachers, learners or schools were sampled. Results must not
 be presented as findings about real schools.
 
-## 2. Descriptive statistics
+## 3. Descriptive statistics
 
 {descriptive.to_string()}
 
@@ -391,7 +391,7 @@ paired measurements of the same classes at defined time points.
 Therefore, this comparison does not measure record-level change,
 longitudinal change or intervention effectiveness.
 
-## 3. Exploratory association
+## 4. Exploratory association
 
 Variables:
 - Teacher digital competence score
@@ -402,14 +402,14 @@ Variables:
 This is an unadjusted exploratory Pearson correlation. It does not
 establish causation or represent an empirical relationship.
 
-## 4. School-level summaries
+## 5. School-level summaries
 
 The school-level CSV reports the mean competence, current achievement,
 baseline achievement, resource access and class size for each fictional
 school. The school-level figure visualises the distribution of school
 mean current achievement scores.
 
-## 5. School-level variation and ICC
+## 6. School-level variation and ICC
 
 {icc_text}
 
@@ -427,7 +427,7 @@ In applied research, the ICC interpretation should be checked against
 the model, design and uncertainty in the estimate. This synthetic
 analysis is not evidence about real schools.
 
-## 6. Methodological limitations
+## 7. Methodological limitations
 
 - The data are synthetic and do not represent actual schools.
 - Any patterns reflect the data-generation process.
@@ -438,18 +438,18 @@ analysis is not evidence about real schools.
 - The results do not establish intervention effectiveness or policy
   impact.
 
-## 7. Requirements for real research
+## 8. Requirements for real research
 
 A real study would require authentic data, appropriate ethical review
 and permissions, valid measures, a justified sampling strategy, and an
 analysis plan suited to the research design and clustered observations.
 
-## 8. Reproducibility
+## 9. Reproducibility
 
 The script generates the CSV summaries, PNG figures and this report
 from the synthetic dataset. Results are calculated when the script runs.
 
-## 9. Conclusion
+## 10. Conclusion
 
 This demonstration illustrates reproducible education data analysis
 and basic school-level variance estimation. It does not establish
