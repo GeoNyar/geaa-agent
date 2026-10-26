@@ -2044,10 +2044,18 @@ if run_task_clicked or research_data_results_active:
                     col for col in data.columns
                     if pd.api.types.is_numeric_dtype(data[col])
                 ]
-                categorical_columns = [
-                    col for col in data.columns
-                    if col not in numeric_columns
+
+                binary_numeric_columns = [
+                    col for col in numeric_columns
+                    if data[col].nunique(dropna=True) == 2
                 ]
+
+                categorical_columns = list(dict.fromkeys(
+                    [
+                        col for col in data.columns
+                        if col not in numeric_columns
+                    ] + binary_numeric_columns
+                ))
 
                 quality = pd.DataFrame({
                     "Variable": data.columns.astype(str),
