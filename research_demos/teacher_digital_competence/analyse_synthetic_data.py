@@ -337,6 +337,30 @@ Teacher digital competence and class mean achievement.
 - Fictional schools: {df["school_id"].nunique()}
 - Data status: SYNTHETIC_NOT_REAL
 
+## 2. Data quality and validation
+
+The dataset passed the validation checks implemented in the analysis
+script before the statistical analysis was conducted.
+
+| Validation check | Result |
+|---|---|
+| Dataset structure | Passed: expected columns present |
+| Record count | Passed: {len(df)} records |
+| Missing values | Passed: none detected |
+| Duplicate rows | Passed: none detected |
+| Numeric and finite values | Passed |
+| Defined score and rating ranges | Passed |
+| Digital training coding | Passed: values restricted to 0 and 1 |
+| Teacher ID uniqueness | Passed |
+| School structure | Passed: {df["school_id"].nunique()} fictional schools |
+| Records per school | Passed: 6 per school |
+| School-level consistency | Passed |
+| Synthetic-data provenance labels | Passed: all records labelled SYNTHETIC_NOT_REAL |
+
+These checks establish that the dataset meets the structural and
+value constraints defined in this script. They do not establish that
+the synthetic data represent real teachers, learners or schools,
+or that the variables are valid measures of real-world phenomena.
 No actual teachers, learners or schools were sampled. Results must not
 be presented as findings about real schools.
 
