@@ -2174,23 +2174,28 @@ User request:
                             st.warning(
                                 "Gemini is temporarily busy or unavailable (503). "
                                 "Your task is preserved, and no statistical results were produced. "
-                                "Wait briefly, then select Retry planning response."
-                            )
-                            st.button(
-                                "Retry planning response",
-                                key="retry_research_planning_503",
-                                help="Resubmits the same planning task to Gemini."
+                                "Wait briefly before trying the same task again."
                             )
                         elif "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
-                            st.warning(
-                                "Gemini has reached a request or quota limit (429). "
-                                "Wait before retrying and check your API quota if the problem persists."
+                            daily_quota_exceeded = (
+                                "GenerateRequestsPerDayPerProjectPerModel-FreeTier" in error_text
+                                or "requests per day limit exceeded" in error_text.lower()
+                                or "retry in " in error_text.lower()
                             )
-                            st.button(
-                                "Retry planning response",
-                                key="retry_research_planning_429",
-                                help="Resubmits the same planning task to Gemini."
-                            )
+                            if daily_quota_exceeded:
+                                st.warning(
+                                    "Gemini's daily free-tier request quota is exhausted (429). "
+                                    "Do not retry immediately; wait for the reset time stated in "
+                                    "the technical details. Your task is preserved, and no "
+                                    "statistical results were produced. Check current limits at "
+                                    "https://ai.dev/rate-limit."
+                                )
+                            else:
+                                st.warning(
+                                    "Gemini has reached a request or quota limit (429). "
+                                    "Wait before retrying and check the project's current quota "
+                                    "at https://ai.dev/rate-limit if the problem persists."
+                                )
                         elif "404" in error_text or "NOT_FOUND" in error_text:
                             st.error(
                                 "The configured Gemini model was not found or is unavailable "
