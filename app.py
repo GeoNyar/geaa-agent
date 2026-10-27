@@ -2172,13 +2172,24 @@ User request:
                         error_text = str(e)
                         if "503" in error_text or "UNAVAILABLE" in error_text:
                             st.warning(
-                                "The Gemini service is temporarily busy or unavailable. "
-                                "Please retry in a few minutes; your task has not been analysed."
+                                "Gemini is temporarily busy or unavailable (503). "
+                                "Your task is preserved, and no statistical results were produced. "
+                                "Wait briefly, then select Retry planning response."
+                            )
+                            st.button(
+                                "Retry planning response",
+                                key="retry_research_planning_503",
+                                help="Resubmits the same planning task to Gemini."
                             )
                         elif "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
                             st.warning(
-                                "The Gemini request limit has been reached. Please wait and retry, "
-                                "or check the quota and billing limits for your API key."
+                                "Gemini has reached a request or quota limit (429). "
+                                "Wait before retrying and check your API quota if the problem persists."
+                            )
+                            st.button(
+                                "Retry planning response",
+                                key="retry_research_planning_429",
+                                help="Resubmits the same planning task to Gemini."
                             )
                         elif "404" in error_text or "NOT_FOUND" in error_text:
                             st.error(
@@ -3028,17 +3039,43 @@ User request:
                     )
 
                 except Exception as e:
+                    error_text = str(e)
                     if client is None:
                         st.error(
                             "GEAA cannot generate this response because the Gemini "
                             "API key is missing or unavailable. Check the app's "
                             "Secrets settings and confirm GEMINI_API_KEY is set."
                         )
+                    elif "503" in error_text or "UNAVAILABLE" in error_text:
+                        st.warning(
+                            "Gemini is temporarily busy or unavailable (503). "
+                            "Your task is preserved. Wait briefly, then select Retry AI response."
+                        )
+                        st.button(
+                            "Retry AI response",
+                            key="retry_general_ai_503",
+                            help="Resubmits the same task to Gemini."
+                        )
+                    elif "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
+                        st.warning(
+                            "Gemini has reached a request or quota limit (429). "
+                            "Wait before retrying and check your API quota if the problem persists."
+                        )
+                        st.button(
+                            "Retry AI response",
+                            key="retry_general_ai_429",
+                            help="Resubmits the same task to Gemini."
+                        )
+                    elif "404" in error_text or "NOT_FOUND" in error_text:
+                        st.error(
+                            "The configured Gemini model was not found or is unavailable "
+                            "for this API key. Check the model ID and API access."
+                        )
                     else:
                         st.error("GEAA could not complete the request.")
 
                     with st.expander("Technical details"):
-                        st.code(str(e))
+                        st.code(error_text)
 
         else:
             st.warning("Please enter a task first.")
