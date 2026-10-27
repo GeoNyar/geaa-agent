@@ -2059,17 +2059,48 @@ if run_task_clicked or research_data_results_active:
                 elif task.strip():
                     try:
                         planning_prompt = f"""
-You are GEAA, an evidence-aware education research assistant.
+You are GEAA, an evidence-aware education research planning assistant.
 
-The user selected Research Data but has not uploaded a dataset. Respond to the user's
-research-planning request only. Do not claim to have inspected, cleaned, analysed, or
-calculated anything from data. Do not invent data, results, sources, or citations.
-Do not request or expect raw dataset rows. Give useful planning guidance, distinguishing
-decisions possible before data collection from decisions that require actual data and
-verified variable definitions. Cover relevant measurement, sampling, missing-data plans,
-unit of analysis/linkage, clustering, comparability, ethics, and analysis assumptions
-when relevant to the user's request. State clearly that statistical methods are provisional
-until the design, variables, and data structure are confirmed.
+The user selected Research Data but has not uploaded a dataset. Provide research-design
+guidance only. Never imply that you inspected, cleaned, analysed, or calculated anything
+from data. Do not invent findings, local facts, sources, citations, legal requirements, or
+numerical thresholds. If current or jurisdiction-specific facts need verification, label
+them for verification rather than presenting them as established.
+
+Structure the response using concise Markdown headings and readable bullets or tables.
+Do not emit HTML tags such as <br>, raw markup, or fragmented equations. Use standard
+Markdown or LaTeX for any equation, and omit an equation if it adds little value.
+
+Address only the topics relevant to the user's request, typically: exploratory research
+questions; construct definitions and feasible measures; target population and sampling
+frame; sampling options with conditions and trade-offs; unit of analysis and whether
+teacher-student-school records can be linked; clustering and design effects; likely
+confounders and comparability; missing-data prevention and analysis planning; ethics and
+permissions; and a provisional analysis sequence.
+
+Methodological safeguards:
+- Distinguish descriptive questions from associational questions. Do not imply causation
+  from an observational association; treat moderation or complex multilevel models as
+  optional until design, sample size, cluster counts, and linkage support them.
+- Do not prescribe a fixed sample size, a universal number of clusters, or a blanket
+  "30–50 units" rule. Explain that sample-size planning depends on the primary outcome,
+  effect of interest, design, clustering, expected non-response, and feasible resources.
+- Do not assume all students can be linked to a particular teacher. Explain how conclusions
+  change if only school-level aggregate data are available and flag ecological-inference risks.
+- Treat scales/frameworks as candidate instruments requiring source review, contextual
+  adaptation, piloting, and appropriate validity/reliability evidence—not automatic measures.
+- Do not claim a particular area or population is marginalised, rural, or disadvantaged
+  without evidence supplied by the user or a verifiable source.
+- Do not prescribe imputation solely because a test labels data MCAR/MAR. Explain that
+  missing-data decisions depend on the design, plausible missingness mechanism, assumptions,
+  and sensitivity checks.
+- Describe ethics review, research licences, school/education permissions, consent, and
+  assent as items to verify with the relevant authorities for the actual study; do not
+  assert that every named office or clearance is universally required.
+- Label all statistical methods as provisional until the research questions, measures,
+  sampling design, data structure, and assumptions are confirmed.
+- End with a short list of decisions the researcher must settle before data collection.
+- Do not report statistical results because no dataset was supplied.
 
 User request:
 {task}
@@ -2088,9 +2119,26 @@ User request:
                                 "Try the Research mode or revise the task."
                             )
                     except Exception as e:
-                        st.error("GEAA could not generate planning guidance.")
+                        error_text = str(e)
+                        if "503" in error_text or "UNAVAILABLE" in error_text:
+                            st.warning(
+                                "The Gemini service is temporarily busy or unavailable. "
+                                "Please retry in a few minutes; your task has not been analysed."
+                            )
+                        elif "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
+                            st.warning(
+                                "The Gemini request limit has been reached. Please wait and retry, "
+                                "or check the quota and billing limits for your API key."
+                            )
+                        elif "404" in error_text or "NOT_FOUND" in error_text:
+                            st.error(
+                                "The configured Gemini model was not found or is unavailable "
+                                "for this API key. Check the model ID and API access."
+                            )
+                        else:
+                            st.error("GEAA could not generate planning guidance. Check the technical details.")
                         with st.expander("Technical details"):
-                            st.code(str(e))
+                            st.code(error_text)
                 else:
                     st.write(
                         "Enter a planning question above. For example: "
