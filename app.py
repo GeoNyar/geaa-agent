@@ -3049,22 +3049,12 @@ User request:
                     elif "503" in error_text or "UNAVAILABLE" in error_text:
                         st.warning(
                             "Gemini is temporarily busy or unavailable (503). "
-                            "Your task is preserved. Wait briefly, then select Retry AI response."
-                        )
-                        st.button(
-                            "Retry AI response",
-                            key="retry_general_ai_503",
-                            help="Resubmits the same task to Gemini."
+                            "Your task is preserved. Wait briefly, then select Run Task again."
                         )
                     elif "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
                         st.warning(
                             "Gemini has reached a request or quota limit (429). "
-                            "Wait before retrying and check your API quota if the problem persists."
-                        )
-                        st.button(
-                            "Retry AI response",
-                            key="retry_general_ai_429",
-                            help="Resubmits the same task to Gemini."
+                            "Wait before selecting Run Task again, and check your API quota if the problem persists."
                         )
                     elif "404" in error_text or "NOT_FOUND" in error_text:
                         st.error(
