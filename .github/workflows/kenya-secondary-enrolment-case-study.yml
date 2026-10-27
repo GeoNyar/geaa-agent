@@ -1,0 +1,39 @@
+name: Kenya Secondary Enrolment Open-Data Case Study
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "research_demos/kenya_secondary_enrolment/**"
+      - ".github/workflows/kenya-secondary-enrolment-case-study.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  analyse-open-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pandas matplotlib
+
+      - name: Retrieve and analyse official open data
+        run: python research_demos/kenya_secondary_enrolment/analyse_open_data.py
+
+      - name: Upload case-study outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: kenya-secondary-enrolment-case-study
+          path: research_demos/kenya_secondary_enrolment/outputs/
+          if-no-files-found: error
+          retention-days: 30
