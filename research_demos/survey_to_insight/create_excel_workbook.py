@@ -210,7 +210,7 @@ def create_workbook(analysis_dir: Path, output_file: Path) -> Path:
                 chart.height = 7
                 chart.width = 13
                 chart.add_data(
-                    Reference(skills, min_col=2, min_row=1, max_row=skills.max_row),
+                    Reference(skills, min_col=3, min_row=1, max_row=skills.max_row),
                     titles_from_data=True,
                 )
                 chart.set_categories(
