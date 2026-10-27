@@ -25,7 +25,7 @@ The project aims to:
 
 ## 3. Implemented Workflow
 
-The current workflow connects data generation, validation, analysis and reporting through Python scripts and GitHub Actions.
+The current workflow connects data generation, validation, analysis and reporting through Python scripts and GitHub Actions. The workbook includes formatted analysis tables and native charts; the report uses readable display labels and includes the full categorical frequency table for this demonstration dataset.
 
 1. **Synthetic data generation:** Creates a reproducible demonstration dataset using a specified sample size and random seed.
 2. **Data validation:** Checks the generated dataset against defined structural and quality rules and produces a validation report.
@@ -69,8 +69,8 @@ The successful workflow produces a downloadable artifact named `survey-to-insigh
 | `mean_familiarity_by_skill.png` | Chart of familiarity by skill | Implemented |
 | `respondents_by_role.png` | Chart of respondent counts by role | Implemented |
 | `analysis_manifest.json` | Records analysis provenance and dataset classification | Implemented |
-| `survey_to_insight_workbook.xlsx` | Consolidated Excel workbook with eight worksheets | Implemented |
-| `survey_to_insight_research_report.docx` | Structured Word report with embedded charts | Implemented |
+| `survey_to_insight_workbook.xlsx` | Consolidated Excel workbook with eight worksheets, formatted Excel tables and native charts for selected descriptive outputs | Implemented |
+| `survey_to_insight_research_report.docx` | Structured Word report with embedded charts, compact table typography and readable display labels | Implemented |
 
 The workflow also retains analysis outputs in the `analysis_outputs/` directory during execution. Generated files are packaged as a GitHub Actions artifact rather than committed as if they were actual survey findings.
 
