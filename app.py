@@ -2154,7 +2154,8 @@ Methodological safeguards:
 
 User request:
 {task}
-"""nt(
+"""
+                        planning_response = client.models.generate_content(
                             model="gemini-3.8-flash",
                             contents=planning_prompt
                         )
