@@ -1750,6 +1750,19 @@ research_question_requested = any(
         "study variables"
     ]
 )
+# Identify planning-only requests before any uploaded file is read or summarised.
+task_lower = task.lower().strip()
+planning_terms = (
+    "plan", "planning", "before data collection", "what information",
+    "data requirements", "analysis plan", "which analyses",
+    "research design", "variables to collect", "sample size",
+    "data collection", "methodological guidance",
+    "no dataset has been collected", "do not report statistical results",
+    "don't report statistical results", "research questions",
+    "sampling considerations"
+)
+is_planning_request = any(term in task_lower for term in planning_terms)
+
 st.markdown("### 📊 Optional Data File")
 
 uploaded_file = st.file_uploader(
@@ -1764,244 +1777,250 @@ uploaded_data = None
 
 if uploaded_file is not None:
 
-    try:
-        if uploaded_file.name.lower().endswith((".xlsx", ".xls")):
-            uploaded_data = pd.read_excel(uploaded_file)
-        else:
-            uploaded_data = pd.read_csv(uploaded_file)
-
-        st.markdown("### 📋 Uploaded Data")
-
-        st.write(
-            f"**File:** {uploaded_file.name}"
+    if is_planning_request:
+        st.info(
+            "Planning-only request detected. The attached file will not be read, "
+            "previewed, summarised, or analysed for this task."
         )
+    else:
+        try:
+            if uploaded_file.name.lower().endswith((".xlsx", ".xls")):
+                uploaded_data = pd.read_excel(uploaded_file)
+            else:
+                uploaded_data = pd.read_csv(uploaded_file)
 
-        st.write(
-            f"**Rows:** {uploaded_data.shape[0]} | "
-            f"**Columns:** {uploaded_data.shape[1]}"
-        )
+            st.markdown("### 📋 Uploaded Data")
 
-        st.markdown("#### Variables")
-
-        variable_table = pd.DataFrame({
-            "Variable": uploaded_data.columns,
-            "Data type": [
-                str(dtype)
-                for dtype in uploaded_data.dtypes
-            ],
-            "Missing values": [
-                int(uploaded_data[column].isna().sum())
-                for column in uploaded_data.columns
-            ]
-        })
-
-        st.dataframe(
-            variable_table,
-            use_container_width=True
-        )
-
-        st.markdown("#### Preview")
-
-        st.dataframe(
-            uploaded_data.head(10),
-            use_container_width=True
-        )
-
-        st.markdown("#### 🔎 Data Quality Check")
-
-        duplicate_rows = int(
-            uploaded_data.duplicated().sum()
-        )
-
-        missing_cells = int(
-            uploaded_data.isna().sum().sum()
-        )
-
-        numeric_columns = [
-            column
-            for column in uploaded_data.columns
-            if pd.api.types.is_numeric_dtype(
-                uploaded_data[column]
+            st.write(
+                f"**File:** {uploaded_file.name}"
             )
-        ]
 
-        st.write(
-            f"**Duplicate rows:** {duplicate_rows}"
-        )
-
-        st.write(
-            f"**Missing cells:** {missing_cells}"
-        )
-
-        st.write(
-            f"**Numeric variables:** "
-            f"{len(numeric_columns)}"
-        )
-
-        if numeric_columns:
-
-            numeric_summary = pd.DataFrame({
-                "Variable": numeric_columns,
-                "Minimum": [
-                    uploaded_data[column].min()
-                    for column in numeric_columns
-                ],
-                "Maximum": [
-                    uploaded_data[column].max()
-                    for column in numeric_columns
-                ]
-            })
-
-            st.markdown("#### Numerical Range")
-
-            st.dataframe(
-                numeric_summary,
-                use_container_width=True
+            st.write(
+                f"**Rows:** {uploaded_data.shape[0]} | "
+                f"**Columns:** {uploaded_data.shape[1]}"
             )
-            st.markdown("#### 📊 Descriptive Statistics")
 
-            descriptive_summary = pd.DataFrame({
-                "Variable": numeric_columns,
-                "Count": [
-                    uploaded_data[column].count()
-                    for column in numeric_columns
+            st.markdown("#### Variables")
+
+            variable_table = pd.DataFrame({
+                "Variable": uploaded_data.columns,
+                "Data type": [
+                    str(dtype)
+                    for dtype in uploaded_data.dtypes
                 ],
-                "Mean": [
-                    uploaded_data[column].mean()
-                    for column in numeric_columns
-                ],
-                "Median": [
-                    uploaded_data[column].median()
-                    for column in numeric_columns
-                ],
-                "Minimum": [
-                    uploaded_data[column].min()
-                    for column in numeric_columns
-                ],
-                "Maximum": [
-                    uploaded_data[column].max()
-                    for column in numeric_columns
-                ],
-                "Standard deviation": [
-                    uploaded_data[column].std()
-                    for column in numeric_columns
+                "Missing values": [
+                    int(uploaded_data[column].isna().sum())
+                    for column in uploaded_data.columns
                 ]
             })
 
             st.dataframe(
-                descriptive_summary,
+                variable_table,
                 use_container_width=True
             )
 
-            st.markdown("#### 📌 Calculated Values")
+            st.markdown("#### Preview")
 
-            for _, row in descriptive_summary.iterrows():
+            st.dataframe(
+                uploaded_data.head(10),
+                use_container_width=True
+            )
 
-                st.write(
-                    f"**{row['Variable']}** — "
-                    f"Count: {int(row['Count'])}, "
-                    f"Mean: {row['Mean']:.2f}, "
-                    f"Median: {row['Median']:.2f}, "
-                    f"Minimum: {row['Minimum']:.2f}, "
-                    f"Maximum: {row['Maximum']:.2f}, "
-                    f"Sample standard deviation: {row['Standard deviation']:.2f}"
-                )
+            st.markdown("#### 🔎 Data Quality Check")
 
-            categorical_columns = [
+            duplicate_rows = int(
+                uploaded_data.duplicated().sum()
+            )
+
+            missing_cells = int(
+                uploaded_data.isna().sum().sum()
+            )
+
+            numeric_columns = [
                 column
                 for column in uploaded_data.columns
-                if not pd.api.types.is_numeric_dtype(
+                if pd.api.types.is_numeric_dtype(
                     uploaded_data[column]
                 )
             ]
 
-            if visualization_requested:
+            st.write(
+                f"**Duplicate rows:** {duplicate_rows}"
+            )
 
-                st.markdown("#### 📊 Data Visualization")
+            st.write(
+                f"**Missing cells:** {missing_cells}"
+            )
 
-                if (
-                    len(numeric_columns) == 1
-                    and len(categorical_columns) >= 1
-                ):
+            st.write(
+                f"**Numeric variables:** "
+                f"{len(numeric_columns)}"
+            )
 
-                    chart_data = uploaded_data[
-                        [
-                            categorical_columns[0],
-                            numeric_columns[0]
-                        ]
-                    ].copy()
+            if numeric_columns:
 
-                    st.bar_chart(
-                        chart_data,
-                        x=categorical_columns[0],
-                        y=numeric_columns[0]
+                numeric_summary = pd.DataFrame({
+                    "Variable": numeric_columns,
+                    "Minimum": [
+                        uploaded_data[column].min()
+                        for column in numeric_columns
+                    ],
+                    "Maximum": [
+                        uploaded_data[column].max()
+                        for column in numeric_columns
+                    ]
+                })
+
+                st.markdown("#### Numerical Range")
+
+                st.dataframe(
+                    numeric_summary,
+                    use_container_width=True
+                )
+                st.markdown("#### 📊 Descriptive Statistics")
+
+                descriptive_summary = pd.DataFrame({
+                    "Variable": numeric_columns,
+                    "Count": [
+                        uploaded_data[column].count()
+                        for column in numeric_columns
+                    ],
+                    "Mean": [
+                        uploaded_data[column].mean()
+                        for column in numeric_columns
+                    ],
+                    "Median": [
+                        uploaded_data[column].median()
+                        for column in numeric_columns
+                    ],
+                    "Minimum": [
+                        uploaded_data[column].min()
+                        for column in numeric_columns
+                    ],
+                    "Maximum": [
+                        uploaded_data[column].max()
+                        for column in numeric_columns
+                    ],
+                    "Standard deviation": [
+                        uploaded_data[column].std()
+                        for column in numeric_columns
+                    ]
+                })
+
+                st.dataframe(
+                    descriptive_summary,
+                    use_container_width=True
+                )
+
+                st.markdown("#### 📌 Calculated Values")
+
+                for _, row in descriptive_summary.iterrows():
+
+                    st.write(
+                        f"**{row['Variable']}** — "
+                        f"Count: {int(row['Count'])}, "
+                        f"Mean: {row['Mean']:.2f}, "
+                        f"Median: {row['Median']:.2f}, "
+                        f"Minimum: {row['Minimum']:.2f}, "
+                        f"Maximum: {row['Maximum']:.2f}, "
+                        f"Sample standard deviation: {row['Standard deviation']:.2f}"
                     )
 
-                elif len(numeric_columns) == 2:
-
-                    predictor_terms = [
-                        "study",
-                        "hours",
-                        "attendance",
-                        "age",
-                        "experience",
-                        "time",
-                        "practice",
-                        "training",
-                        "input",
-                        "exposure"
-                    ]
-
-                    outcome_terms = [
-                        "score",
-                        "mark",
-                        "grade",
-                        "result",
-                        "performance",
-                        "achievement",
-                        "outcome",
-                        "rating"
-                    ]
-
-                    x_column = numeric_columns[0]
-                    y_column = numeric_columns[1]
-
-                    for column in numeric_columns:
-
-                        column_lower = column.lower()
-
-                        if any(
-                            term in column_lower
-                            for term in predictor_terms
-                        ):
-                            x_column = column
-
-                        if any(
-                            term in column_lower
-                            for term in outcome_terms
-                        ):
-                            y_column = column
-
-                    scatter_data = uploaded_data[
-                        [
-                            x_column,
-                            y_column
-                        ]
-                    ].copy()
-
-                    st.scatter_chart(
-                        scatter_data,
-                        x=x_column,
-                        y=y_column
+                categorical_columns = [
+                    column
+                    for column in uploaded_data.columns
+                    if not pd.api.types.is_numeric_dtype(
+                        uploaded_data[column]
                     )
-    except Exception as e:
+                ]
 
-        st.error(
-            "GEAA could not read the uploaded file. Check that it is a valid CSV or Excel file."
-        )
+                if visualization_requested:
 
-        with st.expander("Technical details"):
-            st.code(str(e))# Run task
+                    st.markdown("#### 📊 Data Visualization")
+
+                    if (
+                        len(numeric_columns) == 1
+                        and len(categorical_columns) >= 1
+                    ):
+
+                        chart_data = uploaded_data[
+                            [
+                                categorical_columns[0],
+                                numeric_columns[0]
+                            ]
+                        ].copy()
+
+                        st.bar_chart(
+                            chart_data,
+                            x=categorical_columns[0],
+                            y=numeric_columns[0]
+                        )
+
+                    elif len(numeric_columns) == 2:
+
+                        predictor_terms = [
+                            "study",
+                            "hours",
+                            "attendance",
+                            "age",
+                            "experience",
+                            "time",
+                            "practice",
+                            "training",
+                            "input",
+                            "exposure"
+                        ]
+
+                        outcome_terms = [
+                            "score",
+                            "mark",
+                            "grade",
+                            "result",
+                            "performance",
+                            "achievement",
+                            "outcome",
+                            "rating"
+                        ]
+
+                        x_column = numeric_columns[0]
+                        y_column = numeric_columns[1]
+
+                        for column in numeric_columns:
+
+                            column_lower = column.lower()
+
+                            if any(
+                                term in column_lower
+                                for term in predictor_terms
+                            ):
+                                x_column = column
+
+                            if any(
+                                term in column_lower
+                                for term in outcome_terms
+                            ):
+                                y_column = column
+
+                        scatter_data = uploaded_data[
+                            [
+                                x_column,
+                                y_column
+                            ]
+                        ].copy()
+
+                        st.scatter_chart(
+                            scatter_data,
+                            x=x_column,
+                            y=y_column
+                        )
+        except Exception as e:
+
+            st.error(
+                "GEAA could not read the uploaded file. Check that it is a valid CSV or Excel file."
+            )
+
+            with st.expander("Technical details"):
+                st.code(str(e))# Run task
 run_task_clicked = st.button("🚀 Run Task")
 
 # Tie Research Data results to the exact inputs submitted by the user.
@@ -2028,11 +2047,16 @@ research_data_results_active = (
 if run_task_clicked or research_data_results_active:
 
     if mode == "Research Data":
-        st.markdown("### Research Data — Local Analysis")
-        st.info(
-            "Privacy safeguard: this mode analyses the uploaded dataset with Python. "
-            "It does not send raw dataset rows to Gemini."
+        st.markdown(
+            "### Research Planning — No Statistical Analysis"
+            if is_planning_request
+            else "### Research Data — Local Analysis"
         )
+        if not is_planning_request:
+            st.info(
+                "Privacy safeguard: this mode analyses the uploaded dataset with Python. "
+                "It does not send raw dataset rows to Gemini."
+            )
 
         # Decide whether this run is planning or analysis from the user's task
         # before checking whether a file is attached. Explicit planning requests
