@@ -2075,7 +2075,7 @@ User request:
 {task}
 """
                         planning_response = client.models.generate_content(
-                            model="gemini-2.5-flash",
+                            model="gemini-3.8-flash",
                             contents=planning_prompt
                         )
                         planning_text = getattr(planning_response, "text", None)
