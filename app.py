@@ -2180,7 +2180,6 @@ User request:
                             daily_quota_exceeded = (
                                 "GenerateRequestsPerDayPerProjectPerModel-FreeTier" in error_text
                                 or "requests per day limit exceeded" in error_text.lower()
-                                or "retry in " in error_text.lower()
                             )
                             if daily_quota_exceeded:
                                 st.warning(
