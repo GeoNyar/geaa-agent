@@ -2020,7 +2020,9 @@ if uploaded_file is not None:
             )
 
             with st.expander("Technical details"):
-                st.code(str(e))# Run task
+                st.code(str(e))
+
+# Run task
 run_task_clicked = st.button("🚀 Run Task")
 
 # Tie Research Data results to the exact inputs submitted by the user.
@@ -2114,8 +2116,10 @@ numerical thresholds. If current or jurisdiction-specific facts need verificatio
 them for verification rather than presenting them as established.
 
 Structure the response using concise Markdown headings and readable bullets or tables.
-Do not emit HTML tags such as <br>, raw markup, or fragmented equations. Use standard
-Markdown or LaTeX for any equation, and omit an equation if it adds little value.
+Do not emit HTML tags such as <br>, raw markup, ASCII flowcharts, box-drawing diagrams, or
+fragmented/duplicated equations. Use standard Markdown or LaTeX for any equation, and omit
+an equation if it adds little value. Present a provisional analysis sequence as numbered
+Markdown steps. Define symbols in prose and show each equation no more than once.
 
 Address only the topics relevant to the user's request, typically: exploratory research
 questions; construct definitions and feasible measures; target population and sampling
