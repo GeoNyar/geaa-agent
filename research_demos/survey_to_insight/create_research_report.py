@@ -15,13 +15,40 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches, Pt
 
 
-def add_dataframe_table(document, dataframe, max_rows=20):
+def add_dataframe_table(document, dataframe, max_rows=50):
     """Add a readable table containing a DataFrame's first rows."""
     if dataframe.empty:
         document.add_paragraph("No records available for this table.")
         return
 
-    display = dataframe.head(max_rows)
+    display = dataframe.head(max_rows).copy()
+    # Use readable labels in the report while preserving original column
+    # names in the machine-readable CSV outputs.
+    friendly_columns = {
+        "q3_questionnaire_design": "Questionnaire design",
+        "q4_data_validation": "Data validation",
+        "q5_excel": "Excel",
+        "q6_descriptive_statistics": "Descriptive statistics",
+        "q7_crosstabs": "Cross-tabulations",
+        "q8_visualisation": "Visualisation",
+        "q9_reporting": "Reporting",
+        "q11_development_need": "Development need",
+        "q11_development_need": "Development need",
+        "selection_count": "Selections",
+        "percentage_of_respondents": "% of records",
+        "percentage": "Percentage",
+        "variable": "Variable",
+        "response": "Response",
+        "count": "Count",
+        "mean": "Mean",
+        "std": "SD",
+        "min": "Minimum",
+        "max": "Maximum",
+    }
+    display.columns = [
+        friendly_columns.get(str(column), str(column).replace("_", " ").strip().title())
+        for column in display.columns
+    ]
     table = document.add_table(rows=1, cols=len(display.columns))
     table.style = "Light Shading Accent 1"
 
@@ -37,6 +64,17 @@ def add_dataframe_table(document, dataframe, max_rows=20):
                 cell.text = f"{value:.2f}"
             else:
                 cell.text = str(value)
+    # Compact table typography helps keep wide result tables readable.
+    for row in table.rows:
+        for cell in row.cells:
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_after = Pt(2)
+                for run in paragraph.runs:
+                    run.font.size = Pt(8)
+    for cell in table.rows[0].cells:
+        for paragraph in cell.paragraphs:
+            for run in paragraph.runs:
+                run.bold = True
 
     if len(dataframe) > max_rows:
         document.add_paragraph(
@@ -105,8 +143,10 @@ def create_report(analysis_dir: Path, output_file: Path) -> Path:
 
     document = Document()
     section = document.sections[0]
-    section.top_margin = Inches(0.7)
-    section.bottom_margin = Inches(0.7)
+    section.top_margin = Inches(0.6)
+    section.bottom_margin = Inches(0.6)
+    section.left_margin = Inches(0.65)
+    section.right_margin = Inches(0.65)
 
     document.styles["Normal"].font.name = "Arial"
     document.styles["Normal"].font.size = Pt(10)
