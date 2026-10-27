@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.chart import BarChart, Reference
 from openpyxl.utils import get_column_letter
 
 
@@ -66,6 +68,7 @@ def create_workbook(analysis_dir: Path, output_file: Path) -> Path:
                 ("Dataset status", "SYNTHETIC — NOT REAL RESPONDENT DATA"),
                 ("Records analysed", manifest["records_analysed"]),
                 ("Validation passed", "Yes"),
+                ("Generated on (UTC)", pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d %H:%M UTC")),
                 ("Critical validation errors",
                  manifest["critical_validation_errors"]),
                 ("Validation warnings",
@@ -146,7 +149,8 @@ def create_workbook(analysis_dir: Path, output_file: Path) -> Path:
         for worksheet in writer.book.worksheets:
             worksheet.freeze_panes = "A2"
             worksheet.auto_filter.ref = worksheet.dimensions
-            worksheet.row_dimensions[1].height = 30
+            worksheet.sheet_view.showGridLines = False
+            worksheet.row_dimensions[1].height = 32
 
             for cell in worksheet[1]:
                 cell.font = Font(bold=True, color="FFFFFF")
@@ -174,6 +178,65 @@ def create_workbook(analysis_dir: Path, output_file: Path) -> Path:
                     cell.alignment = Alignment(
                         vertical="top", wrap_text=True
                     )
+                    if isinstance(cell.value, float):
+                        cell.number_format = "0.00"
+
+            # Add a native Excel table where there is a header and data.
+            # The Read Me and Validation sheets are intentionally kept as
+            # key-value summaries rather than analysis tables.
+            if worksheet.title not in {"Read Me", "Validation"} and worksheet.max_row > 1:
+                table_ref = worksheet.dimensions
+                safe_name = "".join(ch for ch in worksheet.title if ch.isalnum()) + "Table"
+                excel_table = Table(displayName=safe_name[:250], ref=table_ref)
+                excel_table.tableStyleInfo = TableStyleInfo(
+                    name="TableStyleMedium2",
+                    showFirstColumn=False,
+                    showLastColumn=False,
+                    showRowStripes=True,
+                    showColumnStripes=False,
+                )
+                worksheet.add_table(excel_table)
+
+        # Add simple native Excel charts for quick review.
+        if "Skill Statistics" in writer.book.sheetnames:
+            skills = writer.book["Skill Statistics"]
+            if skills.max_row > 1 and skills.max_column > 1:
+                chart = BarChart()
+                chart.type = "bar"
+                chart.style = 10
+                chart.title = "Mean familiarity by skill"
+                chart.y_axis.title = "Skill"
+                chart.x_axis.title = "Mean rating (1–5)"
+                chart.height = 7
+                chart.width = 13
+                chart.add_data(
+                    Reference(skills, min_col=2, min_row=1, max_row=skills.max_row),
+                    titles_from_data=True,
+                )
+                chart.set_categories(
+                    Reference(skills, min_col=1, min_row=2, max_row=skills.max_row)
+                )
+                skills.add_chart(chart, "K2")
+
+        if "Role Counts" in writer.book.sheetnames:
+            roles = writer.book["Role Counts"]
+            if roles.max_row > 1 and roles.max_column > 1:
+                chart = BarChart()
+                chart.type = "bar"
+                chart.style = 11
+                chart.title = "Synthetic records by role"
+                chart.y_axis.title = "Professional role"
+                chart.x_axis.title = "Record count"
+                chart.height = 7
+                chart.width = 13
+                chart.add_data(
+                    Reference(roles, min_col=2, min_row=1, max_row=roles.max_row),
+                    titles_from_data=True,
+                )
+                chart.set_categories(
+                    Reference(roles, min_col=1, min_row=2, max_row=roles.max_row)
+                )
+                roles.add_chart(chart, "D2")
 
     return output_file
 
