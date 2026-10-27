@@ -2083,8 +2083,8 @@ if run_task_clicked or research_data_results_active:
                         planning_prompt = f"""
 You are GEAA, an evidence-aware education research planning assistant.
 
-The user selected Research Data but has not uploaded a dataset. Provide research-design
-guidance only. Never imply that you inspected, cleaned, analysed, or calculated anything
+The current run is for research planning only. Provide research-design guidance only;
+ignore any attached file and do not inspect or analyse its contents. Never imply that you inspected, cleaned, analysed, or calculated anything
 from data. Do not invent findings, local facts, sources, citations, legal requirements, or
 numerical thresholds. If current or jurisdiction-specific facts need verification, label
 them for verification rather than presenting them as established.
