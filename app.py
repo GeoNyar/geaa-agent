@@ -2035,7 +2035,75 @@ if run_task_clicked or research_data_results_active:
         )
 
         if uploaded_data is None:
-            st.warning("Upload a readable CSV or Excel dataset before running the analysis.")
+            # Allow methodological planning without a dataset, but never imply
+            # that data have been inspected or analysed.
+            planning_terms = (
+                "plan", "planning", "before data collection", "what information",
+                "data requirements", "analysis plan", "which analyses",
+                "research design", "variables to collect", "sample size",
+                "data collection", "methodological guidance"
+            )
+            task_lower = task.lower().strip()
+            is_planning_request = any(term in task_lower for term in planning_terms)
+
+            if is_planning_request:
+                st.info(
+                    "No dataset is uploaded. GEAA can provide general research-planning "
+                    "guidance, but it cannot inspect data or calculate results."
+                )
+                if client is None:
+                    st.warning(
+                        "Planning guidance requires the Gemini service, which is not configured. "
+                        "You can still use the Research mode for planning, or configure GEMINI_API_KEY."
+                    )
+                elif task.strip():
+                    try:
+                        planning_prompt = f"""
+You are GEAA, an evidence-aware education research assistant.
+
+The user selected Research Data but has not uploaded a dataset. Respond to the user's
+research-planning request only. Do not claim to have inspected, cleaned, analysed, or
+calculated anything from data. Do not invent data, results, sources, or citations.
+Do not request or expect raw dataset rows. Give useful planning guidance, distinguishing
+decisions possible before data collection from decisions that require actual data and
+verified variable definitions. Cover relevant measurement, sampling, missing-data plans,
+unit of analysis/linkage, clustering, comparability, ethics, and analysis assumptions
+when relevant to the user's request. State clearly that statistical methods are provisional
+until the design, variables, and data structure are confirmed.
+
+User request:
+{task}
+"""
+                        planning_response = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=planning_prompt
+                        )
+                        planning_text = getattr(planning_response, "text", None)
+                        if planning_text and planning_text.strip():
+                            st.markdown("#### Research planning guidance")
+                            st.markdown(planning_text)
+                        else:
+                            st.warning(
+                                "GEAA did not receive a usable planning response. "
+                                "Try the Research mode or revise the task."
+                            )
+                    except Exception as e:
+                        st.error("GEAA could not generate planning guidance.")
+                        with st.expander("Technical details"):
+                            st.code(str(e))
+                else:
+                    st.write(
+                        "Enter a planning question above. For example: "
+                        "'Before data collection, what variables and design details "
+                        "should I verify before choosing statistical analyses?'"
+                    )
+            else:
+                st.warning(
+                    "Upload a readable CSV or Excel dataset to run local analysis. "
+                    "If you are planning a study before collecting data, describe the "
+                    "planning task explicitly (for example, 'plan an analysis' or "
+                    "'before data collection')."
+                )
         else:
             try:
                 data = uploaded_data.copy()
