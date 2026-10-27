@@ -36,7 +36,7 @@ The dataset includes variables relating to:
 - Baseline and current class mean achievement scores.
 - School identifiers and illustrative subcounty labels.
 
-The dataset uses a fixed random seed of `20261021` for its documented generation process.
+The committed analysis dataset is `geaa_synthetic_teacher_digital_competence.csv`. The separate generator uses a fixed random seed of `20261023` to create `geaa_synthetic_teacher_digital_competence_regenerated.csv`. The generator is a separately documented implementation and is not claimed to reproduce the committed dataset.
 
 **Data integrity statement:** All records are labelled `SYNTHETIC_NOT_REAL`. School identifiers and contextual labels are illustrative. The data must not be represented as observations from real Kenyan schools or teachers.
 
