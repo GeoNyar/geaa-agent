@@ -2034,6 +2034,28 @@ if run_task_clicked or research_data_results_active:
             "It does not send raw dataset rows to Gemini."
         )
 
+        # Decide whether this run is planning or analysis from the user's task
+        # before checking whether a file is attached. Explicit planning requests
+        # take priority, so an attached file cannot trigger unintended analysis.
+        task_lower = task.lower().strip()
+        planning_terms = (
+            "plan", "planning", "before data collection", "what information",
+            "data requirements", "analysis plan", "which analyses",
+            "research design", "variables to collect", "sample size",
+            "data collection", "methodological guidance",
+            "no dataset has been collected", "do not report statistical results",
+            "don't report statistical results", "research questions",
+            "sampling considerations"
+        )
+        is_planning_request = any(term in task_lower for term in planning_terms)
+
+        if uploaded_data is not None and is_planning_request:
+            st.info(
+                "Planning-only request detected. The attached file will be ignored "
+                "for this run; GEAA will not inspect it or calculate statistics."
+            )
+            uploaded_data = None
+
         if uploaded_data is None:
             # Allow methodological planning without a dataset, but never imply
             # that data have been inspected or analysed.
@@ -2048,8 +2070,8 @@ if run_task_clicked or research_data_results_active:
 
             if is_planning_request:
                 st.info(
-                    "No dataset is uploaded. GEAA can provide general research-planning "
-                    "guidance, but it cannot inspect data or calculate results."
+                    "This run is for research planning only. GEAA will provide guidance "
+                    "without inspecting a dataset or calculating statistical results."
                 )
                 if client is None:
                     st.warning(
