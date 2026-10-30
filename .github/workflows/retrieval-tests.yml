@@ -3,9 +3,9 @@ name: GEAA Retrieval Regression Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, "geaa-v1.3-resilience"]
   pull_request:
-    branches: [main]
+    branches: [main, "geaa-v1.3-resilience"]
   workflow_dispatch:
 
 jobs:
