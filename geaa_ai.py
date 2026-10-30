@@ -73,9 +73,10 @@ def generate_content_with_fallback(client, contents, config=None):
             model=PRIMARY_MODEL, **request
         )
         return response, PRIMARY_MODEL
-    except Exception as primary_error:
-        if get_http_status(primary_error) != 503:
+    except Exception as error:
+        if get_http_status(error) != 503:
             raise
+        primary_error = error
 
     try:
         client.models.get(model=FALLBACK_MODEL)
