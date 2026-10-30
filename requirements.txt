@@ -1,5 +1,5 @@
 streamlit
-google-genai
+google-genai==2.33.0
 pandas
 python-pptx
 matplotlib
