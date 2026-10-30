@@ -217,5 +217,31 @@ class TestKnowledgeRetrieval(unittest.TestCase):
         self.assertIn("Electrochemistry principles", text)
         self.assertIn("Chemical kinetics", text)
         self.assertIn("Chemical thermodynamics", text)
+
+    def test_11_descriptive_and_inferential_statistics_retrieves_education_methodology(self):
+        query = (
+            "Explain the distinction between descriptive and inferential "
+            "statistics in educational research. Discuss when each is "
+            "appropriate, the assumptions and limitations researchers "
+            "should consider, and how school leaders can avoid making "
+            "unsupported conclusions from assessment data."
+        )
+        text, selected = self.retrieve_text(query)
+        selected_filenames = [item["filename"] for item in selected]
+
+        self.assertIn("education_research_methodology.md", text)
+        self.assertIn(
+            "education_research_methodology.md",
+            selected_filenames,
+        )
+        self.assertNotIn(
+            "chemistry_principles_level_6_course_outline.md",
+            selected_filenames,
+        )
+        self.assertNotIn(
+            "thermodynamics_topic_4_notes.md",
+            selected_filenames,
+        )
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
