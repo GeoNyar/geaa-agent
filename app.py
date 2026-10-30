@@ -1,6 +1,12 @@
 import streamlit as st
 from google import genai
 from google.genai import types
+from geaa_ai import (
+    FALLBACK_MODEL,
+    GeminiFallbackError,
+    classify_gemini_error,
+    generate_content_with_fallback,
+)
 from pptx import Presentation
 from pptx.util import Inches, Pt
 # GEAA query expansion terms
@@ -83,7 +89,19 @@ st.set_page_config(
 try:
     gemini_api_key = st.secrets.get("GEMINI_API_KEY", "")
     client = (
-        genai.Client(api_key=gemini_api_key)
+        genai.Client(
+            api_key=gemini_api_key,
+            http_options=types.HttpOptions(
+                retry_options=types.HttpRetryOptions(
+                    attempts=5,
+                    http_status_codes=[408, 500, 502, 503, 504],
+                    initial_delay=1.0,
+                    max_delay=16.0,
+                    exp_base=2.0,
+                    jitter=0.5,
+                )
+            ),
+        )
         if gemini_api_key
         else None
     )
@@ -2816,8 +2834,8 @@ if run_task_clicked or research_data_results_active:
                             + f"Duplicate rows: {uploaded_data.duplicated().sum()}\n"
                             + f"Missing cells: {uploaded_data.isna().sum().sum()}\n"
                         )
-                    response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
+                    response, model_used = generate_content_with_fallback(
+                        client,
                         contents=(
                             "USER TASK:\n"
                             + task
@@ -2847,8 +2865,15 @@ if run_task_clicked or research_data_results_active:
                         ),
                         config=types.GenerateContentConfig(
                             system_instruction=full_instructions
-                        )
+                        ),
                     )
+
+                    if model_used == FALLBACK_MODEL:
+                        st.info(
+                            "The primary Gemini model was temporarily unavailable. "
+                            "GEAA verified access to the backup model and generated "
+                            "this response using Gemini 3.8 Flash."
+                        )
 
                     st.markdown("### GEAA's Response")
                     st.markdown(response.text, unsafe_allow_html=False)
@@ -2861,15 +2886,89 @@ if run_task_clicked or research_data_results_active:
                         key="download_geaa_presentation"
                     )
 
+                except GeminiFallbackError as e:
+                    fallback_category = classify_gemini_error(e.fallback_error)
+                    if e.stage == "verification":
+                        if fallback_category == "authentication":
+                            st.error(
+                                "The primary Gemini model returned 503. GEAA could "
+                                "not verify access to the backup model. Check that "
+                                "GEMINI_API_KEY is valid and permitted to use "
+                                "Gemini 3.8 Flash."
+                            )
+                        elif fallback_category == "rate_limited":
+                            st.error(
+                                "The primary Gemini model returned 503, and Google's "
+                                "API rate-limited the backup-model access check. "
+                                "Wait and try again."
+                            )
+                        else:
+                            st.error(
+                                "The primary Gemini model returned 503. GEAA could "
+                                "not verify that the backup model is available to "
+                                "this API key. See technical details."
+                            )
+                    elif fallback_category == "rate_limited":
+                        st.error(
+                            "The primary model returned 503, but the backup request "
+                            "was rate-limited or quota-limited (HTTP 429). Check "
+                            "your Gemini API usage and try again later."
+                        )
+                    elif fallback_category == "authentication":
+                        st.error(
+                            "The primary model returned 503, but Google rejected "
+                            "the backup request. Check the API key and model access."
+                        )
+                    else:
+                        st.error(
+                            "The primary Gemini model returned 503 and the backup "
+                            "model could not complete the request. Please try again "
+                            "later."
+                        )
+
+                    with st.expander("Technical details"):
+                        st.code(str(e))
+
                 except Exception as e:
                     if client is None:
                         st.error(
                             "GEAA cannot generate this response because the Gemini "
                             "API key is missing or unavailable. Check the app's "
-                            "Secrets settings and confirm GEMINI_API_KEY is set."
+                            "Secrets settings and confirm GEMINI_API_KEY is set. "
+                            "Research Data mode and local analysis features remain "
+                            "available without Gemini."
                         )
                     else:
-                        st.error("GEAA could not complete the request.")
+                        category = classify_gemini_error(e)
+                        if category == "rate_limited":
+                            st.error(
+                                "Gemini returned HTTP 429: the request was rate- "
+                                "limited or the available quota was reached. "
+                                "Check your API usage and try again later. "
+                                "GEAA does not switch models for quota errors."
+                            )
+                        elif category == "authentication":
+                            st.error(
+                                "Gemini rejected the API key or its permissions. "
+                                "Check GEMINI_API_KEY in Streamlit Secrets and "
+                                "confirm that the key is active."
+                            )
+                        elif category == "service_unavailable":
+                            st.error(
+                                "Gemini remained unavailable (HTTP 503) after the "
+                                "configured SDK retries. GEAA could not complete "
+                                "the request. Please try again later."
+                            )
+                        elif category == "model_unavailable":
+                            st.error(
+                                "Google could not find the requested Gemini model "
+                                "for this API key (HTTP 404). Check model availability."
+                            )
+                        else:
+                            st.error(
+                                "GEAA could not complete the Gemini request. "
+                                "See technical details below."
+                            )
 
                     with st.expander("Technical details"):
                         st.code(str(e))
