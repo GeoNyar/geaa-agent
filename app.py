@@ -617,6 +617,10 @@ def retrieve_knowledge(task, documents, max_sections=5):
             "metabolism"
         },
         "education_research": {
+            "educational research",
+            "descriptive statistics",
+            "inferential statistics",
+            "school leaders",
             "research",
             "research question",
             "research problem",
