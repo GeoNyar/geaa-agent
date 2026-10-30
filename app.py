@@ -2981,5 +2981,5 @@ st.divider()
 APP_BUILD = "research-data-interpretation-4"
 
 st.caption(
-    f"GEAA v1.2 — George's Education & Analytics Agent · build: {APP_BUILD}"
+    f"GEAA v1.3 — George's Education & Analytics Agent · build: {APP_BUILD}"
 )
